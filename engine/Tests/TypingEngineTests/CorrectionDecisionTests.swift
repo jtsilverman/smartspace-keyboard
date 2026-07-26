@@ -41,6 +41,13 @@ let checker = FakeChecker(misspellings: [
         .correct(to: "The", alternatives: ["Ten", "Tech"]))
 }
 
+@Test func suggestionsWithTheirOwnCapitalsKeepTheCheckerCasing() {
+    let brandChecker = FakeChecker(misspellings: ["iphnoe": ["iPhone"]])
+    let engine = CorrectionEngine(checker: brandChecker)
+    #expect(engine.decision(for: "my Iphnoe") ==
+        .correct(to: "iPhone", alternatives: []))
+}
+
 @Test func allCapsWordsAreNeverCorrected() {
     let engine = CorrectionEngine(checker: checker)
     #expect(engine.decision(for: "need it ASAP") == .noChange)
