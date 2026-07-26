@@ -25,8 +25,12 @@ public struct PersonalRanking: Equatable, Sendable {
             return prediction.candidates
         }
         return prediction.candidates.enumerated()
-            .sorted { (counts[$0.element.text, default: 0], $1.offset) >
-                      (counts[$1.element.text, default: 0], $0.offset) }
+            .sorted { lhs, rhs in
+                let lhsCount = counts[lhs.element.text, default: 0]
+                let rhsCount = counts[rhs.element.text, default: 0]
+                if lhsCount != rhsCount { return lhsCount > rhsCount }
+                return lhs.offset < rhs.offset
+            }
             .map(\.element)
     }
 }

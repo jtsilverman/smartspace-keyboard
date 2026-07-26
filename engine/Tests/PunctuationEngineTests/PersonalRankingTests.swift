@@ -32,8 +32,12 @@ private let questionPrediction = Prediction(rule: .question, candidates: [
     for _ in 1...3 { ranking.record(outcome(.question, kept: ".")) }
     for _ in 1...3 { ranking.record(outcome(.question, kept: "!")) }
     // "." and "!" tie at 3; engine order between them is ? . ! so the
-    // pair rises above "?" but keeps . before !
-    #expect(ranking.reranked(questionPrediction).map(\.text) == [".", "!", "?", ","])
+    // pair rises above "?" but keeps . before ! -- and the comma's
+    // endsSentence flag must ride along through the sort.
+    #expect(ranking.reranked(questionPrediction) == [
+        Candidate(text: "."), Candidate(text: "!"), Candidate(text: "?"),
+        Candidate(text: ",", endsSentence: false),
+    ])
 }
 
 @Test func outcomesForOneRuleNeverTouchAnother() {
