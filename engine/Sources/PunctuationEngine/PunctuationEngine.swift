@@ -17,7 +17,9 @@ public struct Candidate: Equatable, Sendable {
 /// Decides what a double-space should insert, given the sentence typed so far.
 public struct PunctuationEngine: Sendable {
     private static let whWords: Set<Substring> = [
-        "how", "what", "why", "when", "where", "who", "whose", "which"
+        "how", "what", "why", "when", "where", "who", "whose", "which",
+        "hows", "whats", "wheres", "whos", "whens", "whys",
+        "howd", "whatd", "whered", "whod"
     ]
 
     /// Auxiliary/modal verbs that open a yes-no question whenever they start a
@@ -47,6 +49,29 @@ public struct PunctuationEngine: Sendable {
     /// Words a period completes without ending the sentence ("mr", "dr").
     private static let abbreviations: Set<Substring> = [
         "mr", "mrs", "ms", "dr", "prof", "st", "ave", "etc", "vs", "approx"
+    ]
+
+    /// Second words that make a two-word "you ..." sentence a check-in
+    /// question ("you good", "you up", "you in").
+    private static let checkInWords: Set<Substring> = [
+        "good", "up", "ok", "okay", "home", "there", "around", "awake",
+        "free", "in", "out", "down", "ready", "close", "coming", "alive"
+    ]
+
+    /// Whole sentences that are exclamations by convention.
+    private static let exclamationPhrases: Set<String> = [
+        "we did it", "i cant believe it", "i can't believe it", "no way"
+    ]
+
+    /// "happy <occasion>" greetings ("happy birthday").
+    private static let occasions: Set<Substring> = [
+        "birthday", "anniversary", "thanksgiving", "halloween", "easter",
+        "holidays", "hanukkah"
+    ]
+
+    /// "so <emotion>" openers ("so excited for this").
+    private static let emotionWords: Set<Substring> = [
+        "excited", "pumped", "stoked", "hyped", "proud", "happy", "psyched"
     ]
 
     private static let pronouns: Set<Substring> = [
@@ -88,7 +113,18 @@ public struct PunctuationEngine: Sendable {
             if let last = words.last, words.count > 1, Self.trailingTags.contains(last) {
                 return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
             }
-            if words.contains(where: { Self.exclamationWords.contains($0) }) {
+            if (first == "you" || first == "u"), words.count == 2,
+               Self.checkInWords.contains(words[1]) {
+                return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
+            }
+            if first == "any" {
+                return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
+            }
+            if words.contains(where: { Self.exclamationWords.contains($0) })
+                || Self.exclamationPhrases.contains(words.joined(separator: " "))
+                || (first == "happy" && words.count > 1 && Self.occasions.contains(words[1]))
+                || (first == "so" && words.count > 1 && Self.emotionWords.contains(words[1]))
+                || (first == "lets" && words.count > 1 && words[1].hasPrefix("go")) {
                 return [Candidate(text: "!"), Candidate(text: "."), Candidate(text: "?")]
             }
         }
