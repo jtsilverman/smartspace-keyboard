@@ -29,6 +29,7 @@ Double-space inserts the best sentence-ending punctuation based on the sentence 
 - Triple-space ellipsis
 - Smart quotes and dashes done right
 - Punctuation stats in the host app ("your keyboard chose ? correctly 94% this week") -- all computed on-device
+- The improvement loop: every double-space self-labels (the mark the user finally keeps is ground truth). Always stored on-device: text-free outcome records (rule fired, guess, kept mark, cycle taps). Used for personal re-ranking -- rules that fail for YOU get demoted, your cycle order adapts to your habits. Opt-in only (off by default): raw sentence + kept mark stored locally with a user-initiated export button; exports grow the frozen eval and train the future model. Never: servers, auto-upload, federated learning (Jake, 2026-07-26)
 
 **Later (v2+)**:
 - Sentence backcheck at double-space: when the sentence completes, re-check top confusable pairs (were/we're, its/it's, your/you're, their/there) against the now-full sentence via Apple's on-device part-of-speech tagger (`NLTagger`). Fixes the class of error stock autocorrect gets wrong because it commits word-by-word; we already analyze the full sentence at exactly that moment (Jake, 2026-07-26).
