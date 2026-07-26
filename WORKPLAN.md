@@ -4,7 +4,7 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 
 ## Phase 1 -- Punctuation engine (pure Swift package, no Xcode needed)
 
-- [ ] 1.1 Git repo + `PunctuationEngine` Swift package scaffold, first failing test, `swift test` loop green on this Mac
+- [x] 1.1 Git repo + `PunctuationEngine` Swift package scaffold, first failing test, `swift test` loop green on this Mac (engine/ package; RED 60da59a, GREEN 28f79ef)
 - [ ] 1.2 Question detection: wh-words, auxiliary-first inversion with imperative disambiguation (aux + pronoun = question "do you want pizza"; aux + determiner/noun = command "do your homework"), trailing tags -> ranked candidates
 - [ ] 1.3 Exclamation cues + default-period ranking
 - [ ] 1.4 Abbreviation awareness (Mr/Dr/e.g.: period without sentence-end capitalization) + empty-context fallback to period
