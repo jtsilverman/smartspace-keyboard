@@ -64,6 +64,9 @@ public struct PunctuationEngine: Sendable {
     /// Returns candidates ranked best-first for the text before the cursor.
     public func candidates(before context: String) -> [Candidate] {
         let words = Self.sentenceWords(in: context)
+        if words.isEmpty, context.contains(where: { !$0.isWhitespace }) {
+            return []
+        }
         if let last = words.last, Self.abbreviations.contains(last) {
             return [Candidate(text: ".", endsSentence: false),
                     Candidate(text: "?"), Candidate(text: "!")]
