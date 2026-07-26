@@ -128,7 +128,10 @@ public struct PunctuationEngine: Sendable {
     /// abbreviation fact -- TypingEngine's capitalization rule consults this
     /// instead of keeping its own list.
     public static func isKnownAbbreviation(_ rawToken: String) -> Bool {
-        false
+        var token = rawToken.lowercased()
+        if token.hasSuffix(".") { token.removeLast() }
+        return Self.abbreviations.contains(token[...]) ||
+            Self.dottedAbbreviations.contains(token)
     }
 
     /// Returns candidates ranked best-first for the text before the cursor.
