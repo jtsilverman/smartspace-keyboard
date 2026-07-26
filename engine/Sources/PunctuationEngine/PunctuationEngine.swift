@@ -15,14 +15,18 @@ public struct PunctuationEngine: Sendable {
         "how", "what", "why", "when", "where", "who", "whose", "which"
     ]
 
-    /// Auxiliary/modal verbs that start yes-no questions when a pronoun follows
-    /// ("do you...", "can we..."); without one they usually open a command
-    /// ("do your homework").
+    /// Auxiliary/modal verbs that open a yes-no question whenever they start a
+    /// sentence ("was your day good", "can your brother come").
     private static let auxiliaries: Set<Substring> = [
-        "do", "does", "did", "am", "are", "is", "was", "were",
+        "does", "did", "am", "are", "is", "was", "were",
         "can", "could", "will", "would", "should", "shall", "may", "might",
-        "have", "has", "had"
+        "has", "had"
     ]
+
+    /// Auxiliaries that also head commands/statements ("do your homework",
+    /// "have a great day"), so they only signal a question when a pronoun
+    /// follows ("do you...", "have you...").
+    private static let imperativeCapableAuxiliaries: Set<Substring> = ["do", "have"]
 
     private static let pronouns: Set<Substring> = [
         "i", "you", "we", "they", "he", "she", "it", "u", "ya", "anyone", "anybody"
@@ -31,7 +35,7 @@ public struct PunctuationEngine: Sendable {
     /// Sentence-final words that turn a statement into a tag question
     /// ("you're coming tonight right").
     private static let trailingTags: Set<Substring> = [
-        "right", "ok", "okay", "huh", "eh", "yeah", "no"
+        "right", "ok", "okay", "huh", "eh", "yeah"
     ]
 
     public init() {}
@@ -43,7 +47,10 @@ public struct PunctuationEngine: Sendable {
             if Self.whWords.contains(first) {
                 return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
             }
-            if Self.auxiliaries.contains(first), words.count > 1,
+            if Self.auxiliaries.contains(first) {
+                return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
+            }
+            if Self.imperativeCapableAuxiliaries.contains(first), words.count > 1,
                Self.pronouns.contains(words[1]) {
                 return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
             }
