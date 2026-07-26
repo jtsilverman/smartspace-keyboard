@@ -6,18 +6,21 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 
 - [x] 1.1 Git repo + `PunctuationEngine` Swift package scaffold, first failing test, `swift test` loop green on this Mac (engine/ package; RED 60da59a, GREEN 28f79ef)
 - [x] 1.2 Question detection: wh-words, auxiliary-first inversion with imperative disambiguation (aux + pronoun = question "do you want pizza"; aux + determiner/noun = command "do your homework"), trailing tags -> ranked candidates
-- [ ] 1.2b Verb-first requests ("want to grab dinner", "wanna come") -- surfaced by the 1.2 live probe, not covered by aux-inversion
-- [ ] 1.3 Exclamation cues + default-period ranking
-- [ ] 1.4 Abbreviation awareness (Mr/Dr/e.g.: period without sentence-end capitalization) + empty-context fallback to period
-- [ ] 1.5 Cycle state machine: insert-then-cycle logic as pure testable state (candidate order, cycling window, wrap)
-- [ ] 1.6 Triple-space ellipsis + no-double-punctuation guards
-- [ ] 1.7 Corpus accuracy harness: labeled sentence set, accuracy as a test target; ship gate = top candidate matches label on >=90% of the corpus (also the bar future ML must beat)
+- [x] 1.2b Verb-first requests ("want to grab dinner", "wanna come") -- surfaced by the 1.2 live probe, not covered by aux-inversion
+- [x] 1.3 Exclamation cues + default-period ranking
+- [x] 1.4 Abbreviation awareness (Mr/Dr/e.g.: period without sentence-end capitalization; Candidate.endsSentence) + empty-context fallback to period
+- [x] 1.5 Cycle state machine: insert-then-cycle logic as pure testable state (candidate order, cycling window, wrap)
+- [x] 1.6 No-double-punctuation guard (empty candidates right after a terminal mark). Triple-space ellipsis DROPPED pending Jake: gesture conflicts with tap-to-cycle; recommended replacement is ellipsis as last cycle candidate
+- [x] 1.7 Corpus accuracy harness, two sets: authored regression set (124, top-1 99%, gates 90/97) and FROZEN real-SMS eval (500 sender-labeled UCI sentences; baseline top-1 58%, top-2 80%; never edited alongside rule changes)
+- [ ] 1.8 Raise real-eval score: iterate rules against the 209 real misses (questions 45%, exclamations 0% -- tone-carried, likely needs the ML phase)
 
 ## Phase 2 -- Typing engine logic (still off-device)
 
 - [ ] 2.1 Autocorrect-lite pipeline as testable logic: word-boundary detection, correction decision rules, undo-tap protection (UITextChecker calls stubbed at the seam; real calls arrive in Phase 3)
 - [ ] 2.2 Auto-capitalization + smart apostrophes + smart quotes/dashes rules
-- [ ] 2.3 On-device stats counters model (counts only, no content)
+- [ ] 2.3 Outcome-record model (text-free: rule fired, guess, kept mark, cycle taps, length bucket) -- feeds stats screen AND personal re-ranking
+- [ ] 2.4 Personal re-ranking: per-rule win/loss counters nudge candidate order (pure logic, testable)
+- [ ] 2.5 Opt-in capture + export format: raw sentence + kept mark stored locally when toggled on; export file becomes new frozen eval sets (and later ML training data)
 
 **-- GATE: install Xcode (~15GB), enroll Apple Developer ($99/yr), iPhone available --**
 
