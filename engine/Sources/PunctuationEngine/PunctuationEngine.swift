@@ -28,6 +28,12 @@ public struct PunctuationEngine: Sendable {
         "i", "you", "we", "they", "he", "she", "it", "u", "ya", "anyone", "anybody"
     ]
 
+    /// Sentence-final words that turn a statement into a tag question
+    /// ("you're coming tonight right").
+    private static let trailingTags: Set<Substring> = [
+        "right", "ok", "okay", "huh", "eh", "yeah", "no"
+    ]
+
     public init() {}
 
     /// Returns candidates ranked best-first for the text before the cursor.
@@ -39,6 +45,9 @@ public struct PunctuationEngine: Sendable {
             }
             if Self.auxiliaries.contains(first), words.count > 1,
                Self.pronouns.contains(words[1]) {
+                return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
+            }
+            if let last = words.last, words.count > 1, Self.trailingTags.contains(last) {
                 return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
             }
         }
