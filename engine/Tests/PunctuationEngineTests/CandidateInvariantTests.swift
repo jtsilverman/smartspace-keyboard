@@ -20,7 +20,15 @@ import PunctuationEngine
     for input in inputs {
         let result = engine.candidates(before: input)
         let texts = result.map(\.text)
-        #expect(Set(texts) == Set([".", "?", "!"]), "input: \(input)")
+        let currentSentence = input.split(omittingEmptySubsequences: false,
+                                          whereSeparator: { ".!?".contains($0) }).last ?? ""
+        let sentenceIsBlank = currentSentence.allSatisfy(\.isWhitespace)
+        let contextIsBlank = input.allSatisfy(\.isWhitespace)
+        if sentenceIsBlank && !contextIsBlank {
+            #expect(texts.isEmpty, "input: \(input)")
+        } else {
+            #expect(Set(texts) == Set([".", "?", "!"]), "input: \(input)")
+        }
     }
 }
 
