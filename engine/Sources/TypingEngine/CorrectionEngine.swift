@@ -35,6 +35,7 @@ public struct CorrectionEngine: Sendable {
     ) -> CorrectionDecision {
         guard let word = WordBoundary.lastWord(in: context) else { return .noChange }
         guard !lexicon.contains(word.lowercased()) else { return .noChange }
+        guard !session.isProtected(word) else { return .noChange }
         // All-caps words are acronyms more often than typos; correcting
         // them mangles deliberate input.
         let letters = word.filter(\.isLetter)

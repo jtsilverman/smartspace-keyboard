@@ -3,7 +3,7 @@ import TypingEngine
 
 @Test func undoReturnsOriginalWordAndProtectsItFromRecorrection() {
     var session = CorrectionSession()
-    session.recordCorrection(original: "teh", corrected: "the")
+    session.recordCorrection(original: "teh")
     #expect(session.undoLast() == "teh")
 
     let engine = CorrectionEngine(checker: checker)
@@ -12,7 +12,7 @@ import TypingEngine
 
 @Test func undoProtectionIsCaseInsensitive() {
     var session = CorrectionSession()
-    session.recordCorrection(original: "teh", corrected: "the")
+    session.recordCorrection(original: "teh")
     _ = session.undoLast()
     #expect(session.isProtected("Teh"))
     #expect(session.isProtected("TEH"))
@@ -26,8 +26,8 @@ import TypingEngine
 
 @Test func undoAppliesToTheMostRecentCorrectionOnly() {
     var session = CorrectionSession()
-    session.recordCorrection(original: "teh", corrected: "the")
-    session.recordCorrection(original: "realy", corrected: "really")
+    session.recordCorrection(original: "teh")
+    session.recordCorrection(original: "realy")
     #expect(session.undoLast() == "realy")
     #expect(session.undoLast() == nil)
     #expect(!session.isProtected("teh"))
@@ -35,7 +35,7 @@ import TypingEngine
 
 @Test func unprotectedWordsStillGetCorrectedWithASessionPresent() {
     var session = CorrectionSession()
-    session.recordCorrection(original: "teh", corrected: "the")
+    session.recordCorrection(original: "teh")
     _ = session.undoLast()
 
     let engine = CorrectionEngine(checker: checker)
