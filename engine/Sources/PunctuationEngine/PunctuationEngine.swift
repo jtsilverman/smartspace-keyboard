@@ -44,6 +44,11 @@ public struct PunctuationEngine: Sendable {
         "amazing", "awesome", "incredible", "unbelievable", "insane", "lfg"
     ]
 
+    /// Words a period completes without ending the sentence ("mr", "dr").
+    private static let abbreviations: Set<Substring> = [
+        "mr", "mrs", "ms", "dr", "prof", "st", "ave", "etc", "vs", "approx"
+    ]
+
     private static let pronouns: Set<Substring> = [
         "i", "you", "we", "they", "he", "she", "it", "u", "ya", "anyone", "anybody"
     ]
@@ -59,6 +64,10 @@ public struct PunctuationEngine: Sendable {
     /// Returns candidates ranked best-first for the text before the cursor.
     public func candidates(before context: String) -> [Candidate] {
         let words = Self.sentenceWords(in: context)
+        if let last = words.last, Self.abbreviations.contains(last) {
+            return [Candidate(text: ".", endsSentence: false),
+                    Candidate(text: "?"), Candidate(text: "!")]
+        }
         if let first = words.first {
             if Self.whWords.contains(first) {
                 return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
