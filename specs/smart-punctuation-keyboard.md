@@ -57,3 +57,4 @@ A full replacement iOS keyboard (App Store) whose hero feature is smart double-s
 - Strategy: ship + traction as the pitch to Apple; Feedback Assistant request filed in parallel; never email ideas (unsolicited-idea policy) (2026-07-25).
 - Engine is pure rules for v1, no LLM (memory ceiling + no-network are hard constraints); the 1.7 corpus referees when rules plateau and a tiny on-device classifier (~1-5MB, Gboard precedent) graduates in (2026-07-26).
 - Quotes excluded from the double-space candidate set (cycle noise, rare sentence-ender in texting); smart quote pairing stays v1; closing-quote as optional candidate only if usage shows demand (2026-07-26).
+- Eval charter locked in EVAL.md: benchmark marks are . ? ! , (comma = mid-sentence continuation, self-labeled from real SMS); : ; - and " faded until export data shows usage; real set v2 is 600 rows dev/test split (Jake, 2026-07-26).
