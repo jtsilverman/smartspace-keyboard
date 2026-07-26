@@ -45,10 +45,13 @@ public struct CorrectionEngine: Sendable {
         return .correct(to: top, alternatives: Array(suggestions.dropFirst()))
     }
 
-    /// Checkers return suggestions in their own casing; a word typed with a
-    /// leading capital keeps it through the correction.
+    /// A word typed with a leading capital keeps it through the correction.
+    /// A suggestion carrying any capital of its own (iPhone, McDonald's)
+    /// already knows its casing and is passed through untouched.
     private func recased(_ suggestion: String, like word: String) -> String {
-        guard word.first?.isUppercase == true, let first = suggestion.first else {
+        guard word.first?.isUppercase == true,
+              !suggestion.contains(where: \.isUppercase),
+              let first = suggestion.first else {
             return suggestion
         }
         return first.uppercased() + suggestion.dropFirst()
