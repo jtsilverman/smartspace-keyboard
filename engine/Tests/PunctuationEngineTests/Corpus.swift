@@ -119,4 +119,10 @@ let corpus: [(text: String, label: String)] = [
     ("let's go", "!"),
     ("don't forget your keys", "."),
     ("bring snacks e.g", "."),
+    ("done with the car", "?"),
+    ("on your way", "?"),
+    ("leaving now", "."),
+    ("still at work", "?"),
+    ("food there yet", "?"),
+    ("home in 10", "."),
 ]
