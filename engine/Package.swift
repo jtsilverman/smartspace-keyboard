@@ -10,7 +10,7 @@ let package = Package(
     targets: [
         .target(name: "PunctuationEngine"),
         .testTarget(name: "PunctuationEngineTests", dependencies: ["PunctuationEngine"]),
-        .target(name: "TypingEngine"),
+        .target(name: "TypingEngine", dependencies: ["PunctuationEngine"]),
         .testTarget(name: "TypingEngineTests", dependencies: ["TypingEngine"])
     ]
 )

@@ -123,6 +123,14 @@ public struct PunctuationEngine: Sendable {
 
     public init() {}
 
+    /// Whether a raw token (dots included: "Mr.", "e.g.", "mr") is a known
+    /// abbreviation whose period does not end the sentence. The one shared
+    /// abbreviation fact -- TypingEngine's capitalization rule consults this
+    /// instead of keeping its own list.
+    public static func isKnownAbbreviation(_ rawToken: String) -> Bool {
+        false
+    }
+
     /// Returns candidates ranked best-first for the text before the cursor.
     public func candidates(before context: String) -> [Candidate] {
         let rawLastToken = context.lowercased()
