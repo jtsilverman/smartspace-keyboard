@@ -27,7 +27,7 @@ import PunctuationEngine
         if sentenceIsBlank && !contextIsBlank {
             #expect(texts.isEmpty, "input: \(input)")
         } else {
-            #expect(Set(texts) == Set([".", "?", "!"]), "input: \(input)")
+            #expect(Set(texts) == Set([".", "?", "!", ",", "\""]), "input: \(input)")
         }
     }
 }
