@@ -27,7 +27,12 @@ public struct CorrectionEngine: Sendable {
         self.lexicon = Set(lexicon.map { $0.lowercased() })
     }
 
-    public func decision(for context: String) -> CorrectionDecision {
+    /// - Parameter session: undo memory; a word the user has un-corrected
+    ///   in this session is never corrected again.
+    public func decision(
+        for context: String,
+        session: CorrectionSession = CorrectionSession()
+    ) -> CorrectionDecision {
         guard let word = WordBoundary.lastWord(in: context) else { return .noChange }
         guard !lexicon.contains(word.lowercased()) else { return .noChange }
         // All-caps words are acronyms more often than typos; correcting
