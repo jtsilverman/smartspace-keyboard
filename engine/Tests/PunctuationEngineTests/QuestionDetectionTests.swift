@@ -42,3 +42,9 @@ import PunctuationEngine
     let engine = PunctuationEngine()
     #expect(engine.candidates(before: "just say no").first == Candidate(text: "."))
 }
+
+@Test func verbFirstRequestRanksQuestionFirst() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "want to grab dinner").first == Candidate(text: "?"))
+    #expect(engine.candidates(before: "wanna come with us").first == Candidate(text: "?"))
+}
