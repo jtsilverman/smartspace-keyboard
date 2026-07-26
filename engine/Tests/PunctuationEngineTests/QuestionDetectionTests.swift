@@ -10,3 +10,8 @@ import PunctuationEngine
     let engine = PunctuationEngine()
     #expect(engine.candidates(before: "How was it? we got the keys").first == Candidate(text: "."))
 }
+
+@Test func auxiliaryThenPronounRanksQuestionFirst() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "do you want pizza").first == Candidate(text: "?"))
+}
