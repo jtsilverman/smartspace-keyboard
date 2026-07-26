@@ -34,8 +34,12 @@ public enum ContractionRule {
         return nil
     }
 
-    /// A contraction typed with a leading capital keeps it (Dont -> Don't).
+    /// A contraction typed with a leading capital keeps it (Dont -> Don't);
+    /// an all-caps word keeps shouting (DONT -> DON'T).
     private static func recased(_ fixed: String, like word: String) -> String {
+        if word.count >= 2, word.allSatisfy(\.isUppercase) {
+            return fixed.uppercased()
+        }
         guard word.first?.isUppercase == true,
               let first = fixed.first, first.isLowercase else { return fixed }
         return first.uppercased() + fixed.dropFirst()
