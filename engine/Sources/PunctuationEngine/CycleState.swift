@@ -4,7 +4,10 @@ public struct CycleState: Sendable {
     private let candidates: [Candidate]
     private var index = 0
 
-    public init(candidates: [Candidate]) {
+    /// Fails on an empty list -- the engine returns no candidates right after
+    /// terminal punctuation, and a cycle over nothing cannot exist.
+    public init?(candidates: [Candidate]) {
+        guard !candidates.isEmpty else { return nil }
         self.candidates = candidates
     }
 

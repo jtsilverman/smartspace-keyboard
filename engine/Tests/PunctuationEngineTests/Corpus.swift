@@ -114,4 +114,9 @@ let corpus: [(text: String, label: String)] = [
     ("so tired today", "."),
     ("u up", "?"),
     ("any news on the apartment", "?"),
+    ("what's the wifi password", "?"),
+    ("what\u{2019}s for dinner", "?"),
+    ("let's go", "!"),
+    ("don't forget your keys", "."),
+    ("bring snacks e.g", "."),
 ]

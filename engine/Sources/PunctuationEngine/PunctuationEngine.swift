@@ -51,6 +51,12 @@ public struct PunctuationEngine: Sendable {
         "mr", "mrs", "ms", "dr", "prof", "st", "ave", "etc", "vs", "approx"
     ]
 
+    /// Abbreviations with internal dots, matched against the raw last token
+    /// BEFORE sentence splitting (the splitter would chop "e.g" at its dot).
+    private static let dottedAbbreviations: Set<String> = [
+        "e.g", "i.e", "p.m", "a.m", "u.s", "d.c", "ph.d"
+    ]
+
     /// Second words that make a two-word "you ..." sentence a check-in
     /// question ("you good", "you up", "you in").
     private static let checkInWords: Set<Substring> = [
@@ -58,9 +64,10 @@ public struct PunctuationEngine: Sendable {
         "free", "in", "out", "down", "ready", "close", "coming", "alive"
     ]
 
-    /// Whole sentences that are exclamations by convention.
+    /// Whole sentences that are exclamations by convention (apostrophes are
+    /// stripped before matching, so "can't" arrives as "cant").
     private static let exclamationPhrases: Set<String> = [
-        "we did it", "i cant believe it", "i can't believe it", "no way"
+        "we did it", "i cant believe it", "no way"
     ]
 
     /// "happy <occasion>" greetings ("happy birthday").
@@ -88,6 +95,12 @@ public struct PunctuationEngine: Sendable {
 
     /// Returns candidates ranked best-first for the text before the cursor.
     public func candidates(before context: String) -> [Candidate] {
+        let rawLastToken = context.lowercased()
+            .split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? ""
+        if Self.dottedAbbreviations.contains(rawLastToken) {
+            return [Candidate(text: ".", endsSentence: false),
+                    Candidate(text: "?"), Candidate(text: "!")]
+        }
         let words = Self.sentenceWords(in: context)
         if words.isEmpty, context.contains(where: { !$0.isWhitespace }) {
             return []
@@ -131,10 +144,13 @@ public struct PunctuationEngine: Sendable {
         return [Candidate(text: "."), Candidate(text: "?"), Candidate(text: "!")]
     }
 
-    /// Words of the sentence being typed (text after the last terminal mark), lowercased.
+    /// Words of the sentence being typed (text after the last terminal mark),
+    /// lowercased with apostrophes stripped ("What's" -> "whats") so straight
+    /// and curly apostrophe forms hit the same word sets.
     private static func sentenceWords(in context: String) -> [Substring] {
         let current = context.split(omittingEmptySubsequences: false,
                                     whereSeparator: { ".!?".contains($0) }).last ?? ""
-        return current.lowercased()[...].split(whereSeparator: { $0.isWhitespace })
+        let normalized = current.lowercased().filter { $0 != "'" && $0 != "\u{2019}" }
+        return normalized[...].split(whereSeparator: { $0.isWhitespace })
     }
 }
