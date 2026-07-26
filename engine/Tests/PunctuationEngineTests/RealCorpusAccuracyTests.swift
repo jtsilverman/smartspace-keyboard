@@ -26,14 +26,14 @@ private func score(_ set: [(text: String, label: String)], name: String,
 
 /// Dev half: misses are printed and may be studied to design rules.
 @Test func realDevAccuracyReport() {
-    #expect(realCorpusDev.count == 300)
+    #expect(realCorpusDev.count == 319)
     let s = score(realCorpusDev, name: "DEV ", printMisses: true)
     #expect(s.top1 > 0)
 }
 
 /// Held-out half: aggregate score ONLY. Never print or study its sentences.
 @Test func realTestAccuracyReport() {
-    #expect(realCorpusTest.count == 300)
+    #expect(realCorpusTest.count == 319)
     let s = score(realCorpusTest, name: "TEST", printMisses: false)
     #expect(s.top1 > 0)
 }
