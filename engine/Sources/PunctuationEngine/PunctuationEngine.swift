@@ -146,11 +146,11 @@ public struct PunctuationEngine: Sendable {
         if Self.isQuestion(words) || Self.isQuestion(clauseWords) {
             return Self.ranked(["?", ".", "!", ",", "\""])
         }
-        if Self.isQuoteIntroducer(words) {
-            return Self.ranked(["\"", ",", ".", "?", "!"])
-        }
         if Self.isCommaContinuation(words) {
             return Self.ranked([",", ".", "?", "!", "\""])
+        }
+        if Self.isQuoteIntroducer(words) {
+            return Self.ranked(["\"", ",", ".", "?", "!"])
         }
         if Self.isExclamation(words) {
             return Self.ranked(["!", ".", "?", ",", "\""])

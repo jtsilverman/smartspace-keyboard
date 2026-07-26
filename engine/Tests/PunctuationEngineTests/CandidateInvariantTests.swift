@@ -1,8 +1,8 @@
 import Testing
 import PunctuationEngine
 
-/// Property: for ANY input, candidates(before:) returns the three sentence
-/// enders, distinct, with a valid mark ranked first. Inputs are generated
+/// Property: for ANY input, candidates(before:) ranks all five marks,
+/// distinct, with a valid mark first. Inputs are generated
 /// combinations, not hand-picked examples.
 @Test func candidateListInvariantsHoldForGeneratedInputs() {
     let engine = PunctuationEngine()
