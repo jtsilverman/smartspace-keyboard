@@ -6,12 +6,12 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 
 - [x] 1.1 Git repo + `PunctuationEngine` Swift package scaffold, first failing test, `swift test` loop green on this Mac (engine/ package; RED 60da59a, GREEN 28f79ef)
 - [x] 1.2 Question detection: wh-words, auxiliary-first inversion with imperative disambiguation (aux + pronoun = question "do you want pizza"; aux + determiner/noun = command "do your homework"), trailing tags -> ranked candidates
-- [ ] 1.2b Verb-first requests ("want to grab dinner", "wanna come") -- surfaced by the 1.2 live probe, not covered by aux-inversion
-- [ ] 1.3 Exclamation cues + default-period ranking
-- [ ] 1.4 Abbreviation awareness (Mr/Dr/e.g.: period without sentence-end capitalization) + empty-context fallback to period
-- [ ] 1.5 Cycle state machine: insert-then-cycle logic as pure testable state (candidate order, cycling window, wrap)
-- [ ] 1.6 Triple-space ellipsis + no-double-punctuation guards
-- [ ] 1.7 Corpus accuracy harness: labeled sentence set, accuracy as a test target; ship gate = top candidate matches label on >=90% of the corpus (also the bar future ML must beat)
+- [x] 1.2b Verb-first requests ("want to grab dinner", "wanna come") -- surfaced by the 1.2 live probe, not covered by aux-inversion
+- [x] 1.3 Exclamation cues + default-period ranking
+- [x] 1.4 Abbreviation awareness (Mr/Dr/e.g.: period without sentence-end capitalization; Candidate.endsSentence) + empty-context fallback to period
+- [x] 1.5 Cycle state machine: insert-then-cycle logic as pure testable state (candidate order, cycling window, wrap)
+- [x] 1.6 No-double-punctuation guard (empty candidates right after a terminal mark). Triple-space ellipsis DROPPED pending Jake: gesture conflicts with tap-to-cycle; recommended replacement is ellipsis as last cycle candidate
+- [x] 1.7 Corpus accuracy harness: 113 labeled sentences, ship gate >=90%; at 99% (112/113, known miss: "coffee tomorrow" intonation-only). Grow with real-usage sentences + public SMS corpus sample later
 
 ## Phase 2 -- Typing engine logic (still off-device)
 
