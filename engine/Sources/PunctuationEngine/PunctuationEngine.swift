@@ -126,42 +126,51 @@ public struct PunctuationEngine: Sendable {
     /// Returns the ranked candidates plus which rule produced them -- the
     /// label outcome records key on for stats and personal re-ranking.
     public func prediction(before context: String) -> Prediction {
-        Prediction(rule: .fallback, candidates: [])
-    }
-
-    /// Returns candidates ranked best-first for the text before the cursor.
-    public func candidates(before context: String) -> [Candidate] {
         let rawLastToken = context.lowercased()
             .split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? ""
         if Self.dottedAbbreviations.contains(rawLastToken) {
-            return Self.ranked([".", "?", "!", ",", "\""], firstEndsSentence: false)
+            return Prediction(rule: .dottedAbbreviation,
+                              candidates: Self.ranked([".", "?", "!", ",", "\""],
+                                                      firstEndsSentence: false))
         }
 
         let sentence = Self.currentSentence(in: context)
         let words = Self.tokens(sentence)
         if words.isEmpty, context.contains(where: { !$0.isWhitespace }) {
-            return []
+            return Prediction(rule: .terminalGuard, candidates: [])
         }
         if let last = words.last, Self.abbreviations.contains(last) {
-            return Self.ranked([".", "?", "!", ",", "\""], firstEndsSentence: false)
+            return Prediction(rule: .abbreviation,
+                              candidates: Self.ranked([".", "?", "!", ",", "\""],
+                                                      firstEndsSentence: false))
         }
 
         // A question can hide in the last comma-separated clause
         // ("just got home babe, are you still awake").
         let clauseWords = Self.tokens(sentence.split(separator: ",").last ?? sentence)
         if Self.isQuestion(words) || Self.isQuestion(clauseWords) {
-            return Self.ranked(["?", ".", "!", ",", "\""])
+            return Prediction(rule: .question,
+                              candidates: Self.ranked(["?", ".", "!", ",", "\""]))
         }
         if Self.isCommaContinuation(words) {
-            return Self.ranked([",", ".", "?", "!", "\""])
+            return Prediction(rule: .comma,
+                              candidates: Self.ranked([",", ".", "?", "!", "\""]))
         }
         if Self.isQuoteIntroducer(words) {
-            return Self.ranked(["\"", ",", ".", "?", "!"])
+            return Prediction(rule: .quote,
+                              candidates: Self.ranked(["\"", ",", ".", "?", "!"]))
         }
         if Self.isExclamation(words) {
-            return Self.ranked(["!", ".", "?", ",", "\""])
+            return Prediction(rule: .exclamation,
+                              candidates: Self.ranked(["!", ".", "?", ",", "\""]))
         }
-        return Self.ranked([".", "?", "!", ",", "\""])
+        return Prediction(rule: .fallback,
+                          candidates: Self.ranked([".", "?", "!", ",", "\""]))
+    }
+
+    /// Returns candidates ranked best-first for the text before the cursor.
+    public func candidates(before context: String) -> [Candidate] {
+        prediction(before: context).candidates
     }
 
     private static func isQuestion(_ words: [Substring]) -> Bool {
