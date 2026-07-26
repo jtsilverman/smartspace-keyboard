@@ -123,9 +123,6 @@ public struct PunctuationEngine: Sendable {
 
     public init() {}
 
-    /// Returns the ranked candidates plus which rule produced them -- the
-    /// label outcome records key on for stats and personal re-ranking.
-    public func prediction(before context: String) -> Prediction {
     /// Whether a raw token (dots included: "Mr.", "e.g.", "mr") is a known
     /// abbreviation whose period does not end the sentence. The one shared
     /// abbreviation fact -- TypingEngine's capitalization rule consults this
@@ -137,8 +134,9 @@ public struct PunctuationEngine: Sendable {
             Self.dottedAbbreviations.contains(token)
     }
 
-    /// Returns candidates ranked best-first for the text before the cursor.
-    public func candidates(before context: String) -> [Candidate] {
+    /// Returns the ranked candidates plus which rule produced them -- the
+    /// label outcome records key on for stats and personal re-ranking.
+    public func prediction(before context: String) -> Prediction {
         let rawLastToken = context.lowercased()
             .split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? ""
         if Self.dottedAbbreviations.contains(rawLastToken) {
