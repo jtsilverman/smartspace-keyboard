@@ -33,7 +33,7 @@ A full replacement iOS keyboard (App Store) whose hero feature is smart double-s
 - ML model (rules first; the corpus harness in WORKPLAN 1.5 is the on-ramp and the bar).
 - Swipe typing, languages beyond English, iPad-optimized layouts, themes.
 - Cloud/network anything, analytics, accounts. Dictation (Apple blocks mic access, hard stop).
-- Mid-sentence comma prediction (double-space is a sentence-end gesture).
+- Colon/semicolon/dash/quote candidates (faded per EVAL.md until export data shows usage). Comma prediction IS in scope (WORKPLAN 1.9) -- it graduated from non-goal when the eval charter made continuation a benchmark mark.
 
 ## Orientation findings (deep-research 2026-07-25, adversarially verified)
 
