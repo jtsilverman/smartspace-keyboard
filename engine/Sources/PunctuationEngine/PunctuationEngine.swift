@@ -26,8 +26,10 @@ public struct PunctuationEngine: Sendable {
         return [Candidate(text: "."), Candidate(text: "?"), Candidate(text: "!")]
     }
 
-    /// Words of the sentence being typed, lowercased.
+    /// Words of the sentence being typed (text after the last terminal mark), lowercased.
     private static func sentenceWords(in context: String) -> [Substring] {
-        context.lowercased()[...].split(whereSeparator: { $0.isWhitespace })
+        let current = context.split(omittingEmptySubsequences: false,
+                                    whereSeparator: { ".!?".contains($0) }).last ?? ""
+        return current.lowercased()[...].split(whereSeparator: { $0.isWhitespace })
     }
 }
