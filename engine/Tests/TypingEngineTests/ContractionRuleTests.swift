@@ -28,6 +28,11 @@ import TypingEngine
     #expect(ContractionRule.transform("Thats") == "That\u{2019}s")
 }
 
+@Test func allCapsContractionsStayAllCaps() {
+    #expect(ContractionRule.transform("DONT") == "DON\u{2019}T")
+    #expect(ContractionRule.transform("IM") == "I\u{2019}M")
+}
+
 @Test func ordinaryWordsPassThroughUntouched() {
     #expect(ContractionRule.transform("hello") == nil)
     #expect(ContractionRule.transform("in") == nil)
