@@ -4,8 +4,13 @@
 public struct Candidate: Equatable, Sendable {
     public let text: String
 
-    public init(text: String) {
+    /// False when the mark closes a token, not the sentence (period after an
+    /// abbreviation like "Mr"): the keyboard must not auto-capitalize next.
+    public let endsSentence: Bool
+
+    public init(text: String, endsSentence: Bool = true) {
         self.text = text
+        self.endsSentence = endsSentence
     }
 }
 
