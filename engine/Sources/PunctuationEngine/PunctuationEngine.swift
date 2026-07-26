@@ -28,6 +28,10 @@ public struct PunctuationEngine: Sendable {
     /// follows ("do you...", "have you...").
     private static let imperativeCapableAuxiliaries: Set<Substring> = ["do", "have"]
 
+    /// Bare-verb sentence openers that read as invitations in texting
+    /// ("want to grab dinner", "wanna come").
+    private static let requestVerbs: Set<Substring> = ["want", "wanna"]
+
     private static let pronouns: Set<Substring> = [
         "i", "you", "we", "they", "he", "she", "it", "u", "ya", "anyone", "anybody"
     ]
@@ -52,6 +56,9 @@ public struct PunctuationEngine: Sendable {
             }
             if Self.imperativeCapableAuxiliaries.contains(first), words.count > 1,
                Self.pronouns.contains(words[1]) {
+                return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
+            }
+            if Self.requestVerbs.contains(first) {
                 return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
             }
             if let last = words.last, words.count > 1, Self.trailingTags.contains(last) {
