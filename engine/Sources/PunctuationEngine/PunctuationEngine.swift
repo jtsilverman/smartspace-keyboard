@@ -32,6 +32,13 @@ public struct PunctuationEngine: Sendable {
     /// ("want to grab dinner", "wanna come").
     private static let requestVerbs: Set<Substring> = ["want", "wanna"]
 
+    /// Words that mark a sentence as an exclamation wherever they appear
+    /// ("congrats on the new job", "omg that view").
+    private static let exclamationWords: Set<Substring> = [
+        "congrats", "congratulations", "wow", "omg", "yay", "woohoo", "wooo",
+        "amazing", "awesome", "incredible", "unbelievable", "insane", "lfg"
+    ]
+
     private static let pronouns: Set<Substring> = [
         "i", "you", "we", "they", "he", "she", "it", "u", "ya", "anyone", "anybody"
     ]
@@ -63,6 +70,9 @@ public struct PunctuationEngine: Sendable {
             }
             if let last = words.last, words.count > 1, Self.trailingTags.contains(last) {
                 return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
+            }
+            if words.contains(where: { Self.exclamationWords.contains($0) }) {
+                return [Candidate(text: "!"), Candidate(text: "."), Candidate(text: "?")]
             }
         }
         return [Candidate(text: "."), Candidate(text: "?"), Candidate(text: "!")]
