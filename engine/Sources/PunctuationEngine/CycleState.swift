@@ -2,6 +2,7 @@
 /// space tap replaces the inserted mark with the next ranked candidate.
 public struct CycleState: Sendable {
     private let candidates: [Candidate]
+    private var index = 0
 
     public init(candidates: [Candidate]) {
         self.candidates = candidates
@@ -9,11 +10,12 @@ public struct CycleState: Sendable {
 
     /// The candidate currently inserted in the text.
     public var current: Candidate {
-        candidates[0]
+        candidates[index]
     }
 
-    /// Advances to the next candidate and returns it.
+    /// Advances to the next candidate (wrapping) and returns it.
     public mutating func advance() -> Candidate {
-        candidates[0]
+        index = (index + 1) % candidates.count
+        return candidates[index]
     }
 }
