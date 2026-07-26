@@ -134,6 +134,12 @@ public struct PunctuationEngine: Sendable {
             Self.dottedAbbreviations.contains(token)
     }
 
+    /// Returns the ranked candidates plus which rule produced them -- the
+    /// label outcome records key on for stats and personal re-ranking.
+    public func prediction(before context: String) -> Prediction {
+        Prediction(rule: .fallback, candidates: [])
+    }
+
     /// Returns candidates ranked best-first for the text before the cursor.
     public func candidates(before context: String) -> [Candidate] {
         let rawLastToken = context.lowercased()
