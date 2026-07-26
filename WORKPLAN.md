@@ -18,13 +18,9 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 ## Phase 2 -- Typing engine logic (still off-device)
 
 - [x] 2.1 Autocorrect-lite pipeline as testable logic: word-boundary detection, correction decision rules, undo-tap protection (UITextChecker calls stubbed at the seam; real calls arrive in Phase 3). TypingEngine target: WordBoundary, CorrectionEngine + SpellChecking seam, CorrectionSession
-- [ ] 2.2 Auto-capitalization + smart apostrophes + smart quotes/dashes rules
+- [x] 2.2 Auto-capitalization + smart apostrophes + smart quotes/dashes rules. CapitalizationRule (abbreviation-aware via public PunctuationEngine.isKnownAbbreviation), ContractionRule, SmartSymbols
 - [x] 2.3 Outcome-record model (text-free: rule fired, guess, kept mark, cycle taps, length bucket) -- feeds stats screen AND personal re-ranking. Prediction/PredictionRule, OutcomeRecord, OutcomeStats
 - [x] 2.4 Personal re-ranking: per-rule win/loss counters nudge candidate order (pure logic, testable). PersonalRanking: kept-mark counts per rule, 5-outcome threshold, stable reorder
-- [ ] 2.5 Opt-in capture + export format: raw sentence + kept mark stored locally when toggled on; export file becomes new frozen eval sets (and later ML training data)
-- [x] 2.2 Auto-capitalization + smart apostrophes + smart quotes/dashes rules. CapitalizationRule (abbreviation-aware via public PunctuationEngine.isKnownAbbreviation), ContractionRule, SmartSymbols
-- [x] 2.3 Outcome-record model (text-free: rule fired, guess, kept mark, cycle taps, length bucket) -- feeds stats screen AND personal re-ranking
-- [x] 2.4 Personal re-ranking: per-rule win/loss counters nudge candidate order (pure logic, testable)
 - [x] 2.5 Opt-in capture + export format: raw sentence + kept mark stored locally when toggled on; export file becomes new frozen eval sets (and later ML training data). CaptureRecord + CaptureExport.tsv; storage/toggle wiring is Phase 3/4
 
 **-- GATE: install Xcode (~15GB), enroll Apple Developer ($99/yr), iPhone available --**
