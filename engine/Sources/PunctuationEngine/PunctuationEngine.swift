@@ -15,6 +15,6 @@ public struct PunctuationEngine: Sendable {
 
     /// Returns candidates ranked best-first for the text before the cursor.
     public func candidates(before context: String) -> [Candidate] {
-        []
+        [Candidate(text: ".")]
     }
 }
