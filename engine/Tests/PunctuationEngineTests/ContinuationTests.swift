@@ -37,6 +37,12 @@ import PunctuationEngine
     #expect(engine.candidates(before: "my painful personal thought").first?.text == "\"")
 }
 
+@Test func commaOpenerOutranksMidSentenceQuoteNoun() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "if you quote me on this").first?.text == ",")
+    #expect(engine.candidates(before: "but i think a quote would help").first?.text == ",")
+}
+
 @Test func timeOfDayGreetingRanksCommaFirst() {
     let engine = PunctuationEngine()
     #expect(engine.candidates(before: "good afternoon").first?.text == ",")
