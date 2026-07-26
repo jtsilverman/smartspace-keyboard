@@ -13,7 +13,7 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 - [x] 1.6 No-double-punctuation guard (empty candidates right after a terminal mark). Triple-space ellipsis DROPPED pending Jake: gesture conflicts with tap-to-cycle; recommended replacement is ellipsis as last cycle candidate
 - [x] 1.7 Corpus accuracy harness, two sets: authored regression set (124, top-1 99%, gates 90/97) and FROZEN real-SMS eval (500 sender-labeled UCI sentences; baseline top-1 58%, top-2 80%; never edited alongside rule changes)
 - [x] 1.8 Raise real-eval score via dev-miss patterns (dev 55->63; held-out test flat 61 -- hand rules near ceiling for ! )
-- [ ] 1.9 Continuation prediction: engine learns "sentence continues" (comma) and "quote starts" (opening quote after introducers like "u say"); eval v2.1 rows are the target; conjunction/clause-opener and say-verb rules first, ML later
+- [x] 1.9 Continuation prediction: five-mark ranking; subordinate/conjunction/when-nonaux/greeting -> comma, say-verb/quote-noun -> opening quote. Dev 42->47/54->60; test 41->41/56->58 -- rule ceiling reached, remaining continuation headroom belongs to the ML phase
 
 ## Phase 2 -- Typing engine logic (still off-device)
 
