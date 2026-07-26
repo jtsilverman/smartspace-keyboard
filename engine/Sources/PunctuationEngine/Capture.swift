@@ -19,6 +19,9 @@ public enum CaptureExport {
     /// inside a sentence are normalized to spaces so a line is always
     /// exactly one record.
     public static func tsv(_ records: [CaptureRecord]) -> String {
-        ""
+        records.map { record in
+            let flat = String(record.sentence.map { $0.isWhitespace ? " " : $0 })
+            return record.kept + "\t" + flat + "\n"
+        }.joined()
     }
 }
