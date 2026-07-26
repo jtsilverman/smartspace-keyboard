@@ -11,7 +11,8 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 - [x] 1.4 Abbreviation awareness (Mr/Dr/e.g.: period without sentence-end capitalization; Candidate.endsSentence) + empty-context fallback to period
 - [x] 1.5 Cycle state machine: insert-then-cycle logic as pure testable state (candidate order, cycling window, wrap)
 - [x] 1.6 No-double-punctuation guard (empty candidates right after a terminal mark). Triple-space ellipsis DROPPED pending Jake: gesture conflicts with tap-to-cycle; recommended replacement is ellipsis as last cycle candidate
-- [x] 1.7 Corpus accuracy harness: 113 labeled sentences, ship gate >=90%; at 99% (112/113, known miss: "coffee tomorrow" intonation-only). Grow with real-usage sentences + public SMS corpus sample later
+- [x] 1.7 Corpus accuracy harness, two sets: authored regression set (124, top-1 99%, gates 90/97) and FROZEN real-SMS eval (500 sender-labeled UCI sentences; baseline top-1 58%, top-2 80%; never edited alongside rule changes)
+- [ ] 1.8 Raise real-eval score: iterate rules against the 209 real misses (questions 45%, exclamations 0% -- tone-carried, likely needs the ML phase)
 
 ## Phase 2 -- Typing engine logic (still off-device)
 
