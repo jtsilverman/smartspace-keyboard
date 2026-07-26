@@ -25,3 +25,20 @@ import PunctuationEngine
     let engine = PunctuationEngine()
     #expect(engine.candidates(before: "you're coming tonight right").first == Candidate(text: "?"))
 }
+
+@Test func nonImperativeAuxiliaryQuestionsNeedNoPronoun() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "was your day good").first == Candidate(text: "?"))
+    #expect(engine.candidates(before: "did your mom call").first == Candidate(text: "?"))
+    #expect(engine.candidates(before: "can your brother come").first == Candidate(text: "?"))
+}
+
+@Test func imperativeCapableAuxiliariesStillGateOnPronoun() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "have a great day").first == Candidate(text: "."))
+}
+
+@Test func finalNoIsAStatementNotATag() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "just say no").first == Candidate(text: "."))
+}
