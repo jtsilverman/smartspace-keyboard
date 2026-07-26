@@ -15,3 +15,8 @@ import PunctuationEngine
     let engine = PunctuationEngine()
     #expect(engine.candidates(before: "do you want pizza").first == Candidate(text: "?"))
 }
+
+@Test func auxiliaryThenDeterminerStaysImperative() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "do your homework").first == Candidate(text: "."))
+}
