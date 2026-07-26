@@ -6,7 +6,11 @@ public enum LengthBucket: String, Sendable, Equatable {
     case long
 
     public init(wordCount: Int) {
-        self = .long
+        switch wordCount {
+        case ..<4: self = .short
+        case ..<9: self = .medium
+        default: self = .long
+        }
     }
 }
 
@@ -39,10 +43,14 @@ public struct OutcomeStats: Equatable, Sendable {
     public let lossesByRule: [PredictionRule: Int]
 
     public init(_ records: [OutcomeRecord]) {
-        total = 0
-        keptWithoutCycling = 0
-        keptByMark = [:]
-        winsByRule = [:]
-        lossesByRule = [:]
+        total = records.count
+        keptWithoutCycling = records.count(where: { $0.cycleTaps == 0 })
+        keptByMark = records.reduce(into: [:]) { $0[$1.kept, default: 0] += 1 }
+        winsByRule = records.reduce(into: [:]) {
+            if $1.kept == $1.guess { $0[$1.rule, default: 0] += 1 }
+        }
+        lossesByRule = records.reduce(into: [:]) {
+            if $1.kept != $1.guess { $0[$1.rule, default: 0] += 1 }
+        }
     }
 }
