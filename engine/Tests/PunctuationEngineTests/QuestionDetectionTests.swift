@@ -20,3 +20,8 @@ import PunctuationEngine
     let engine = PunctuationEngine()
     #expect(engine.candidates(before: "do your homework").first == Candidate(text: "."))
 }
+
+@Test func trailingTagWordRanksQuestionFirst() {
+    let engine = PunctuationEngine()
+    #expect(engine.candidates(before: "you're coming tonight right").first == Candidate(text: "?"))
+}
