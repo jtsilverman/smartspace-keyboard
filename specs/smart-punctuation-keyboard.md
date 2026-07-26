@@ -33,7 +33,7 @@ A full replacement iOS keyboard (App Store) whose hero feature is smart double-s
 - ML model (rules first; the corpus harness in WORKPLAN 1.5 is the on-ramp and the bar).
 - Swipe typing, languages beyond English, iPad-optimized layouts, themes.
 - Cloud/network anything, analytics, accounts. Dictation (Apple blocks mic access, hard stop).
-- Mid-sentence comma prediction (double-space is a sentence-end gesture).
+- Colon/semicolon/dash candidates (faded per EVAL.md until export data shows usage). Comma and opening-quote prediction ARE in scope (WORKPLAN 1.9) -- continuation marks graduated from non-goal when the eval charter made them benchmark marks.
 
 ## Orientation findings (deep-research 2026-07-25, adversarially verified)
 
@@ -56,4 +56,5 @@ A full replacement iOS keyboard (App Store) whose hero feature is smart double-s
 - From-scratch on Apple APIs; KeyboardKit rejected on verified license grounds (2026-07-25).
 - Strategy: ship + traction as the pitch to Apple; Feedback Assistant request filed in parallel; never email ideas (unsolicited-idea policy) (2026-07-25).
 - Engine is pure rules for v1, no LLM (memory ceiling + no-network are hard constraints); the 1.7 corpus referees when rules plateau and a tiny on-device classifier (~1-5MB, Gboard precedent) graduates in (2026-07-26).
-- Quotes excluded from the double-space candidate set (cycle noise, rare sentence-ender in texting); smart quote pairing stays v1; closing-quote as optional candidate only if usage shows demand (2026-07-26).
+- Quotes: SUPERSEDED same day -- opening quote joined the benchmark as a continuation mark (Jake); closing-quote-as-sentence-ender stays out; smart quote pairing stays v1 (2026-07-26).
+- Eval charter locked in EVAL.md: benchmark marks are . ? ! , " (comma and opening quote = continuation predictions, self-labeled from real SMS); : ; - faded until export data shows usage; real set v2.1 is 638 rows dev/test split (Jake, 2026-07-26).

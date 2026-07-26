@@ -99,6 +99,28 @@ public struct PunctuationEngine: Sendable {
         "right", "ok", "okay", "huh", "eh", "yeah"
     ]
 
+    /// Clause openers that promise more sentence ("if you're free tomorrow,").
+    private static let subordinateOpeners: Set<Substring> = [
+        "if", "as", "while", "although", "though", "unless", "since", "once"
+    ]
+
+    /// Sentence-starting conjunctions that usually continue with a comma in
+    /// texting ("but actually it is,").
+    private static let conjunctionOpeners: Set<Substring> = ["and", "but", "also", "plus"]
+
+    /// Verbs of speech that introduce a quotation when they end the sentence
+    /// ("she said" -> opening quote).
+    private static let sayVerbs: Set<Substring> = ["say", "says", "said", "saying"]
+
+    /// Rank orders per prediction shape; comma and quote never end a sentence.
+    private static func ranked(_ order: [String], firstEndsSentence: Bool = true) -> [Candidate] {
+        order.enumerated().map { i, text in
+            let continuation = (text == "," || text == "\"")
+            let ends = continuation ? false : (i == 0 ? firstEndsSentence : true)
+            return Candidate(text: text, endsSentence: ends)
+        }
+    }
+
     public init() {}
 
     /// Returns candidates ranked best-first for the text before the cursor.
@@ -106,8 +128,7 @@ public struct PunctuationEngine: Sendable {
         let rawLastToken = context.lowercased()
             .split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? ""
         if Self.dottedAbbreviations.contains(rawLastToken) {
-            return [Candidate(text: ".", endsSentence: false),
-                    Candidate(text: "?"), Candidate(text: "!")]
+            return Self.ranked([".", "?", "!", ",", "\""], firstEndsSentence: false)
         }
 
         let sentence = Self.currentSentence(in: context)
@@ -116,25 +137,39 @@ public struct PunctuationEngine: Sendable {
             return []
         }
         if let last = words.last, Self.abbreviations.contains(last) {
-            return [Candidate(text: ".", endsSentence: false),
-                    Candidate(text: "?"), Candidate(text: "!")]
+            return Self.ranked([".", "?", "!", ",", "\""], firstEndsSentence: false)
         }
 
         // A question can hide in the last comma-separated clause
         // ("just got home babe, are you still awake").
         let clauseWords = Self.tokens(sentence.split(separator: ",").last ?? sentence)
         if Self.isQuestion(words) || Self.isQuestion(clauseWords) {
-            return [Candidate(text: "?"), Candidate(text: "."), Candidate(text: "!")]
+            return Self.ranked(["?", ".", "!", ",", "\""])
+        }
+        if Self.isCommaContinuation(words) {
+            return Self.ranked([",", ".", "?", "!", "\""])
+        }
+        if Self.isQuoteIntroducer(words) {
+            return Self.ranked(["\"", ",", ".", "?", "!"])
         }
         if Self.isExclamation(words) {
-            return [Candidate(text: "!"), Candidate(text: "."), Candidate(text: "?")]
+            return Self.ranked(["!", ".", "?", ",", "\""])
         }
-        return [Candidate(text: "."), Candidate(text: "?"), Candidate(text: "!")]
+        return Self.ranked([".", "?", "!", ",", "\""])
     }
 
     private static func isQuestion(_ words: [Substring]) -> Bool {
         guard let first = words.first else { return false }
-        if whWords.contains(first) { return true }
+        if whWords.contains(first) {
+            // "when you land" is a subordinate clause, not a question --
+            // "when" only asks when an auxiliary follows ("when do you land").
+            if first == "when", words.count > 1, !auxiliaries.contains(words[1]),
+               !imperativeCapableAuxiliaries.contains(words[1]) {
+                // fall through to the other question checks
+            } else {
+                return true
+            }
+        }
         if auxiliaries.contains(first) { return true }
         if imperativeCapableAuxiliaries.contains(first), words.count > 1,
            pronouns.contains(words[1]) { return true }
@@ -153,6 +188,30 @@ public struct PunctuationEngine: Sendable {
             }
         }
         if first == "any" { return true }
+        return false
+    }
+
+    private static func isQuoteIntroducer(_ words: [Substring]) -> Bool {
+        guard let last = words.last else { return false }
+        if sayVerbs.contains(last) { return true }
+        // quote-forwarding idiom: "ever green quote ever told", "superb thought"
+        if words.contains("quote") || words.contains("quotes") { return true }
+        if last == "thought" || last == "thoughts" { return true }
+        return false
+    }
+
+    private static func isCommaContinuation(_ words: [Substring]) -> Bool {
+        guard let first = words.first else { return false }
+        if subordinateOpeners.contains(first) { return true }
+        if conjunctionOpeners.contains(first) { return true }
+        if first == "even", words.count > 1, words[1] == "if" { return true }
+        if first == "when", words.count > 1, !auxiliaries.contains(words[1]),
+           !imperativeCapableAuxiliaries.contains(words[1]) { return true }
+        // "good afternoon" usually continues with a name ("good afternoon, love")
+        if first == "good", words.count > 1,
+           ["morning", "afternoon", "evening", "night"].contains(String(words[1])) {
+            return true
+        }
         return false
     }
 
