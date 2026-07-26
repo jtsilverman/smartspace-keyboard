@@ -1,9 +1,9 @@
 /// What lands in the text when a symbol key is typed.
 public enum TypedSymbolDecision: Equatable, Sendable {
     case insert(String)
-    /// Replace `count` characters before the cursor with `with`
+    /// Replace the character before the cursor with `with`
     /// (the -- to em-dash collapse).
-    case replacePreceding(count: Int, with: String)
+    case replacePrevious(with: String)
 }
 
 /// Curly-quote and em-dash conversion for typed symbols -- the pair behind
@@ -25,7 +25,7 @@ public enum SmartSymbols {
         case "'":
             return .insert(opensQuote(context) ? "\u{2018}" : "\u{2019}")
         case "-" where context.last == "-":
-            return .replacePreceding(count: 1, with: "\u{2014}")
+            return .replacePrevious(with: "\u{2014}")
         default:
             return .insert(String(char))
         }

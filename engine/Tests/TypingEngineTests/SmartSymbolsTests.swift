@@ -19,7 +19,7 @@ import TypingEngine
 
 @Test func doubleHyphenCollapsesToEmDash() {
     #expect(SmartSymbols.decision(forTyping: "-", before: "wait-") ==
-        .replacePreceding(count: 1, with: "\u{2014}"))
+        .replacePrevious(with: "\u{2014}"))
     #expect(SmartSymbols.decision(forTyping: "-", before: "wait") == .insert("-"))
     #expect(SmartSymbols.decision(forTyping: "-", before: "wait\u{2014}") == .insert("-"))
 }

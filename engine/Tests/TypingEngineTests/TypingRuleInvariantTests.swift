@@ -24,7 +24,7 @@ import TypingEngine
         }
         for char in ["\"", "'", "-", "x"] as [Character] {
             let decision = SmartSymbols.decision(forTyping: char, before: context)
-            if case .replacePreceding = decision {
+            if case .replacePrevious = decision {
                 #expect(char == "-" && context.last == "-", "context: \(context)")
             }
         }
