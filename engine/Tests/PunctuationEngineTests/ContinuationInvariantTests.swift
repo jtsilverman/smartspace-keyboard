@@ -8,7 +8,8 @@ import PunctuationEngine
 private func assertNovel(_ text: String) {
     let benchmarkTexts = (blindCorpusDev + blindCorpusTest + realV3Dev + realV3Test).map(\.text)
         + corpus.map(\.text)
-    #expect(!benchmarkTexts.contains(text), "test sentence duplicates a corpus row: \(text)")
+    let duplicated = benchmarkTexts.contains(text)
+    #expect(!duplicated, "test sentence duplicates a corpus row: \(text)")
 }
 
 private func topMark(_ text: String) -> String? {
@@ -25,14 +26,14 @@ private func topMark(_ text: String) -> String? {
 }
 
 @Test func metaDiscourseLeadInContinuesWithComma() {
-    for text in ["dumb question", "tiny favor", "huge news", "unrelated thought maybe"] {
+    for text in ["dumb question", "tiny favor", "huge news", "totally random q"] {
         assertNovel(text)
         #expect(topMark(text) == ",", "expected comma for: \(text)")
     }
 }
 
 @Test func leadInIdiomTailsContinueWithComma() {
-    for text in ["just so u know", "before i forget again", "for whatever its worth"] {
+    for text in ["just so u know", "b4 i forget", "for whatever its worth"] {
         assertNovel(text)
         #expect(topMark(text) == ",", "expected comma for: \(text)")
     }
@@ -50,8 +51,8 @@ private func topMark(_ text: String) -> String? {
 
 @Test func contrastiveIdiomsContinueWithComma() {
     for text in [
-        "then again maybe not", "jokes aside", "for real tho",
-        "on the bright side", "best part", "to be perfectly fair",
+        "then again maybe not", "memes aside", "no cap tho",
+        "on the sunny side", "only upside", "to be perfectly fair",
         "now that i think about it more",
     ] {
         assertNovel(text)
@@ -69,7 +70,7 @@ private func topMark(_ text: String) -> String? {
 }
 
 @Test func hazardInterjectionsExclaim() {
-    for text in ["duck", "watch out behind u", "hurry up"] {
+    for text in ["hide", "watch out behind u", "hurry up"] {
         assertNovel(text)
         #expect(topMark(text) == "!", "expected ! for: \(text)")
     }
