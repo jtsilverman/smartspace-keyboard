@@ -180,6 +180,11 @@ final class KeyboardViewController: UIInputViewController {
         case .done: return "done"
         case .next: return "next"
         case .join: return "join"
+        case .google: return "google"
+        case .yahoo: return "yahoo"
+        case .route: return "route"
+        case .continue: return "continue"
+        case .emergencyCall: return "emergencycall"
         default: return "default"
         }
     }
@@ -197,22 +202,24 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     @objc private func shiftTapped() {
+        dismissAlternates()
         shift.tapShift(at: CACurrentMediaTime())
         log.debug("shift mode: \(String(describing: self.shift.mode))")
         refreshShiftAppearance()
     }
 
     @objc private func layerTapped() {
-        layer.toggle(layer == .letters ? .numbers : .letters)
+        layer.tapPrimary()
         rebuildRows()
     }
 
     @objc private func subLayerTapped() {
-        layer.toggle(layer == .numbers ? .symbols : .numbers)
+        layer.tapSecondary()
         rebuildRows()
     }
 
     @objc private func backspaceTapped() {
+        dismissAlternates()
         textDocumentProxy.deleteBackward()
         armAutoShiftIfSentenceStart()
     }

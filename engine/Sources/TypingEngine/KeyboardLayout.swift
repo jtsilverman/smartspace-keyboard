@@ -94,8 +94,15 @@ public struct ShiftState: Sendable {
 public enum KeyboardLayer: Equatable, Sendable {
     case letters, numbers, symbols
 
-    public mutating func toggle(_ target: KeyboardLayer) {
-        self = target
+    /// The bottom-row key: "123" from letters, "ABC" otherwise.
+    public mutating func tapPrimary() {
+        self = (self == .letters) ? .numbers : .letters
+    }
+
+    /// The shift-position key on non-letter planes: "#+=" from numbers,
+    /// "123" from symbols.
+    public mutating func tapSecondary() {
+        self = (self == .numbers) ? .symbols : .numbers
     }
 }
 
@@ -103,12 +110,15 @@ public enum KeyboardLayer: Equatable, Sendable {
 public enum ReturnKeyLabel {
     public static func label(for returnKeyType: String) -> String {
         switch returnKeyType.lowercased() {
-        case "search": return "Search"
+        case "search", "google", "yahoo": return "Search"
         case "go": return "Go"
         case "send": return "Send"
         case "done": return "Done"
         case "next": return "Next"
         case "join": return "Join"
+        case "route": return "Route"
+        case "continue": return "Continue"
+        case "emergencycall": return "Emergency Call"
         default: return "return"
         }
     }
