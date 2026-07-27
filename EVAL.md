@@ -23,13 +23,13 @@ The benchmark every engine change (rules today, model later) is judged against. 
 - Annotation inputs are always SHUFFLED: the ordered-input first pass produced block-stamping annotators (archived in `eval/raw/`); randomized order is what made votes independent.
 - Reported per label AND per scenario form (aggregate only for test halves) -- misses cluster by invariant, and a change that lifts one mark by tanking another stays visible.
 
-## Metrics + baseline (2026-07-27, rules unchanged from 1.9)
+## Metrics + scores
 
 Top-1 = right on the first guess. Top-2 = right within one cycle tap (the product-truth metric).
 
-- Blind: dev 50% / 62%, test 48% / 63%. Strong forms: imperative 100, indirect-question 100, comma-conditional 96, wh-question 92. Weak forms (the invariant backlog): exclamation 15, quote-introducer 13, comma-vocative 4-5, comma-conjunction 5-10, urgent-imperative 14, elliptical-question 5 top-1 (but 100 top-2).
-- Real-SMS v3: dev 73% / 91%, test 67% / 85% (was 47/41 on noisy v2.1 labels -- the old ceiling was label noise, not rule capability).
-- Ship gate (spec AC 7c, Jake 2026-07-27): top-2 >= 80% blind test AND top-2 >= 85% real-v3 test.
+- Baseline (2026-07-27, rules unchanged from 1.9): blind dev 50/62, test 48/63; real-v3 dev 73/91, test 67/85.
+- After the rules-invariants pass (2026-07-27): blind dev 68/81, **test 61/76** (+13/+13 held out -- generalized, not dev-fit); real-v3 dev 72/92, **test 65/84**. Per-form dev: quote-introducer 13->75, comma-conjunction 5->95, comma-vocative 4->84, greeting 50->73/93, urgent 12->31/37, exclamation 6->33/40.
+- Ship gate (spec AC 7c, Jake 2026-07-27): top-2 >= 80% blind test AND top-2 >= 85% real-v3 test. NOT YET MET (76 / 84). The remaining gap is open-vocabulary exclamation and ambiguous rising-statement questions -- semantic, zero-sum for rules (ranking ! second helps one class by hurting the other). This is the spec's documented rules-plateau trigger: remaining headroom belongs to the tiny on-device classifier (~1-5MB, Gboard precedent).
 
 ## Known blind spots (accepted)
 
