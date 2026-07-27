@@ -2,20 +2,31 @@ import UIKit
 import os
 import TypingEngine
 
-/// Thin shell over TypingEngine: renders KeyboardLayout, forwards taps to
-/// textDocumentProxy. All decision logic stays in the tested packages.
+/// Thin shell over TypingEngine: renders KeyboardLayout planes, forwards taps
+/// to textDocumentProxy. All decision logic stays in the tested packages.
 final class KeyboardViewController: UIInputViewController {
     private let log = Logger(subsystem: "com.jtsilverman.smartspace.keyboard", category: "keyboard")
 
     private var shift = ShiftState()
-    private var letterButtons: [UIButton] = []
-    private var shiftButton: UIButton?
+    private var layer = KeyboardLayer.letters
+    private var rowsStack: UIStackView?
     private let probeBadge = UILabel()
+    private var backspaceTimer: Timer?
+    private var backspaceRepeats = 0
+    private var alternatesView: UIView?
+    private var characterButtons: [(button: UIButton, key: String)] = []
+    private var shiftButton: UIButton?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         buildKeyboard()
         runAppGroupProbe()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        shift.armAutoShift(for: textDocumentProxy.documentContextBeforeInput ?? "")
+        rebuildRows()
     }
 
     // MARK: - Layout
@@ -27,50 +38,7 @@ final class KeyboardViewController: UIInputViewController {
         rows.spacing = 8
         rows.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rows)
-
-        for (index, letters) in KeyboardLayout.letterRows.enumerated() {
-            let row = UIStackView()
-            row.axis = .horizontal
-            row.distribution = .fillEqually
-            row.spacing = 4
-            for letter in letters {
-                let button = keyButton(title: letter)
-                button.addTarget(self, action: #selector(letterTapped(_:)), for: .touchUpInside)
-                letterButtons.append(button)
-                row.addArrangedSubview(button)
-            }
-            if index == KeyboardLayout.letterRows.count - 1 {
-                let shiftKey = keyButton(title: "⇧")
-                shiftKey.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
-                shiftButton = shiftKey
-                row.insertArrangedSubview(shiftKey, at: 0)
-
-                let backspace = keyButton(title: "⌫")
-                backspace.addTarget(self, action: #selector(backspaceTapped), for: .touchUpInside)
-                row.addArrangedSubview(backspace)
-            }
-            rows.addArrangedSubview(row)
-        }
-
-        let bottomRow = UIStackView()
-        bottomRow.axis = .horizontal
-        bottomRow.spacing = 4
-
-        let globe = keyButton(title: "🌐")
-        globe.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
-
-        let space = keyButton(title: "space")
-        space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
-
-        let returnKey = keyButton(title: "return")
-        returnKey.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
-
-        bottomRow.addArrangedSubview(globe)
-        bottomRow.addArrangedSubview(space)
-        bottomRow.addArrangedSubview(returnKey)
-        globe.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
-        returnKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.22).isActive = true
-        rows.addArrangedSubview(bottomRow)
+        rowsStack = rows
 
         probeBadge.font = .systemFont(ofSize: 10, weight: .semibold)
         probeBadge.translatesAutoresizingMaskIntoConstraints = false
@@ -85,6 +53,105 @@ final class KeyboardViewController: UIInputViewController {
             probeBadge.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -6),
             probeBadge.topAnchor.constraint(equalTo: view.topAnchor, constant: 2),
         ])
+        rebuildRows()
+    }
+
+    /// Updates key titles in place -- button identity survives, so a
+    /// double-tap's second touch still lands on the same shift button.
+    private func refreshShiftAppearance() {
+        shiftButton?.configuration?.title = shiftTitle()
+        guard layer == .letters else { return }
+        for (button, key) in characterButtons {
+            button.configuration?.title = shift.isShifted ? key.uppercased() : key
+        }
+    }
+
+    /// Rebuilds the visible plane from pure layout data + current state.
+    private func rebuildRows() {
+        guard let rows = rowsStack else { return }
+        dismissAlternates()
+        characterButtons = []
+        shiftButton = nil
+        rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        let plane: [[String]]
+        switch layer {
+        case .letters: plane = KeyboardLayout.letterRows
+        case .numbers: plane = KeyboardLayout.numberRows
+        case .symbols: plane = KeyboardLayout.symbolRows
+        }
+
+        for (index, keys) in plane.enumerated() {
+            let row = UIStackView()
+            row.axis = .horizontal
+            row.distribution = .fillEqually
+            row.spacing = 4
+            for key in keys {
+                row.addArrangedSubview(characterButton(for: key))
+            }
+            if index == plane.count - 1 {
+                let leading: UIButton
+                if layer == .letters {
+                    leading = keyButton(title: shiftTitle())
+                    leading.accessibilityIdentifier = "shift"
+                    leading.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
+                    shiftButton = leading
+                } else {
+                    leading = keyButton(title: layer == .numbers ? "#+=" : "123")
+                    leading.addTarget(self, action: #selector(subLayerTapped), for: .touchUpInside)
+                }
+                row.insertArrangedSubview(leading, at: 0)
+
+                let backspace = keyButton(title: "⌫")
+                let press = UILongPressGestureRecognizer(target: self, action: #selector(backspaceHeld(_:)))
+                press.minimumPressDuration = 0.4
+                backspace.addGestureRecognizer(press)
+                backspace.addTarget(self, action: #selector(backspaceTapped), for: .touchUpInside)
+                row.addArrangedSubview(backspace)
+            }
+            rows.addArrangedSubview(row)
+        }
+
+        let bottomRow = UIStackView()
+        bottomRow.axis = .horizontal
+        bottomRow.spacing = 4
+
+        let layerKey = keyButton(title: layer == .letters ? "123" : "ABC")
+        layerKey.addTarget(self, action: #selector(layerTapped), for: .touchUpInside)
+
+        let globe = keyButton(title: "🌐")
+        globe.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
+
+        let space = keyButton(title: "space")
+        space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
+
+        let returnTitle = ReturnKeyLabel.label(
+            for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default))
+        let returnKey = keyButton(title: returnTitle)
+        returnKey.accessibilityIdentifier = "return-key"
+        returnKey.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
+
+        bottomRow.addArrangedSubview(layerKey)
+        bottomRow.addArrangedSubview(globe)
+        bottomRow.addArrangedSubview(space)
+        bottomRow.addArrangedSubview(returnKey)
+        layerKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
+        globe.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
+        returnKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.22).isActive = true
+        rows.addArrangedSubview(bottomRow)
+    }
+
+    private func characterButton(for key: String) -> UIButton {
+        let title = (layer == .letters && shift.isShifted) ? key.uppercased() : key
+        let button = keyButton(title: title)
+        button.addTarget(self, action: #selector(characterTapped(_:)), for: .touchUpInside)
+        if KeyboardLayout.alternates[key] != nil {
+            let press = UILongPressGestureRecognizer(target: self, action: #selector(keyHeld(_:)))
+            press.minimumPressDuration = 0.4
+            button.addGestureRecognizer(press)
+        }
+        characterButtons.append((button, key))
+        return button
     }
 
     private func keyButton(title: String) -> UIButton {
@@ -97,41 +164,147 @@ final class KeyboardViewController: UIInputViewController {
         return button
     }
 
+    private func shiftTitle() -> String {
+        switch shift.mode {
+        case .off: return "⇧"
+        case .oneShot: return "⬆"
+        case .capsLock: return "⇪"
+        }
+    }
+
+    private func returnKeyTypeName(_ type: UIReturnKeyType) -> String {
+        switch type {
+        case .search: return "search"
+        case .go: return "go"
+        case .send: return "send"
+        case .done: return "done"
+        case .next: return "next"
+        case .join: return "join"
+        default: return "default"
+        }
+    }
+
     // MARK: - Keys
 
-    @objc private func letterTapped(_ sender: UIButton) {
-        guard let letter = sender.configuration?.title else { return }
-        let text = shift.isShifted ? letter.uppercased() : letter
-        textDocumentProxy.insertText(text)
-        shift.didTypeLetter()
-        refreshShiftAppearance()
+    @objc private func characterTapped(_ sender: UIButton) {
+        guard let title = sender.configuration?.title else { return }
+        dismissAlternates()
+        textDocumentProxy.insertText(title)
+        if layer == .letters, shift.mode == .oneShot {
+            shift.didTypeLetter()
+            refreshShiftAppearance()
+        }
     }
 
     @objc private func shiftTapped() {
-        shift.tapShift()
-        log.debug("shift armed: \(self.shift.isShifted)")
+        shift.tapShift(at: CACurrentMediaTime())
+        log.debug("shift mode: \(String(describing: self.shift.mode))")
         refreshShiftAppearance()
+    }
+
+    @objc private func layerTapped() {
+        layer.toggle(layer == .letters ? .numbers : .letters)
+        rebuildRows()
+    }
+
+    @objc private func subLayerTapped() {
+        layer.toggle(layer == .numbers ? .symbols : .numbers)
+        rebuildRows()
     }
 
     @objc private func backspaceTapped() {
         textDocumentProxy.deleteBackward()
+        armAutoShiftIfSentenceStart()
+    }
+
+    @objc private func backspaceHeld(_ gesture: UILongPressGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            backspaceRepeats = 0
+            backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+                guard let self else { return }
+                backspaceRepeats += 1
+                textDocumentProxy.deleteBackward()
+                // accelerate after ~1.5s of holding
+                if backspaceRepeats > 15 { textDocumentProxy.deleteBackward() }
+            }
+        case .ended, .cancelled, .failed:
+            backspaceTimer?.invalidate()
+            backspaceTimer = nil
+            armAutoShiftIfSentenceStart()
+        default:
+            break
+        }
+    }
+
+    @objc private func keyHeld(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began,
+              let button = gesture.view as? UIButton,
+              let title = button.configuration?.title,
+              let options = KeyboardLayout.alternates[title.lowercased()] else { return }
+        showAlternates(options, above: button, shifted: layer == .letters && shift.isShifted)
+    }
+
+    private func showAlternates(_ options: [String], above button: UIButton, shifted: Bool) {
+        dismissAlternates()
+        let bar = UIStackView()
+        bar.axis = .horizontal
+        bar.spacing = 2
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.backgroundColor = .systemBackground
+        bar.layer.cornerRadius = 8
+        bar.layer.borderWidth = 1
+        bar.layer.borderColor = UIColor.separator.cgColor
+        for option in options {
+            let alt = keyButton(title: shifted ? option.uppercased() : option)
+            alt.addTarget(self, action: #selector(alternateTapped(_:)), for: .touchUpInside)
+            bar.addArrangedSubview(alt)
+        }
+        view.addSubview(bar)
+        let center = bar.centerXAnchor.constraint(equalTo: button.centerXAnchor)
+        center.priority = .defaultHigh  // yields at screen edges
+        NSLayoutConstraint.activate([
+            center,
+            bar.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 4),
+            bar.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -4),
+            bar.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -4),
+            bar.heightAnchor.constraint(equalToConstant: 44),
+        ])
+        alternatesView = bar
+    }
+
+    @objc private func alternateTapped(_ sender: UIButton) {
+        if let title = sender.configuration?.title {
+            textDocumentProxy.insertText(title)
+            if layer == .letters { shift.didTypeLetter() }
+        }
+        dismissAlternates()
+        refreshShiftAppearance()
+    }
+
+    private func dismissAlternates() {
+        alternatesView?.removeFromSuperview()
+        alternatesView = nil
     }
 
     @objc private func spaceTapped() {
+        dismissAlternates()
         textDocumentProxy.insertText(" ")
+        armAutoShiftIfSentenceStart()
     }
 
     @objc private func returnTapped() {
+        dismissAlternates()
         textDocumentProxy.insertText("\n")
+        armAutoShiftIfSentenceStart()
     }
 
-    private func refreshShiftAppearance() {
-        shiftButton?.configuration?.baseBackgroundColor = shift.isShifted ? .systemBlue : nil
-        for button in letterButtons {
-            guard var config = button.configuration, let title = config.title else { continue }
-            config.title = shift.isShifted ? title.uppercased() : title.lowercased()
-            button.configuration = config
-        }
+    /// Auto-shift re-arms whenever the context now reads as a sentence start.
+    private func armAutoShiftIfSentenceStart() {
+        let before = textDocumentProxy.documentContextBeforeInput ?? ""
+        let wasShifted = shift.isShifted
+        shift.armAutoShift(for: before)
+        if shift.isShifted != wasShifted { refreshShiftAppearance() }
     }
 
     // MARK: - App-group probe (WORKPLAN 3.1)
