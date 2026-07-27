@@ -56,6 +56,16 @@ targets:
       base:
         TEST_TARGET_NAME: SmartSpace
         GENERATE_INFOPLIST_FILE: YES
+  SmartSpaceTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [SmartSpaceTests]
+    dependencies:
+      - package: Engine
+        product: TypingEngine
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   SmartSpace:
     build:
@@ -63,4 +73,4 @@ schemes:
         SmartSpace: all
     run: {}
     test:
-      targets: [SmartSpaceUITests]
+      targets: [SmartSpaceTests, SmartSpaceUITests]
