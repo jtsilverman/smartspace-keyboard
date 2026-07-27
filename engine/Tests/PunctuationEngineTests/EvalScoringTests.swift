@@ -1,5 +1,4 @@
 import Testing
-@testable import PunctuationEngine
 
 // Scoring is tested against an injected fake predictor with hand-computed
 // expectations, so these tests are independent of engine rule behavior.
