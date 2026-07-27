@@ -1,0 +1,50 @@
+name: SmartSpace
+options:
+  bundleIdPrefix: com.jtsilverman
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+packages:
+  Engine:
+    path: ../engine
+targets:
+  SmartSpace:
+    type: application
+    platform: iOS
+    sources: [SmartSpace]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jtsilverman.smartspace
+        CODE_SIGN_ENTITLEMENTS: SmartSpace/SmartSpace.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+    dependencies:
+      - target: SmartSpaceKeyboard
+  SmartSpaceKeyboard:
+    type: app-extension
+    platform: iOS
+    sources: [SmartSpaceKeyboard]
+    info:
+      path: SmartSpaceKeyboard/Info.plist
+      properties:
+        CFBundleDisplayName: SmartSpace
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: true
+            PrefersRightToLeft: false
+            PrimaryLanguage: en-US
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jtsilverman.smartspace.keyboard
+        CODE_SIGN_ENTITLEMENTS: SmartSpaceKeyboard/SmartSpaceKeyboard.entitlements
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+    dependencies:
+      - package: Engine
+        product: TypingEngine
+      - package: Engine
+        product: PunctuationEngine
