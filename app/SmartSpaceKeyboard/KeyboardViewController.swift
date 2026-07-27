@@ -1,5 +1,6 @@
 import UIKit
 import os
+import PunctuationEngine
 import TypingEngine
 
 /// Thin shell over TypingEngine: renders KeyboardLayout planes, forwards taps
@@ -9,6 +10,8 @@ final class KeyboardViewController: UIInputViewController {
 
     private var shift = ShiftState()
     private var layer = KeyboardLayer.letters
+    private let punctuation = PunctuationEngine()
+    private var spaceBar = SmartSpaceBar()
     private var rowsStack: UIStackView?
     private let probeBadge = UILabel()
     private var backspaceTimer: Timer?
@@ -194,6 +197,7 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func characterTapped(_ sender: UIButton) {
         guard let title = sender.configuration?.title else { return }
         dismissAlternates()
+        spaceBar.nonSpaceKey()
         textDocumentProxy.insertText(title)
         if layer == .letters, shift.mode == .oneShot {
             shift.didTypeLetter()
@@ -220,6 +224,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func backspaceTapped() {
         dismissAlternates()
+        spaceBar.nonSpaceKey()
         textDocumentProxy.deleteBackward()
         armAutoShiftIfSentenceStart()
     }
@@ -282,6 +287,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func alternateTapped(_ sender: UIButton) {
         if let title = sender.configuration?.title {
+            spaceBar.nonSpaceKey()
             textDocumentProxy.insertText(title)
             if layer == .letters { shift.didTypeLetter() }
         }
@@ -296,12 +302,44 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func spaceTapped() {
         dismissAlternates()
-        textDocumentProxy.insertText(" ")
-        armAutoShiftIfSentenceStart()
+        let decision = spaceBar.spaceTapped(at: CACurrentMediaTime()) {
+            // Context minus the space the first tap inserted: the engine sees
+            // the sentence as typed.
+            var context = textDocumentProxy.documentContextBeforeInput ?? ""
+            if context.hasSuffix(" ") { context.removeLast() }
+            return punctuation.candidates(before: context)
+        }
+        switch decision {
+        case .insertSpace:
+            textDocumentProxy.insertText(" ")
+            armAutoShiftIfSentenceStart()
+        case .insertMark(let mark):
+            textDocumentProxy.deleteBackward()          // the first space
+            textDocumentProxy.insertText(mark.text + " ")
+            log.debug("smart insert: \(mark.text, privacy: .public)")
+            if mark.endsSentence { armAutoShiftIfSentenceStart() }
+        case .replaceMark(let mark, let previous):
+            // The cursor may have moved since the insert; only edit if the
+            // text still ends with the mark we placed.
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            guard context.hasSuffix(previous.text + " ") else {
+                spaceBar.nonSpaceKey()
+                textDocumentProxy.insertText(" ")
+                armAutoShiftIfSentenceStart()
+                return
+            }
+            for _ in 0..<(previous.text.count + 1) {    // mark + trailing space
+                textDocumentProxy.deleteBackward()
+            }
+            textDocumentProxy.insertText(mark.text + " ")
+            log.debug("cycle to: \(mark.text, privacy: .public)")
+            if mark.endsSentence { armAutoShiftIfSentenceStart() }
+        }
     }
 
     @objc private func returnTapped() {
         dismissAlternates()
+        spaceBar.nonSpaceKey()
         textDocumentProxy.insertText("\n")
         armAutoShiftIfSentenceStart()
     }
