@@ -14,3 +14,12 @@ import Testing
     let s = evalScore(blindCorpusTest, predict: enginePredictor(), name: "BLIND TEST", printMisses: false)
     #expect(s.top1 > 0)
 }
+
+/// Ambiguity slice (all three annotators disagreed): top-2 is the only fair
+/// metric. Empty in the current build; scores automatically if a future
+/// regeneration produces ambiguous rows.
+@Test func blindAmbiguousTop2Report() {
+    guard !blindAmbiguous.isEmpty else { return }
+    let s = evalScore(blindAmbiguous, predict: enginePredictor(), name: "BLIND AMBIG", printMisses: false)
+    #expect(s.n == blindAmbiguous.count)
+}

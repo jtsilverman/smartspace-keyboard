@@ -27,7 +27,7 @@ The benchmark every engine change (rules today, model later) is judged against. 
 
 Top-1 = right on the first guess. Top-2 = right within one cycle tap (the product-truth metric).
 
-- Blind: dev 50% / 62%, test 48% / 63%. Strong forms: imperative 100, indirect-question 100, comma-conditional 96, wh-question 92. Weak forms (the invariant backlog): exclamation 15, quote-introducer 13, comma-vocative 4-14, comma-conjunction 5-10, urgent-imperative 14, elliptical-question 5 top-1 (but 100 top-2).
+- Blind: dev 50% / 62%, test 48% / 63%. Strong forms: imperative 100, indirect-question 100, comma-conditional 96, wh-question 92. Weak forms (the invariant backlog): exclamation 15, quote-introducer 13, comma-vocative 4-5, comma-conjunction 5-10, urgent-imperative 14, elliptical-question 5 top-1 (but 100 top-2).
 - Real-SMS v3: dev 73% / 91%, test 67% / 85% (was 47/41 on noisy v2.1 labels -- the old ceiling was label noise, not rule capability).
 - Ship gate (spec AC 7c, Jake 2026-07-27): top-2 >= 80% blind test AND top-2 >= 85% real-v3 test.
 

@@ -12,6 +12,7 @@ Writes: BlindCorpus.swift, blind-labeled.tsv, assembly-report.txt
 import collections
 import random
 import sys
+import zlib
 
 
 def load_pool(path):
@@ -92,8 +93,9 @@ def main():
         rng.shuffle(rows)
         half = len(rows) // 2
         extra = len(rows) - 2 * half
-        # odd rows alternate which half gets the extra, deterministically by key hash
-        if extra and (hash(key) % 2 == 0):
+        # odd rows alternate which half gets the extra; crc32 is stable across
+        # processes (Python randomizes hash() per run, which broke reproducibility)
+        if extra and (zlib.crc32("|".join(key).encode()) % 2 == 0):
             dev.extend(rows[:half + extra]); test.extend(rows[half + extra:])
         else:
             dev.extend(rows[:half]); test.extend(rows[half:])
