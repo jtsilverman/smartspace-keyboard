@@ -48,3 +48,21 @@ targets:
         product: TypingEngine
       - package: Engine
         product: PunctuationEngine
+  SmartSpaceUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [SmartSpaceUITests]
+    dependencies:
+      - target: SmartSpace
+    settings:
+      base:
+        TEST_TARGET_NAME: SmartSpace
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  SmartSpace:
+    build:
+      targets:
+        SmartSpace: all
+    run: {}
+    test:
+      targets: [SmartSpaceUITests]
