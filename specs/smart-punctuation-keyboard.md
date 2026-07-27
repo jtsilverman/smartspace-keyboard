@@ -19,7 +19,7 @@ A full replacement iOS keyboard (App Store) whose hero feature is smart double-s
 5. Triple-space inserts `... `; double-space directly after existing terminal punctuation inserts nothing extra.
 6. Empty/unavailable sentence context falls back to plain period -- stock behavior, never worse. The period fallback applies even if `.` is disabled as a cycle candidate (disabling `.` only removes it from context-ranked cycling).
 7. Candidate set is user-configurable (default `. ? !`; optional `, : ; -`); every smart feature toggles off to stock-equivalent behavior.
-7b. Double-space after a known abbreviation (`Mr`, `Dr`, `e.g`) inserts a period without triggering sentence-start auto-capitalization of the next word.
+7b. Double-space after a known abbreviation inserts a period that never ends the sentence. Capitalization of the next word splits by kind: title abbreviations (`Mr`, `Dr`, `St`) capitalize -- a proper name follows; mid-sentence abbreviations (`e.g`, `etc`, `vs`, `p.m`) do not (Jake, 2026-07-26).
 7c. Ship gate: the engine's top candidate matches the label on >=90% of the labeled corpus (WORKPLAN 1.7); measured, not eyeballed, before 5.1.
 8. Misspelled word + space is corrected via UITextChecker's top suggestion; suggestion bar offers alternatives; tapping the original undoes and protects the word from re-correction. UILexicon entries (contacts, text replacements) are never corrected away.
 9. Auto-capitalization (sentence start, i -> I) and smart apostrophes (dont -> don't) work as typed.

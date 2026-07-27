@@ -22,9 +22,17 @@ import TypingEngine
     #expect(CapitalizationRule.shouldCapitalize(before: "He said \u{201C}come over.\u{201D} "))
 }
 
-@Test func abbreviationPeriodsAreCapsNeutral() {
-    #expect(!CapitalizationRule.shouldCapitalize(before: "Mr. "))
+@Test func titleAbbreviationsCapitalizeTheNameThatFollows() {
+    #expect(CapitalizationRule.shouldCapitalize(before: "Mr. "))
+    #expect(CapitalizationRule.shouldCapitalize(before: "Dr. "))
+    #expect(CapitalizationRule.shouldCapitalize(before: "meet me at St. "))
+}
+
+@Test func midSentenceAbbreviationPeriodsAreCapsNeutral() {
     #expect(!CapitalizationRule.shouldCapitalize(before: "e.g. "))
+    #expect(!CapitalizationRule.shouldCapitalize(before: "apples etc. "))
+    #expect(!CapitalizationRule.shouldCapitalize(before: "cats vs. "))
+    #expect(!CapitalizationRule.shouldCapitalize(before: "at 9 p.m. "))
 }
 
 @Test func midSentenceAndMidWordNeverCapitalize() {
