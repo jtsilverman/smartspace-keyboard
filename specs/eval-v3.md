@@ -20,6 +20,8 @@ Replace the benchmark half of the eval with corpora that cannot see our code. A 
 8. Engine baseline measured on the new blind benchmark and reported to Jake; the AC 7c ship-gate number is then set from that evidence (spec updated in a follow-up decision, not guessed now).
 9. Corpus-build commits touch zero engine source files (freeze discipline from day one).
 
+10. Typo-correction benchmark (Jake, 2026-07-27): blind-generated typo corpus (>= 300 pairs: typo -> intended word; fat-finger, transposition, dropped/doubled letters, common misspellings) scored against the REAL UITextChecker via the CorrectionEngine pipeline in the simulator test target. Metrics: corrected / left-alone / miscorrected (miscorrections are the expensive failure). Baseline reported alongside the punctuation baseline.
+
 ## Non-goals
 
 - Editing frozen v2.1 UCI rows (relabel is a new set).
@@ -28,7 +30,7 @@ Replace the benchmark half of the eval with corpora that cannot see our code. A 
 
 ## Decisions log
 
-- Gate number set after baseline, not before (Jake, 2026-07-27).
+- Gate number set after baseline, not before (Jake, 2026-07-27). Set from baseline: top-2 >= 80% blind test AND >= 85% real-v3 test (Jake, 2026-07-27).
 - UCI noise handled by adjudicated relabel as new frozen set (Jake, 2026-07-27).
 - Eval philosophy: wide not deep; corpora independent of code; invariant-first rule improvement (Jake, 2026-07-27, /loop directive).
 
