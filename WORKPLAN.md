@@ -28,7 +28,7 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 ## Phase 3 -- The keyboard (Xcode, simulator, then device)
 
 - [x] 3.1 App + keyboard extension scaffold; minimal QWERTY typing correctly in simulator (letters, one-shot shift, space, return, backspace, globe). App-group probe verdict: AG:OK on simulator (iOS 26.5, no Full Access) -- PROVISIONAL, device re-probe rides 3.3; if device blocks: settings/stats UI moves into an in-keyboard panel and 4.2/4.3 shrink to onboarding-only host app. Verified by XCUITest smoke suite (EnableKeyboardTests + KeyboardSmokeTests) driving the real extension.
-- [ ] 3.2 Layers + keys: caps lock/auto-shift (one-shot shift lands in 3.1), 123/symbols, long-press alternates, backspace repeat, return-key context
+- [x] 3.2 Layers + keys: caps lock (double-tap) + auto-shift via CapitalizationRule, 123/#+= planes, long-press alternates, backspace repeat with acceleration, return-key context label. Pure state machines in TypingEngine (ShiftState v2, KeyboardLayer, ReturnKeyLabel); smoke test drives auto-shift/caps/123 live
 - [ ] 3.3 Wire hero feature: double/triple-space detection -> engine -> insert/cycle via textDocumentProxy; live-verify on real iPhone in Messages/Notes/Safari
 - [ ] 3.4 Wire autocorrect-lite: real UITextChecker + UILexicon behind the Phase 2 seam; suggestion bar
 - [ ] 3.5 Spacebar cursor drag, haptics, key-pop, light/dark

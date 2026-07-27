@@ -33,15 +33,28 @@ final class KeyboardSmokeTests: XCTestCase {
             }
         }
 
-        app.buttons["h"].tap()
+        // Empty field -> auto-shift armed -> keys render uppercase.
+        XCTAssertTrue(app.buttons["H"].waitForExistence(timeout: 3), "auto-shift did not arm")
+        app.buttons["H"].tap()          // consumes the one-shot
         app.buttons["i"].tap()
-        app.buttons["⇧"].tap()
-        app.buttons["J"].tap()  // one-shot shift relabels keys uppercase
+        app.buttons["shift"].tap()      // manual one-shot
+        app.buttons["J"].tap()
         app.buttons["space"].tap()
         app.buttons["m"].tap()
         app.buttons["⌫"].tap()
 
-        XCTAssertEqual(field.value as? String, "hiJ ")
+        // Double-tap shift = caps lock; letters stay uppercase across taps.
+        app.buttons["shift"].doubleTap()
+        app.buttons["O"].tap()
+        app.buttons["K"].tap()
+        app.buttons["shift"].tap()      // release caps lock
+
+        // 123 layer carries punctuation; ABC returns.
+        app.buttons["123"].tap()
+        app.buttons["!"].tap()
+        app.buttons["ABC"].tap()
+
+        XCTAssertEqual(field.value as? String, "HiJ OK!")
 
         // App-group probe verdict (3.1): recorded from the badge either way.
         let ok = app.staticTexts["AG:OK"].exists
