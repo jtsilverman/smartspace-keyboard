@@ -22,6 +22,8 @@ targets:
         CURRENT_PROJECT_VERSION: 1
     dependencies:
       - target: SmartSpaceKeyboard
+      - package: Engine
+        product: TypingEngine
   SmartSpaceKeyboard:
     type: app-extension
     platform: iOS
@@ -61,7 +63,7 @@ targets:
   SmartSpaceTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [SmartSpaceTests]
+    sources: [SmartSpaceTests, Shared]
     dependencies:
       - package: Engine
         product: TypingEngine

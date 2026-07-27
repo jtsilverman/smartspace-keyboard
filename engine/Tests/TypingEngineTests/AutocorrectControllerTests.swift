@@ -93,6 +93,17 @@ private func controller(
         _ = c.barTapped(slot: 1)
         #expect(c.barTapped(slot: 0) == .undo(original: "teh", corrected: "ten"))
     }
+
+    @Test func currentCorrectedTracksSwapsAndClears() {
+        var c = controller()
+        #expect(c.currentCorrected == nil)
+        _ = c.wordCommitted(context: "hi teh")
+        #expect(c.currentCorrected == "the")
+        _ = c.barTapped(slot: 1)
+        #expect(c.currentCorrected == "ten")
+        c.backspace()
+        #expect(c.currentCorrected == nil)
+    }
 }
 
 // Spec AC 10: bar lifecycle at the seams.

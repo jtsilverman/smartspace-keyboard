@@ -39,6 +39,11 @@ public struct AutocorrectController: Sendable {
         return [active.original] + active.alternatives
     }
 
+    /// The word the active correction currently has in the document (tracks
+    /// swaps). The keyboard verifies the document still ends with this before
+    /// editing; nil when the bar is empty.
+    public var currentCorrected: String? { active?.corrected }
+
     /// A word was committed (space or return). Decides keep vs replace and
     /// refills or clears the bar.
     public mutating func wordCommitted(context: String) -> Commit {

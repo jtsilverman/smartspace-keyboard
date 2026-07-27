@@ -12,6 +12,8 @@ final class KeyboardViewController: UIInputViewController {
     private var layer = KeyboardLayer.letters
     private let punctuation = PunctuationEngine()
     private var spaceBar = SmartSpaceBar()
+    private var autocorrect = AutocorrectController(checker: SystemSpellChecker())
+    private let suggestionBar = UIStackView()
     private var rowsStack: UIStackView?
     private let probeBadge = UILabel()
     private var backspaceTimer: Timer?
@@ -24,6 +26,16 @@ final class KeyboardViewController: UIInputViewController {
         super.viewDidLoad()
         buildKeyboard()
         runAppGroupProbe()
+        // Contacts + text replacements: words the user owns are never
+        // corrected away. Arrives async; the empty-lexicon controller
+        // covers the gap.
+        requestSupplementaryLexicon { [weak self] lexicon in
+            let words = Set(lexicon.entries.map(\.userInput))
+            DispatchQueue.main.async {
+                self?.autocorrect = AutocorrectController(
+                    checker: SystemSpellChecker(), lexicon: words)
+            }
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -35,6 +47,12 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: - Layout
 
     private func buildKeyboard() {
+        suggestionBar.axis = .horizontal
+        suggestionBar.distribution = .fillEqually
+        suggestionBar.spacing = 4
+        suggestionBar.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(suggestionBar)
+
         let rows = UIStackView()
         rows.axis = .vertical
         rows.distribution = .fillEqually
@@ -48,15 +66,32 @@ final class KeyboardViewController: UIInputViewController {
         view.addSubview(probeBadge)
 
         NSLayoutConstraint.activate([
+            suggestionBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
+            suggestionBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
+            suggestionBar.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
+            suggestionBar.heightAnchor.constraint(equalToConstant: 40),
             rows.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
             rows.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-            rows.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
+            rows.topAnchor.constraint(equalTo: suggestionBar.bottomAnchor, constant: 4),
             rows.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
             rows.heightAnchor.constraint(equalToConstant: 216),
             probeBadge.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -6),
             probeBadge.topAnchor.constraint(equalTo: view.topAnchor, constant: 2),
         ])
         rebuildRows()
+    }
+
+    /// Rebuilds the suggestion-bar slots from controller state: original
+    /// word first (tap to undo), then alternatives (tap to swap).
+    private func refreshSuggestionBar() {
+        suggestionBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for (index, word) in autocorrect.barSlots.enumerated() {
+            let slot = keyButton(title: word)
+            slot.tag = index
+            slot.accessibilityIdentifier = "suggestion-\(index)"
+            slot.addTarget(self, action: #selector(suggestionTapped(_:)), for: .touchUpInside)
+            suggestionBar.addArrangedSubview(slot)
+        }
     }
 
     /// Updates key titles in place -- button identity survives, so a
@@ -225,6 +260,8 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func backspaceTapped() {
         dismissAlternates()
         spaceBar.nonSpaceKey()
+        autocorrect.backspace()
+        refreshSuggestionBar()
         textDocumentProxy.deleteBackward()
         armAutoShiftIfSentenceStart()
     }
@@ -243,6 +280,8 @@ final class KeyboardViewController: UIInputViewController {
         case .ended, .cancelled, .failed:
             backspaceTimer?.invalidate()
             backspaceTimer = nil
+            autocorrect.backspace()
+            refreshSuggestionBar()
             armAutoShiftIfSentenceStart()
         default:
             break
@@ -311,6 +350,7 @@ final class KeyboardViewController: UIInputViewController {
         }
         switch decision {
         case .insertSpace:
+            applyAutocorrectOnCommit()
             textDocumentProxy.insertText(" ")
             armAutoShiftIfSentenceStart()
         case .insertMark(let mark):
@@ -340,8 +380,63 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func returnTapped() {
         dismissAlternates()
         spaceBar.nonSpaceKey()
+        applyAutocorrectOnCommit()
         textDocumentProxy.insertText("\n")
         armAutoShiftIfSentenceStart()
+    }
+
+    // MARK: - Autocorrect (WORKPLAN 3.4)
+
+    /// Decides the correction for the word the space/return just committed
+    /// and rewrites it in the document. Called BEFORE the separator is
+    /// inserted so the word is still the exact document tail.
+    private func applyAutocorrectOnCommit() {
+        let context = textDocumentProxy.documentContextBeforeInput ?? ""
+        let commit = autocorrect.wordCommitted(context: context)
+        defer { refreshSuggestionBar() }
+        guard case .replace(let original, let corrected, _) = commit else { return }
+        // Trailing punctuation ("teh)") detaches the word from the tail;
+        // skip the edit rather than delete the wrong characters. Bar taps
+        // are suffix-guarded the same way, so a shown-but-unapplied bar
+        // cannot corrupt text.
+        guard context.hasSuffix(original) else { return }
+        for _ in 0..<original.count { textDocumentProxy.deleteBackward() }
+        textDocumentProxy.insertText(corrected)
+        log.debug("autocorrect applied (\(original.count) -> \(corrected.count) chars)")
+    }
+
+    @objc private func suggestionTapped(_ sender: UIButton) {
+        dismissAlternates()
+        spaceBar.nonSpaceKey()
+        let context = textDocumentProxy.documentContextBeforeInput ?? ""
+        // The correction must still be the document tail ("word" + the
+        // separator that committed it). If the user typed on or moved the
+        // cursor, drop the bar instead of editing the wrong text.
+        guard let current = autocorrect.currentCorrected,
+              let separator = [" ", "\n"].first(where: { context.hasSuffix(current + $0) })
+        else {
+            autocorrect.backspace()
+            refreshSuggestionBar()
+            return
+        }
+        switch autocorrect.barTapped(slot: sender.tag) {
+        case .none:
+            break
+        case .undo(let original, let corrected):
+            replaceTail(corrected, separator: separator, with: original)
+            log.debug("autocorrect undone")
+        case .swap(let from, let to):
+            replaceTail(from, separator: separator, with: to)
+            log.debug("autocorrect swapped")
+        }
+        refreshSuggestionBar()
+    }
+
+    private func replaceTail(_ current: String, separator: String, with replacement: String) {
+        for _ in 0..<(current.count + separator.count) {
+            textDocumentProxy.deleteBackward()
+        }
+        textDocumentProxy.insertText(replacement + separator)
     }
 
     /// Auto-shift re-arms whenever the context now reads as a sentence start.
