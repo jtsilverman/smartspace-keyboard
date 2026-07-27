@@ -115,6 +115,62 @@ public struct PunctuationEngine: Sendable {
     /// texting ("but actually it is,").
     private static let conjunctionOpeners: Set<Substring> = ["and", "but", "also", "plus"]
 
+    /// Vocative openers: greeting + addressee continues with a comma
+    /// ("hey mom,"). A verb after the greeting means a message, not an address.
+    private static let vocativeOpeners: Set<Substring> = [
+        "hey", "yo", "hi", "hello", "sup", "psst"
+    ]
+    private static let vocativeVerbBlacklist: Set<Substring> = [
+        "come", "call", "text", "listen", "wait", "stop", "look", "check",
+        "send", "tell", "get", "go", "pick", "grab", "watch", "answer", "hurry"
+    ]
+
+    /// Meta-discourse heads: a short verbless NP ending in one of these sets
+    /// up the message ("quick thing,", "big news,").
+    private static let discourseNouns: Set<Substring> = [
+        "thing", "question", "favor", "ask", "update", "news", "note",
+        "problem", "idea", "story", "storytime", "fact", "reminder", "q",
+        "secret", "confession", "rant"
+    ]
+
+    /// Lead-in idiom tails ("just so you know,", "for what it's worth,").
+    private static let leadInTails: Set<Substring> = ["know", "forget", "worth"]
+
+    /// Two-word contrast/summary fragments ("best part,", "only catch,").
+    private static let contrastTailNouns: Set<Substring> = [
+        "side", "part", "catch", "lining", "upside", "downside", "bonus"
+    ]
+
+    /// Fronted contrastive/summative adverbial idioms -- a bounded English
+    /// idiom class, prefix-matched so trailing words don't break them.
+    private static let idiomPrefixes: [String] = [
+        "then again", "even so", "even then", "that said", "that being said",
+        "jokes aside", "long story short", "truth be told",
+        "one way or another", "worst comes to worst", "if nothing else",
+        "all things considered", "at the end of the day",
+        "as luck would have it", "for better or worse", "at the same time",
+        "by the same token", "come to think of it", "not gonna lie",
+        "now that", "real talk", "first things first", "first off",
+        "first of all", "on the other hand"
+    ]
+
+    /// Single-token discourse markers that always lead in ("ngl,", "fyi,").
+    private static let singleDiscourseMarkers: Set<Substring> = [
+        "ngl", "fyi", "btw", "psst", "listen", "storytime", "anyway",
+        "anyways", "tbh"
+    ]
+
+    /// Urgency markers that turn a short imperative into a burst
+    /// ("call me right now", "text back asap").
+    private static let urgencyMarkers: Set<Substring> = [
+        "now", "rn", "asap", "immediately", "quickly", "hurry"
+    ]
+
+    /// One-breath hazard interjections ("duck", "incoming").
+    private static let hazardBursts: Set<Substring> = [
+        "duck", "run", "incoming", "brakes", "hide"
+    ]
+
     /// Verbs of speech/inscription that introduce a quotation when they end
     /// the sentence ("she said", "the sign reads", "my aunt texted"). A
     /// bounded linguistic class (say-verbs, manner-of-speaking, inscription),
@@ -368,7 +424,8 @@ public struct PunctuationEngine: Sendable {
         guard let first = words.first else { return false }
         if subordinateOpeners.contains(first) { return true }
         if conjunctionOpeners.contains(first) { return true }
-        if first == "even", words.count > 1, words[1] == "if" { return true }
+        if first == "even", words.count > 1,
+           ["if", "tho", "though", "so", "then"].contains(String(words[1])) { return true }
         if first == "when", words.count > 1, !auxiliaries.contains(words[1]),
            !imperativeCapableAuxiliaries.contains(words[1]) { return true }
         // "good afternoon" usually continues with a name ("good afternoon, love")
@@ -376,6 +433,42 @@ public struct PunctuationEngine: Sendable {
            ["morning", "afternoon", "evening", "night"].contains(String(words[1])) {
             return true
         }
+        // Vocative: greeting + addressee ("hey mom"), never greeting + verb
+        // ("hey call me back") or doubled greeting ("hey hey").
+        if vocativeOpeners.contains(first), (2...3).contains(words.count),
+           !vocativeOpeners.contains(words[1]), !greetingOpeners.contains(words[1]),
+           !vocativeVerbBlacklist.contains(words[1]),
+           words[1] != "there" {  // "hey there" is a complete greeting
+            return true
+        }
+        // Meta-discourse lead-in: short verbless NP ("quick thing", "big news").
+        if let last = words.last, words.count <= 4, discourseNouns.contains(last) {
+            return true
+        }
+        // Lead-in idiom tails: "just so u know", "for what its worth".
+        if let last = words.last, words.count <= 5, leadInTails.contains(last) {
+            return true
+        }
+        // Two-word contrast/summary fragments: "best part", "only catch".
+        if let last = words.last, words.count <= 2, contrastTailNouns.contains(last) {
+            return true
+        }
+        // "on the flip side", "on the other hand"
+        if first == "on", words.count > 1, words[1] == "the",
+           let last = words.last, ["side", "hand", "token"].contains(String(last)) {
+            return true
+        }
+        // Fronted evaluative to-infinitives: "to be fair", "to start".
+        if first == "to", words.count <= 4 { return true }
+        // Trailing concession: "for real tho", "still though", "memes aside".
+        if let last = words.last, words.count <= 3,
+           last == "tho" || last == "though" || last == "aside" { return true }
+        if singleDiscourseMarkers.contains(first), words.count <= 2 { return true }
+        if first == "attention" { return true }
+        if ["ok", "okay"].contains(String(first)), words.count <= 3, words.count > 1 { return true }
+        if first == "so", words.count > 1, words[1] == "about" { return true }
+        let joined = words.joined(separator: " ")
+        for prefix in idiomPrefixes where joined.hasPrefix(prefix) { return true }
         return false
     }
 
@@ -419,6 +512,17 @@ public struct PunctuationEngine: Sendable {
         if words.count <= 3, words.contains(where: { bodyReactionBursts.contains($0) }) {
             return true
         }
+        // Urgent imperative: short command carrying an urgency marker
+        // ("call the vet right now", "keys now") -- statements about oneself
+        // ("im omw rn") and gerund updates ("leaving rn") stay calm.
+        if words.count <= 5, words.contains(where: { urgencyMarkers.contains($0) }),
+           !pronouns.contains(first), !["the", "a", "my", "ur", "your", "im"].contains(String(first)),
+           !first.hasSuffix("ing") {
+            return true
+        }
+        // Hazard interjections: "duck", "watch out", "heads up".
+        if words.count <= 2, hazardBursts.contains(first) { return true }
+        if joined.hasPrefix("watch out") || joined.hasPrefix("heads up") { return true }
         return false
     }
 
