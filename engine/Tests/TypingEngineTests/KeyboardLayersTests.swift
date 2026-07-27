@@ -58,16 +58,31 @@ import TypingEngine
 
 // MARK: - Layers
 
-@Test func layerTogglesFollowStockKeyboardFlow() {
+@Test func layerKeysFollowStockKeyboardFlow() {
     var layer = KeyboardLayer.letters
-    layer.toggle(.numbers)      // "123"
+    layer.tapPrimary()          // "123"
     #expect(layer == .numbers)
-    layer.toggle(.symbols)      // "#+="
+    layer.tapSecondary()        // "#+="
     #expect(layer == .symbols)
-    layer.toggle(.numbers)      // "123" from symbols goes back to numbers
+    layer.tapSecondary()        // "123" from symbols goes back to numbers
     #expect(layer == .numbers)
-    layer.toggle(.letters)      // "ABC"
+    layer.tapPrimary()          // "ABC"
     #expect(layer == .letters)
+    layer.tapSecondary()        // secondary from letters is a no-op guard: -> numbers
+    #expect(layer == .numbers)
+    layer.tapPrimary()          // "ABC" again
+    #expect(layer == .letters)
+}
+
+@Test func doubleTapBoundaryIsInclusive() {
+    var atEdge = ShiftState()
+    atEdge.tapShift(at: 1.0)
+    atEdge.tapShift(at: 1.0 + ShiftState.doubleTapWindow)
+    #expect(atEdge.mode == .capsLock)
+    var pastEdge = ShiftState()
+    pastEdge.tapShift(at: 1.0)
+    pastEdge.tapShift(at: 1.0 + ShiftState.doubleTapWindow + 0.001)
+    #expect(pastEdge.mode == .off)
 }
 
 @Test func numberAndSymbolRowsCoverStockCharacters() {
@@ -102,4 +117,9 @@ import TypingEngine
     #expect(ReturnKeyLabel.label(for: "send") == "Send")
     #expect(ReturnKeyLabel.label(for: "default") == "return")
     #expect(ReturnKeyLabel.label(for: "somethingUnknown") == "return")
+    #expect(ReturnKeyLabel.label(for: "google") == "Search")
+    #expect(ReturnKeyLabel.label(for: "yahoo") == "Search")
+    #expect(ReturnKeyLabel.label(for: "route") == "Route")
+    #expect(ReturnKeyLabel.label(for: "continue") == "Continue")
+    #expect(ReturnKeyLabel.label(for: "emergencycall") == "Emergency Call")
 }
