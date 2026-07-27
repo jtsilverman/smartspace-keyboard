@@ -43,9 +43,20 @@ import Testing
         #expect(drag.moved(to: 500 + SpacebarCursorDrag.stepWidth) == 1)
     }
 
-    // Property: at every point in a random move sequence, total emitted ==
-    // Int((x - x0)/stepWidth), recomputed independently with truncation.
-    @Test func emittedTotalAlwaysMatchesTruncatedDistance() {
+    // Property: at every point in a random move sequence, total emitted
+    // matches an independent oracle. The oracle counts crossed step
+    // thresholds by iteration (a different mechanism than the impl's
+    // division), so a wrong rounding direction cannot cancel out.
+    @Test func emittedTotalAlwaysMatchesThresholdCount() {
+        func steps(for dx: Double, width: Double) -> Int {
+            var k = 0
+            if dx >= 0 {
+                while Double(k + 1) * width <= dx { k += 1 }
+                return k
+            }
+            while Double(k + 1) * width <= -dx { k += 1 }
+            return -k
+        }
         let w = SpacebarCursorDrag.stepWidth
         let x0 = 250.0
         var drag = SpacebarCursorDrag()
@@ -57,7 +68,7 @@ import Testing
             let step = Double((i * 37 % 23) - 11) * 1.7
             x += step
             total += drag.moved(to: x)
-            #expect(total == Int((x - x0) / w))
+            #expect(total == steps(for: x - x0, width: w))
         }
     }
 }

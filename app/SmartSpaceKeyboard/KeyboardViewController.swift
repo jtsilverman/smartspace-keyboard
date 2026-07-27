@@ -15,7 +15,7 @@ final class KeyboardViewController: UIInputViewController {
     private var autocorrect = AutocorrectController(checker: SystemSpellChecker())
     private var cursorDrag = SpacebarCursorDrag()
     private let haptic = UIImpactFeedbackGenerator(style: .light)
-    private var keyPopView: UIView?
+    private var keyPops: [UIButton: UIView] = [:]
     private let suggestionBar = UIStackView()
     private var rowsStack: UIStackView?
     private let probeBadge = UILabel()
@@ -126,6 +126,7 @@ final class KeyboardViewController: UIInputViewController {
     private func rebuildRows() {
         guard let rows = rowsStack else { return }
         dismissAlternates()
+        dismissAllKeyPops()  // buttons are torn down; orphan pops would leak
         characterButtons = []
         shiftButton = nil
         rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -444,8 +445,10 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: - Key-pop (WORKPLAN 3.5)
 
     /// Magnified preview above a touched character key, stock-style.
+    /// Keyed per button: two-finger typing keeps each finger's pop
+    /// independent (releasing one never removes the other's).
     private func showKeyPop(above button: UIButton) {
-        dismissKeyPop()
+        dismissKeyPop(for: button)
         guard let title = button.configuration?.title else { return }
         let pop = UILabel()
         pop.text = title
@@ -468,12 +471,16 @@ final class KeyboardViewController: UIInputViewController {
             pop.widthAnchor.constraint(equalTo: button.widthAnchor, multiplier: 1.4),
             pop.heightAnchor.constraint(equalToConstant: 50),
         ])
-        keyPopView = pop
+        keyPops[button] = pop
     }
 
-    private func dismissKeyPop() {
-        keyPopView?.removeFromSuperview()
-        keyPopView = nil
+    private func dismissKeyPop(for button: UIButton) {
+        keyPops.removeValue(forKey: button)?.removeFromSuperview()
+    }
+
+    private func dismissAllKeyPops() {
+        keyPops.values.forEach { $0.removeFromSuperview() }
+        keyPops = [:]
     }
 
     @objc private func characterTouchDown(_ sender: UIButton) {
@@ -481,7 +488,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     @objc private func characterTouchEnded(_ sender: UIButton) {
-        dismissKeyPop()
+        dismissKeyPop(for: sender)
     }
 
     // MARK: - Autocorrect (WORKPLAN 3.4)
