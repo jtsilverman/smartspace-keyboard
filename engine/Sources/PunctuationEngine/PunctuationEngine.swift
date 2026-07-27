@@ -152,6 +152,34 @@ public struct PunctuationEngine: Sendable {
         "sing", "squawk", "scream", "chant", "holler", "repeat", "mumble",
         "whisper", "yell", "shout", "mutter", "hiss", "blurt"
     ]
+
+    /// Hype adjectives that exclaim when predicated with BE ("that dunk was
+    /// bonkers"); bare "wild"/"nuts" mid-sentence stays neutral.
+    private static let hypeAdjectives: Set<Substring> = [
+        "unreal", "filthy", "wild", "nuts", "bonkers", "elite", "immaculate",
+        "flawless", "legendary", "perfection"
+    ]
+
+    /// One-breath body-reaction bursts ("goosebumps", "chills literally chills").
+    private static let bodyReactionBursts: Set<Substring> = ["goosebumps", "chills"]
+
+    /// Superlative detection: -est words minus common false friends.
+    private static let superlativeStopList: Set<Substring> = [
+        "west", "rest", "test", "guest", "chest", "vest", "nest", "pest",
+        "honest", "modest", "forest", "interest", "protest", "harvest",
+        "earnest", "latest"
+    ]
+
+    /// Scope windows that turn a superlative into a burst ("best news all
+    /// week", "loudest crowd ever").
+    private static let scopeWindows: Set<Substring> = [
+        "ever", "week", "year", "day", "life", "town", "earth", "time", "history"
+    ]
+
+    /// Second-person praise verbs ("you nailed it", "u crushed that set").
+    private static let praiseVerbs: Set<Substring> = [
+        "crushed", "killed", "nailed", "aced", "smashed"
+    ]
     private static let npPrepositions: Set<Substring> = [
         "on", "from", "in", "at", "over", "under", "by"
     ]
@@ -227,6 +255,14 @@ public struct PunctuationEngine: Sendable {
             return Prediction(rule: .exclamation,
                               candidates: Self.ranked(["!", ".", "?", ",", "\""]))
         }
+        // First-person completion statements ("i finally...", "we just...")
+        // stay period-first but rank ! second: excited news recovers in one
+        // cycle tap. Same .fallback label -- ordering tweak, not a new rule.
+        if let first = words.first, ["i", "we", "im", "my"].contains(first),
+           words.contains("finally") || words.contains("just") {
+            return Prediction(rule: .fallback,
+                              candidates: Self.ranked([".", "!", "?", ",", "\""]))
+        }
         return Prediction(rule: .fallback,
                           candidates: Self.ranked([".", "?", "!", ",", "\""]))
     }
@@ -238,6 +274,9 @@ public struct PunctuationEngine: Sendable {
 
     private static func isQuestion(_ words: [Substring]) -> Bool {
         guard let first = words.first else { return false }
+        // Exclamative syntax, not a question: "what a game", "what an arm".
+        if first == "what" || first == "whats", words.count > 1,
+           words[1] == "a" || words[1] == "an" { return false }
         if whWords.contains(first) {
             // "when you land" is a subordinate clause, not a question --
             // "when" only asks when an auxiliary follows ("when do you land").
@@ -345,12 +384,41 @@ public struct PunctuationEngine: Sendable {
         if words.contains(where: { exclamationWords.contains($0) }) { return true }
         let joined = words.joined(separator: " ")
         if exclamationPhrases.contains(joined) { return true }
-        if joined.hasPrefix("i cant wait") || joined.hasPrefix("cant wait") { return true }
+        for prefix in ["i cant wait", "cant wait", "no way", "no shot",
+                       "i cant believe", "cant believe", "i cant stop", "cant stop"]
+        where joined.hasPrefix(prefix) { return true }
         if thanksOpeners.contains(first) { return true }
         if greetingOpeners.contains(first), words.count <= 3 { return true }
-        if first == "happy", words.count > 1, occasions.contains(words[1]) { return true }
-        if first == "so", words.count > 1, emotionWords.contains(words[1]) { return true }
+        // Occasion wishes exclaim regardless of which occasion follows.
+        if first == "happy" || first == "merry" || first == "welcome",
+           words.count > 1 { return true }
+        // "so <emotion>" with up to two intensifiers between ("so stinkin proud").
+        if first == "so", words.count > 1,
+           words.prefix(4).dropFirst().contains(where: { emotionWords.contains($0) }) {
+            return true
+        }
         if first == "lets", words.count > 1, words[1].hasPrefix("go") { return true }
+        // Exclamative syntax: "what a comeback", "such a gorgeous view".
+        if (first == "what" || first == "whats" || first == "such"), words.count > 1,
+           words[1] == "a" || words[1] == "an" { return true }
+        // Superlative + scope window: "best news all week", "loudest crowd ever".
+        let hasSuperlative = words.contains {
+            $0 == "best" || $0 == "worst" ||
+            ($0.hasSuffix("est") && $0.count > 4 && !superlativeStopList.contains($0))
+        }
+        if hasSuperlative, words.contains(where: { scopeWindows.contains($0) }) {
+            return true
+        }
+        // Second-person praise: "you nailed the interview".
+        if first == "you" || first == "u" || first == "ya",
+           words.contains(where: { praiseVerbs.contains($0) }) { return true }
+        // Hype adjective predicated with BE: "that dunk was bonkers".
+        for i in words.indices.dropFirst() where hypeAdjectives.contains(words[i]) {
+            if beForms.contains(words[i - 1]) || words[i - 1] == "looks" { return true }
+        }
+        if words.count <= 3, words.contains(where: { bodyReactionBursts.contains($0) }) {
+            return true
+        }
         return false
     }
 
