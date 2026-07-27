@@ -76,6 +76,21 @@ private func topMark(_ text: String) -> String? {
     }
 }
 
+@Test func overbreadthGuardsFromReview() {
+    // Each of these misfired before the review pass; they must stay put.
+    for (text, wrong) in [
+        ("to new beginnings", ","),
+        ("attention everyone the meeting moved to three pm today", ","),
+        ("i need to know what im dealing with", "\""),
+        ("mom quickly left again", "!"),
+        ("duck season", "!"),
+        ("mom is home now", "!"),
+    ] {
+        assertNovel(text)
+        #expect(topMark(text) != wrong, "over-broad rule refired for: \(text)")
+    }
+}
+
 @Test func calmImperativesStayPeriod() {
     for text in ["water the ferns while im gone", "watch the finale without me tonight"] {
         assertNovel(text)
