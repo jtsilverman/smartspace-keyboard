@@ -11,7 +11,7 @@ targets:
   SmartSpace:
     type: application
     platform: iOS
-    sources: [SmartSpace]
+    sources: [SmartSpace, Shared]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jtsilverman.smartspace
@@ -25,7 +25,7 @@ targets:
   SmartSpaceKeyboard:
     type: app-extension
     platform: iOS
-    sources: [SmartSpaceKeyboard]
+    sources: [SmartSpaceKeyboard, Shared]
     info:
       path: SmartSpaceKeyboard/Info.plist
       properties:

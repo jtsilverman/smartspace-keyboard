@@ -145,7 +145,3 @@ final class KeyboardViewController: UIInputViewController {
         log.debug("app-group probe: \(ok ? "OK" : "BLOCKED", privacy: .public)")
     }
 }
-
-let appGroupID = "group.com.jtsilverman.smartspace"
-let probeKey = "appGroupProbe"
-let probeValue = "probe-v1"

@@ -1,9 +1,5 @@
 import SwiftUI
 
-let appGroupID = "group.com.jtsilverman.smartspace"
-let probeKey = "appGroupProbe"
-let probeValue = "probe-v1"
-
 @main
 struct SmartSpaceApp: App {
     var body: some Scene {
