@@ -1,0 +1,1201 @@
+0	I'm exhausted
+1	Dinner's ready
+2	It's snowing
+3	Traffic's terrible
+4	We won
+5	It worked
+6	She called
+7	I'm in
+8	The flight got delayed again
+9	Mom loved the flowers
+10	My phone's almost dead
+11	The dog ate my sandwich
+12	Rent went up again this year
+13	I passed the chemistry final
+14	Kickoff is at seven
+15	It's supposed to rain tomorrow
+16	Grandma is coming for Thanksgiving
+17	My back has been killing me
+18	My email has been down all morning
+19	We're out of coffee
+20	I got the promotion
+21	The vet said she's fine
+22	Parking downtown was a nightmare
+23	He finally texted me back
+24	I think we should leave around six to beat the traffic
+25	The doctor said I just need to rest for a few days
+26	My sister is bringing her new boyfriend to dinner on Sunday
+27	The meeting ran two hours over and nobody even took notes
+28	I found a cheaper flight if we leave on Thursday instead
+29	The kids have soccer practice every Tuesday until the end of October
+30	I put the leftovers in the fridge if you're hungry later
+31	My professor pushed the essay deadline back to next Friday
+32	The mechanic says the brakes will cost about four hundred dollars
+33	We watched the entire season in one night and I regret nothing
+34	The neighbors are having another party and it's already really loud
+35	I finally set up the new router and the wifi is much faster
+36	My savings account finally hit the goal I set in January
+37	The radar shows the storm clearing out by early afternoon
+38	Her cat knocked the plant off the windowsill again this morning
+39	I booked us into the cooking class that starts next month
+40	im wiped
+41	omw
+42	shes mad
+43	big W
+44	so humid
+45	im broke
+46	foods here
+47	hes late
+48	u were right about him
+49	my boss is so annoying
+50	gonna crash early tonight
+51	the wifi is down again
+52	that test was brutal
+53	milk situation is dire lol
+54	my knee still hurts
+55	ur package came today
+56	the dog wont stop barking
+57	gas is so expensive rn
+58	i aced the quiz
+59	moms making tacos tonight
+60	the concert is friday now
+61	lowkey wanna skip the gym
+62	my laptop died mid zoom
+63	my commute took forever
+64	im gonna be like 20 min late my train got stuck
+65	u shouldve seen the look on his face when he opened it
+66	i cant believe she said that in front of everyone at dinner
+67	my check finally came thru so drinks r on me friday
+68	the new phone update drains my battery so fast its ridiculous
+69	coach made us run laps the whole practice im dying
+70	grandpa keeps calling me by my brothers name lol its fine
+71	i found ur charger under the couch when i was cleaning
+72	we picked the wrong flight this layover is 6 hours
+73	my allergies r destroying me every time i walk outside
+74	the landlord said hes gonna fix the heater sometime this week
+75	i already did the dishes so u owe me one
+76	that new taco spot by campus is actually so good
+77	shes been in a mood since the tournament ended
+78	im putting half my paycheck into savings starting this month
+79	forecast says like 8 inches tonight so school might close
+80	running late
+81	almost there
+82	home now
+83	so tired
+84	no milk
+85	raining again
+86	feeling better
+87	on break
+88	back in 10
+89	went to the gym already
+90	stuck at the office
+91	got an A on the midterm
+92	dog walked and fed
+93	out of dishwasher pods
+94	leaving work in five
+95	still waiting at the pharmacy
+96	flight boards at nine
+97	car making a weird noise
+98	saw your mom at the store
+99	broke my streak on duolingo
+100	game went to overtime
+101	down 20 bucks from poker night
+102	burnt the garlic bread
+103	finally finished the laundry
+104	picked up the cake on the way so we're all set
+105	been on hold with the bank for like forty minutes now
+106	left the spare key under the mat by the back door
+107	heard the concert sold out in like ten minutes this morning
+108	got roped into hosting book club at our place next week
+109	spent the whole afternoon raking leaves and barely made a dent
+110	scored cheap flights to Denver for spring break
+111	told the landlord about the leak so hopefully someone comes tomorrow
+112	still sore from moving all those boxes up three flights
+113	put twenty on the game with Derek so fingers crossed
+114	made it through the whole week without ordering takeout once
+115	caught the tail end of the sunset from the parking garage
+116	signed the kids up for swim lessons starting next Saturday
+117	blew the whole gift card on books at the airport
+118	got the blood test results back and everything looks normal
+119	dropped the car at the shop so walking home now
+120	Grab milk on the way home
+121	Send me the address when you get a chance
+122	Let the dog out before you leave
+123	Message me when you land
+124	Remind me to call the dentist tomorrow
+125	Take the chicken out of the freezer around noon
+126	Save me a seat at the game
+127	Check the mail when you get home
+128	Ask your sister if she wants to join us for brunch
+129	Water the plants while I'm gone
+130	Leave the porch light on for me
+131	Bring a jacket since it gets cold at night up there
+132	Forward me the invoice whenever you have a minute
+133	Move your shoes off the stairs before Grandma gets here
+134	Pick a restaurant and I'll make the reservation
+135	Let me know how the interview goes
+136	Charge my tablet if you see it lying around
+137	Tell Dad the game got moved to Sunday
+138	Get some rest this weekend
+139	Sign the permission slip in Emma's backpack when you can
+140	Split the bill however you think is fair
+141	Give the cat her medicine with dinner
+142	Book the earlier train if the price is the same
+143	Drop the library books off whenever you're out that way
+144	Feel free to eat the last slice
+145	Call me after your appointment
+146	Hang on to the receipt in case the shoes don't fit
+147	lmk when u get there
+148	snag me a coffee if u stop
+149	text ur mom back
+150	dont eat all the pasta
+151	shoot me the pics from last nite
+152	pack ur switch for the weekend
+153	lock the door when u head out
+154	throw my hoodie in with ur laundry if u do a load
+155	hit me up if u wanna carpool tomorrow
+156	see if the pharmacy is still open
+157	cover for me at practice thursday
+158	hand the tickets to the doorman
+159	venmo me whenever no rush
+160	pick up ur cleats from the garage
+161	take notes for me in bio
+162	gimme a heads up before u come over
+163	turn the game on when u get home
+164	post in the group if anyone has a spare desk
+165	try that ramen place b4 u leave town
+166	make sure my plants survive while im gone
+167	swing by whenever ur free this week
+168	plug in the speaker before saturday
+169	say hi to ur grandma for me
+170	follow the group chat for updates
+171	wear something warm its cold at the field
+172	share ur location when u start driving
+173	nudge ur brother about the oil change
+174	napkins too pls
+175	feed the cat before school
+176	give me a shout once free
+177	prescription pickup before six
+178	set aside a plate for dad
+179	wheel the recycling out tonight
+180	rsvp to the wedding thing by friday
+181	don't forget sunscreen
+182	check on the roast in twenty
+183	go easy on the appetizers
+184	park in the back lot
+185	hold my spot in line
+186	airdrop me the video later
+187	find out about the security deposit
+188	extra charger in the bag
+189	tip the delivery guy in cash
+190	two more chairs for the patio table
+191	enter us in the doubles bracket
+192	keep the change
+193	watch the second episode without me
+194	taste the lemon one first
+195	run my sweater to the cleaners sometime
+196	gas up the car before the trip
+197	mute the group chat if it gets annoying
+198	schedule the vet visit for next week
+199	borrow whatever you need from my closet
+200	What time does the game start
+201	Where did you park
+202	When is Mom's flight landing
+203	Who ate the last slice of pizza
+204	Why is the wifi down again
+205	How was the interview
+206	Which restaurant did you end up picking
+207	What should I bring to the potluck on Saturday
+208	Where are we meeting before the concert
+209	When do you get off work tonight
+210	Who is picking up Grandma from the airport
+211	Why did the vet call you back so late
+212	How much did the plane tickets cost
+213	Which class are you dropping
+214	What happened with the landlord
+215	Where does your sister live now
+216	When did the package say it would arrive
+217	Who won the fantasy league this week
+218	Why are you still awake
+219	How do I reset the thermostat
+220	Which bank did you open the account with
+221	What are we doing for Dad's birthday
+222	Where should we board the dog next weekend
+223	When are you free to grab lunch
+224	Who told you about the layoffs
+225	Why does my phone keep freezing
+226	How long is the drive to the lake house
+227	Which color did you go with for the kitchen
+228	So what time works for everyone
+229	What is the copay on that
+230	Where did all the laundry detergent go
+231	When does the farmers market close
+232	How are you feeling after the shot
+233	Why would they cancel the whole tournament over a little rain
+234	what r u doing tonight
+235	where u at
+236	when r we leaving
+237	who else is coming
+238	why
+239	how come
+240	which one do u want
+241	what do u wanna eat
+242	where did u put my charger
+243	when does ur shift end
+244	who r u texting rn
+245	why is ur dog barking at the tv
+246	how much do i owe u for the tickets
+247	which movie r we seeing
+248	what did the doctor say
+249	where r we watching the game sunday
+250	when do u get paid
+251	who took my hoodie
+252	why didnt u tell me the party moved
+253	how do u get to the stadium from ur place
+254	what happened w ur car
+255	where should i drop the kids
+256	when is rent due again
+257	who won
+258	why is it snowing in april
+259	how bad is the traffic on 95 rn
+260	which airport r u flying out of
+261	what r we getting mom for mothers day
+262	so whats the plan for tmrw
+263	where do u wanna go for spring break
+264	ok but why though
+265	how long till the food gets here
+266	what channel is the fight on
+267	what time
+268	where to
+269	when exactly
+270	who with
+271	why me
+272	how so
+273	which day
+274	what for
+275	where at
+276	since when
+277	how many people
+278	what kind of cake
+279	which gate
+280	when tho
+281	why so early
+282	how much longer
+283	what flavor
+284	where from
+285	who says
+286	how far from the hotel to the beach
+287	what now
+288	where next
+289	whose turn to take the trash out tonight
+290	why the long face
+291	how old
+292	what size for the jersey
+293	which team you got
+294	what about the security deposit
+295	where in brooklyn
+296	how soon
+297	why not friday
+298	what else besides milk and eggs
+299	what day we flying back
+300	Are you coming to the cookout
+301	Did she call you back about the apartment
+302	Can we push the meeting to Thursday
+303	Is that the one you meant
+304	Do you want anything from Chipotle
+305	Have you seen my keys
+306	Will your parents be in town for Thanksgiving
+307	Should I preheat the oven
+308	Would you split an Uber with me
+309	Does the gym open at five
+310	Was the flight delayed
+311	Were the kids good for the sitter
+312	Has the plumber shown up yet
+313	Could you grab dog food on your way home
+314	Is it supposed to rain during the game
+315	Did the check clear
+316	Are we still on for trivia tonight
+317	Can your brother watch the cat this weekend
+318	Do we owe anything on the electric bill
+319	Have they posted the final grades
+320	Is your ankle feeling any better
+321	Should we book the earlier train
+322	Did you remember to move the car for street cleaning
+323	Will the pharmacy still be open after seven
+324	Are you nervous about the presentation
+325	Does she know about the surprise party
+326	Was the concert worth it
+327	r u coming
+328	did u eat
+329	can u pick me up from practice
+330	is ur mom ok
+331	do u still have my umbrella
+332	wanna split a cab
+333	u up
+334	did the game go to overtime
+335	can we do saturday instead
+336	is the wifi working at ur place
+337	r we broke till friday
+338	gonna make it to class
+339	did ur package ever show up
+340	can i borrow ur charger
+341	is it cold out
+342	do u get the day off monday
+343	u good
+344	did they fix the elevator yet
+345	can the dog come too
+346	r u mad at me
+347	is the bakery open on sundays
+348	do i need to bring cash
+349	did u see what coach posted
+350	can we facetime later
+351	is grandpa out of surgery yet
+352	wanna do brunch sunday
+353	did ur boss say yes to the vacation days
+354	coming tonight
+355	still hungry
+356	any luck with the landlord
+357	rain check
+358	too late to call
+359	dogs allowed there
+360	everything ok
+361	free after work
+362	game still on
+363	that the blue house on the corner
+364	enough gas to get there
+365	tickets still available
+366	mom home yet
+367	leftovers still good
+368	down for karaoke
+369	this seat taken
+370	same place as last time
+371	taxes done
+372	fever gone
+373	room for one more in the car
+374	worth the drive
+375	cash only there
+376	kids asleep
+377	flight on time
+378	interview still happening tomorrow
+379	sure about this
+380	I wonder what time the parade starts
+381	She asked me where you went after dinner
+382	I have no idea how that stain got there
+383	Tell me what you think of the paint color
+384	He never explained why the deposit bounced
+385	I forget which terminal we flew out of last time
+386	Let me know when the tow truck gets there
+387	Nobody knows who left the gate open
+388	I'll text you where to park when I find a spot
+389	It's wild how fast the kids are growing
+390	i wonder why he even came
+391	she wouldnt say who told her
+392	no clue where my wallet is rn
+393	lmk when u land
+394	i forget how much we paid last year
+395	tell me which one u like better
+396	dont ask me why the printer hates u
+397	he knows what he did
+398	ill send u where to meet us
+399	cant believe how expensive eggs r now
+400	no idea what happened
+401	not sure when yet
+402	dunno where honestly
+403	no telling how long
+404	hard to say which is worse
+405	still deciding what to wear
+406	no word on when the power comes back
+407	crazy how cheap it was
+408	depends what the doctor says
+409	wild who showed up
+410	You're coming tonight, right
+411	You're coming tonight, right
+412	Dinner is still happening Sunday, no
+413	She made it home okay, yeah
+414	We said eight o'clock, correct
+415	The meeting got moved to Thursday, didn't it
+416	Your flight lands at noon, yes
+417	He's driving us to the airport, right
+418	The movie dragged on forever, huh
+419	That was a wild game last night, eh
+420	The dentist is on Elm Street, correct
+421	Mom already knows about the trip, doesn't she
+422	You locked the back door, yeah
+423	We're splitting the check, right
+424	The baby finally slept through the night, huh
+425	Traffic was brutal this morning, eh
+426	Fifty bucks should cover the gift, ya think
+427	The cable guy is coming between two and four, correct
+428	Kayla passed her driving test, no
+429	That new taco place is a little overrated, don't you think
+430	The rent check cleared, right
+431	Your sister is watching the dogs, yes
+432	It rained the whole weekend, huh
+433	We still owe Grandma a call, don't we
+434	The playoffs start Saturday, correct
+435	ur still down for trivia tonight, right
+436	u fed the cat, yeah
+437	the party got pushed to sat, no
+438	shes got a new bf, right
+439	that chem final was rough, huh
+440	we r good for 7, yeah
+441	u got the tickets already, yes
+442	gas is like 5 bucks now, huh
+443	ur mom said its fine, yeah
+444	coach cancelled practice, no
+445	im crashing at ur place, ok
+446	its freezing up there, eh
+447	the wifi passwords still the same, ya
+448	u already ate, huh
+449	thats enough pizza for everyone, ya think
+450	ur brother can pick us up, yea
+451	the deadline is fri, correct
+452	that call was total garbage, no
+453	u put the trash out, right
+454	the lease ends in aug, right
+455	shes not mad anymore, is she
+456	the game starts at 1, ok
+457	u saw my text about the deposit, right
+458	Still on for brunch, right
+459	Same spot as last time, yeah
+460	BYOB situation, no
+461	Your turn to drive, correct
+462	Kinda late to cancel now, huh
+463	Cold one out there, eh
+464	Enough seats for six, ya think
+465	Leaving at nine, right
+466	No dogs allowed, correct
+467	Leftovers again, huh
+468	Third time this week, no
+469	Rehearsal still at noon, yes
+470	Gate code still 4415, yeah
+471	Too early for margaritas, eh
+472	Off this weekend, ya
+473	Worth the hype, ya think
+474	Extra innings, huh
+475	Presents optional, right
+476	Plus one allowed, yes
+477	Terminal B, correct
+478	Waitlist only now, no
+479	Card on file, ok
+480	Halloween on a Friday this year, right
+481	The whole family is coming to the reunion
+482	She actually said yes
+483	That works for everyone
+484	The package finally showed up
+485	You already booked the hotel
+486	He got the job
+487	We're doing gifts this year
+488	The doctor called back
+489	You want the last slice
+490	They moved the wedding date
+491	Your car is fixed already
+492	The kids went down early
+493	You saw the final score
+494	This is the right exit
+495	We're really doing this
+496	The landlord approved the sublet
+497	You made it through security
+498	She knows about the surprise party
+499	The pool opened this weekend
+500	You need me to bring anything
+501	That was your ex at the bar
+502	The interview went well
+503	You left without saying goodbye
+504	u home
+505	we still on for tmrw
+506	u coming
+507	she texted u back
+508	ur off work yet
+509	u parked out front
+510	u guys already left
+511	the concert still happening
+512	my venmo request went thru
+513	were out of milk again
+514	u rly ate the whole thing
+515	ur bringing the switch
+516	schools closed tmrw
+517	u up
+518	the flight got delayed
+519	u told ur parents
+520	we gotta dress up for this
+521	ur good to drive
+522	he still hasnt paid u
+523	u down for ice cream
+524	shes tagging along
+525	the printer works now
+526	u seen my keys
+527	its supposed to snow tonight
+528	Still up for it
+529	Sold out already
+530	Half day tomorrow
+531	Everything okay over there
+532	Front row seats
+533	Back from the vet
+534	Done with finals
+535	Power back on
+536	That bad
+537	Home safe
+538	New phone
+539	Free tonight
+540	Already in line
+541	Feeling any better
+542	Still raining there
+543	Any word from the plumber
+544	Just the two of us
+545	Serious about quitting
+546	Out of surgery yet
+547	Mad at me
+548	All packed
+549	On your way
+550	Room for one more
+551	Coffee
+552	Tomorrow instead
+553	Rain check
+554	Front door or back
+555	Urgent
+556	Thoughts
+557	Window or aisle
+558	Split an Uber
+559	Decaf okay
+560	Your place
+561	Round two
+562	Anything else
+563	Pizza tonight
+564	u ok
+565	wine later
+566	boba run
+567	carpool tmrw
+568	b4 or after class
+569	movie 2nite
+570	borrow ur charger
+571	urs or mine
+572	need smth from cvs
+573	u nearby
+574	tacos or sushi
+575	ride home
+576	beach sat
+577	hike sun
+578	Usual time
+579	Extra ketchup
+580	This Friday
+581	Plan B
+582	Nightcap
+583	Both days
+584	Vegetarian option
+585	Cash or card
+586	Walk or bike
+587	After lunch
+588	Costume required
+589	Kids too
+590	Backup date
+591	We got the house
+592	I passed the bar exam
+593	She's finally home from deployment
+594	You crushed that presentation
+595	The twins took their first steps today
+596	I can't believe you remembered my birthday
+597	Our flight got upgraded to first class
+598	He proposed at the lighthouse
+599	That was the best concert of my life
+600	I just hit a hole in one
+601	Thank you for covering my shift
+602	You have no idea how much this means to me
+603	The biopsy came back clean
+604	I got into Michigan
+605	Your painting sold at the auction
+606	We're going to Disney World
+607	I finally beat my dad at chess
+608	The recipe turned out perfectly
+609	You look incredible in that jacket
+610	My startup just got funded
+611	I found my grandmother's ring
+612	They named the scholarship after her
+613	We won the whole tournament
+614	I can't stop smiling right now
+615	That buzzer beater was unreal
+616	You're going to be an aunt
+617	The adoption went through
+618	I aced the road test on my first try
+619	Dinner was absolutely amazing
+620	He finally texted me back
+621	I got the corner office
+622	The baby said her first word
+623	My poem is getting published
+624	I'm so proud of you
+625	What a comeback that was
+626	You made my whole week
+627	The insurance finally paid out
+628	I landed the solo in the spring concert
+629	They canceled school tomorrow
+630	This is the best news I've heard all year
+631	omg i got the internship
+632	dude we won
+633	yooo that trailer looks insane
+634	u killed it out there
+635	no way she actually said that
+636	im literally shaking rn
+637	we r going to the finals
+638	ur the best friend ever
+639	lets goooo
+640	i cant believe we pulled that off
+641	bro the new album slaps
+642	ty for picking me up from the airport
+643	my sister just had the baby
+644	tickets r officially booked
+645	i just ran my first 10k
+646	thats actually so cool
+647	u gotta see this sunset
+648	finally got my braces off
+649	the interview went so well
+650	grandma loved the gift u picked
+651	omg they said yes to the puppy
+652	i won the raffle at work
+653	this pizza is unreal
+654	cant wait to see u tonight
+655	i passed everything this semester
+656	u r gonna love this place
+657	yesss the package came early
+658	bro i just hit diamond rank
+659	she got the part in the play
+660	we hit 10k followers
+661	that catch was filthy
+662	free tacos in the break room
+663	i finally fixed the car myself
+664	u should be so proud of urself
+665	the deposit went thru
+666	my bracket is still alive
+667	we just booked the cabin for july
+668	thank u for having my back today
+669	i just got tickets to the cup final
+670	my boss gave me friday off
+671	best news all week
+672	absolute legend
+673	so stinkin proud of you
+674	what a game
+675	huge congrats
+676	total banger
+677	straight up incredible
+678	new personal record
+679	goosebumps
+680	chills literally chills
+681	front row seats
+682	free upgrade baby
+683	such a clutch play
+684	dream come true
+685	unreal finish
+686	worth every penny
+687	hall of fame move
+688	cutest puppy on earth
+689	ten outta ten
+690	zero notes perfection
+691	massive win for the group chat
+692	so happy for them
+693	finally some good news
+694	spring break here we come
+695	new car day
+696	big raise energy
+697	champagne tonight
+698	instant classic
+699	way to go rookie
+700	peak summer vibes
+701	so beyond excited
+702	what a save
+703	hype doesnt even cover it
+704	crying happy tears
+705	loudest crowd ever
+706	victory lap time
+707	straight fire that demo
+708	first place out of forty teams
+709	easily the best burger in town
+710	debt free at last
+711	Happy birthday to my favorite cousin
+712	Good morning from the office
+713	Merry Christmas from all of us
+714	Good evening
+715	Congratulations on the promotion
+716	Good night and sleep well
+717	Welcome to the neighborhood
+718	Good afternoon
+719	Happy anniversary you two
+720	Hello there
+721	Happy Fourth of July
+722	Just wanted to say hi
+723	Happy Thanksgiving to you and yours
+724	Hope you have a good day at work
+725	Welcome back from your trip
+726	Hey there
+727	Happy Mother's Day to the best mom around
+728	Greetings from sunny Tampa
+729	Cheers to the graduate
+730	Have an amazing first day of school
+731	happy bday bestie
+732	gm
+733	merry xmas fam
+734	gn
+735	congrats on the new gig
+736	hey just checkin in
+737	happy new yrs eve everybody
+738	mornin
+739	welcome back stateside
+740	hi from the train
+741	happy valentines day cutie
+742	hope ur monday goes ok
+743	yo happy graduation day
+744	sup
+745	happy easter yall
+746	evening all
+747	big happy 30th to u
+748	gm from the beach
+749	happy fathers day pops
+750	hey hey
+751	happy bday
+752	morning
+753	merry christmas
+754	gnight
+755	congrats grad
+756	afternoon
+757	welcome to the fam
+758	hey
+759	happy 21st
+760	hi hi
+761	happy halloween
+762	gm gm
+763	big congrats
+764	hello from seattle
+765	happy friday
+766	night night
+767	merry everything
+768	howdy
+769	bon voyage
+770	evenin
+771	Call 911 right now
+772	Get out of the intersection
+773	Stop the car
+774	Grab the dog before he gets out
+775	Answer your phone
+776	Turn off the stove before you leave
+777	Move your car before they tow it
+778	Get down here immediately
+779	Lock the doors
+780	Run they're closing the gate
+781	pick up ur phone rn
+782	get over here quick
+783	dont open that email
+784	leave now or ull miss the train
+785	text me back asap
+786	run the bus is pulling up
+787	grab ur stuff we gotta go
+788	turn around ur going the wrong way
+789	hide the cake shes coming
+790	put ur phone down and drive
+791	duck
+792	brakes
+793	behind you
+794	gas leak get out
+795	now not later
+796	phone now
+797	incoming
+798	left lane move
+799	five minutes move it
+800	heads up
+801	Although the meeting ran long
+802	Since the babysitter canceled
+803	Unless the doctor calls back
+804	While everyone was watching the game
+805	Because the garage door froze shut
+806	Whereas last summer was brutal
+807	Once the paint dries
+808	Until the bank clears the check
+809	After we dropped the kids off
+810	Before you sign anything
+811	Whenever my brother visits
+812	In case the power goes out again
+813	As soon as the tickets go on sale
+814	Though I hate to admit it
+815	Even though the reviews were terrible
+816	Since we already paid the deposit
+817	While the pasta boils
+818	Once the landlord approves the sublease
+819	After the storm rolled through
+820	Because traffic on 95 was insane
+821	since u already got the car
+822	unless ur mom says no
+823	while i was waitin for the bus
+824	because my phone died at lunch
+825	once we r done with practice
+826	until they fix the wifi
+827	after i get my paycheck friday
+828	before u leave the house
+829	whenever im back in town
+830	in case shes running late
+831	as soon as coach posts the schedule
+832	tho i wasnt gonna say anything
+833	even tho we lost the first game
+834	since its gonna rain all weekend
+835	while ur at the store anyway
+836	because i aint driving that far
+837	once the group chat decides
+838	unless something crazy happens tonight
+839	after we grab food with dre
+840	before the sale ends tmrw
+841	once done with laundry
+842	though tempted
+843	while at the dentist
+844	until further notice
+845	after months of waiting
+846	before anything else
+847	whenever convenient for you
+848	in case of another blackout
+849	as soon as humanly possible
+850	because reasons
+851	since forever basically
+852	unless told otherwise
+853	while still half asleep
+854	once past security
+855	after all that drama
+856	even though exhausted
+857	though not thrilled about it
+858	until proven wrong
+859	before coffee this morning
+860	whereas last time total chaos
+861	If the flight lands on time
+862	When the results come back
+863	If nobody claims the couch by Friday
+864	When you finish your shift
+865	If the price drops again
+866	When the baby finally naps
+867	If my card gets declined
+868	When the contractor calls
+869	If it snows tonight
+870	When we hit the halfway point
+871	If your dad is up for it
+872	When the lease is up in August
+873	If the test comes back negative
+874	When the movie lets out
+875	If they cancel the reservation
+876	When the package shows up
+877	If the boss signs off
+878	When the semester ends
+879	If the grill runs out of propane
+880	When the vet opens tomorrow
+881	if u see my charger anywhere
+882	when i get outta class
+883	if that check dont clear
+884	when ur done with the gym
+885	if we r still on for tonight
+886	when my sis gets off work
+887	if the uber takes forever
+888	when u wake up
+889	if they run outta wings again
+890	when i finally get paid
+891	if ur not busy later
+892	when this line moves
+893	if grandma asks about thanksgiving
+894	when the drop happens at midnight
+895	if i dont text back by 8
+896	when we get to the parking lot
+897	if the weather app is right
+898	when ur mom leaves
+899	if coach cancels practice
+900	when the game ends
+901	if possible
+902	when in doubt
+903	if not tonight
+904	when done with dinner
+905	if all good on your end
+906	if free saturday
+907	when back in cell range
+908	if serious about carpooling
+909	if okay with everyone
+910	when ready
+911	if still interested
+912	if stuck at work
+913	when finished packing
+914	if home before six
+915	if any doubt at all
+916	when at the register
+917	if driving separately
+918	when unsure about sizes
+919	if desperate enough
+920	if no word by friday
+921	Hey Grandma
+922	Good morning sunshine
+923	Attention roommates
+924	Just so you know
+925	For what it's worth
+926	Before I forget
+927	Between you and me
+928	On a serious note
+929	Fun fact
+930	Little reminder
+931	Not to alarm you
+932	In other news
+933	So about tomorrow
+934	yo dude
+935	hey bestie
+936	ok real quick
+937	lol ok so
+938	omg guys
+939	heads up yall
+940	bro listen up
+941	ngl
+942	fyi babe
+943	sooo funny story
+944	ok dont be mad
+945	yo quick q
+946	hey hun
+947	psst
+948	quick thing
+949	random question
+950	small favor
+951	serious question
+952	weird ask
+953	one sec
+954	minor update
+955	big news
+956	last thing
+957	side note
+958	tiny problem
+959	crazy idea
+960	storytime
+961	On top of everything else
+962	To make matters worse
+963	At the same time
+964	In fairness to Marcus
+965	All things considered
+966	By the same token
+967	If nothing else
+968	Then again
+969	As luck would have it
+970	For better or worse
+971	Come to think of it
+972	Truth be told
+973	At the end of the day
+974	on the flip side
+975	tbh tho
+976	not gonna lie
+977	long story short
+978	worst comes to worst
+979	one way or another
+980	then again lol
+981	now that i think abt it
+982	all that aside
+983	for real tho
+984	jokes aside
+985	that being said
+986	even so
+987	lowkey tho
+988	still though
+989	that said
+990	even then
+991	plus side
+992	downside though
+993	flip side
+994	silver lining
+995	bright side
+996	bonus
+997	only catch
+998	upside
+999	worst part
+1000	best part
+1001	We still need paper towels
+1002	Grab the tortillas
+1003	Remember to bring your swimsuit
+1004	First things first
+1005	Earlier this morning
+1006	Over by the fountain
+1007	On the way home
+1008	For the potluck I'm bringing brownies
+1009	To start
+1010	Back in March
+1011	Around midnight
+1012	Down at the lake house
+1013	The itinerary includes Rome
+1014	we still need milk
+1015	dont forget ur cleats
+1016	add chips to the list
+1017	gotta pack my meds
+1018	bring ur charger
+1019	so far ive got dana
+1020	rn im thinking tacos
+1021	later tn
+1022	after school tmrw
+1023	by the vending machines
+1024	round like 7ish
+1025	first off
+1026	at my cousins place
+1027	order me fries
+1028	shopping list so far
+1029	top of the list
+1030	step one
+1031	next up
+1032	last stop
+1033	meanwhile back home
+1034	same day
+1035	early next week
+1036	halfway through the movie
+1037	right after lunch
+1038	deep in the garage
+1039	two blocks over
+1040	come sunday
+1041	My grandmother leaned over during the sermon and whispered
+1042	The error on my laptop this morning was
+1043	Her out-of-office reply just says
+1044	The tattoo on his forearm reads
+1045	My four-year-old marched into the kitchen and announced
+1046	The first line of the rejection letter was
+1047	Our waiter recommended the special by calling it
+1048	The billboard on I-95 asks
+1049	My professor ended the lecture with
+1050	The fortune inside my cookie tonight read
+1051	Dad's voicemail started with
+1052	The warning label on the box actually states
+1053	My boss opened the meeting by declaring
+1054	The chorus of that song goes
+1055	The movie poster's tagline is
+1056	She looked me dead in the eye and hissed
+1057	The plaque under the statue reads
+1058	My landlord's only response was
+1059	The kid behind me on the plane kept chanting
+1060	The subject line of the email was simply
+1061	Her senior quote in the yearbook was
+1062	The GPS interrupted us to say
+1063	My trainer's favorite phrase is
+1064	The note taped to the fridge says
+1065	The referee blew the whistle and shouted
+1066	The last text he ever sent me was
+1067	The menu describes the burger as
+1068	The pop-up would not close until I clicked
+1069	My therapist gently asked
+1070	The bumper sticker on her van says
+1071	The opening sentence of the book is
+1072	His exact response, word for word, was
+1073	The nurse called down the hallway
+1074	The receipt at the bottom printed
+1075	My mother-in-law greeted me with
+1076	The dentist looked at my x-rays and muttered
+1077	The banner over the gym entrance reads
+1078	The commercial jingle ends with
+1079	The teacher wrote across the top of my essay
+1080	The flight attendant came on the intercom with
+1081	omg my mom just texted me
+1082	the wifi error literally goes
+1083	bro looked at me and went
+1084	my sister keeps yelling from her room
+1085	the sign at the gas station rn says
+1086	my boss just slacked the whole team
+1087	the fortune cookie i got at lunch said
+1088	dude in the drive thru goes
+1089	my grandma commented on my pic
+1090	the error code popped up like
+1091	shes been walking around all day going
+1092	the dj got on the mic and yelled
+1093	my little cousin ran up to me screaming
+1094	the tshirt he wore to church says
+1095	ngl the best line in the movie is
+1096	teacher handed my quiz back and goes
+1097	the voicemail from the dentist was like
+1098	my dads new ringtone literally sings
+1099	the group chat got renamed to
+1100	the review i left them starts with
+1101	u shouldve seen the note he left it said
+1102	the bathroom stall graffiti said
+1103	my roommate stumbled in at 3am mumbling
+1104	the app update notes just say
+1105	coach pulled me aside after practice and goes
+1106	her insta bio rn is
+1107	the scam text i got today reads
+1108	my uber driver turned around and asked
+1109	the parrot at the pet store kept squawking
+1110	lol the pizza box has a sticker that says
+1111	my ex captioned the photo
+1112	the vending machine screen flashed
+1113	gramps answered the phone yelling
+1114	the karaoke host introduced me as
+1115	the hr email this morning opens with
+1116	my doctor looked at the chart and went
+1117	the toddler i babysit calls spaghetti
+1118	the wifi network next door is named
+1119	she snapped me a pic captioned
+1120	the self checkout wouldnt stop repeating
+1121	first words out of her mouth
+1122	sign on the door just
+1123	actual quote from my boss
+1124	best part of the email
+1125	him at 2am texting me
+1126	whole speech basically just
+1127	verbatim from the teacher
+1128	tattoo across his knuckles
+1129	error message every single time
+1130	her only reply
+1131	opening line of the song
+1132	note in my kids lunchbox
+1133	fortune cookie today
+1134	the sign at the trailhead
+1135	last slide of the presentation just
+1136	direct quote from grandma
+1137	voicemail from the landlord basically
+1138	title of his mixtape
+1139	word for word what she yelled
+1140	graffiti under the bridge
+1141	my favorite movie line ever
+1142	caption on the wedding photo
+1143	text from dad this morning
+1144	kid next to me the entire flight
+1145	banner at the finish line
+1146	boss reply in full
+1147	warning on the label no joke
+1148	her yearbook quote
+1149	email subject line just
+1150	printed on the receipt
+1151	the pop up again with
+1152	name of their new band
+1153	sticker on his laptop
+1154	announcement over the loudspeaker
+1155	what the fortune teller told me
+1156	carved into the picnic table
+1157	first review on the app
+1158	the coach at halftime just
+1159	written on the cake in icing
+1160	her ringtone lyrics
+1161	When I asked about the refund, the manager said
+1162	My doctor told me
+1163	And then out of nowhere she goes
+1164	The recruiter emailed back saying
+1165	After the game the coach admitted
+1166	I swear the flight attendant announced
+1167	My daughter asked me last night
+1168	The neighbor swears he heard her yell
+1169	Halfway through dinner my uncle blurted out
+1170	The instructions clearly state
+1171	My lawyer keeps reminding me
+1172	Right before the credits the narrator says
+1173	The vet called and explained
+1174	so my mom texted
+1175	and he just went
+1176	the teacher was all
+1177	my landlord finally replied
+1178	bro turned to me and said
+1179	she kept insisting
+1180	the email from hr says
+1181	my sister swore up and down
+1182	then the cop goes
+1183	grandpa always tells us
+1184	my boss messaged me like
+1185	the gc decided
+1186	dude on the radio said
+1187	my crush replied to my story
+1188	then him all smug
+1189	mom on the phone earlier
+1190	teacher after class
+1191	and the waiter just
+1192	boss in the meeting today
+1193	her response basically
+1194	dad the second i walked in
+1195	the email in short
+1196	coach at practice again
+1197	my grandma every single visit
+1198	the doctor after the tests
+1199	him to the judge apparently
+1200	reply from support after two weeks
