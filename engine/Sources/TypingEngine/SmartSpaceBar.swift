@@ -11,11 +11,13 @@ public struct SmartSpaceBar: Sendable {
         case insertSpace
         /// Replace the just-typed space with "<mark> ".
         case insertMark(Candidate)
-        /// Replace the current "<mark> " with the next candidate's "<mark> ".
-        case replaceMark(Candidate)
+        /// Replace the current "<replacing> " with "<mark> ". The keyboard
+        /// verifies the text still ends with the old mark before deleting --
+        /// the cursor may have moved between taps.
+        case replaceMark(Candidate, replacing: Candidate)
     }
 
-    public static let doubleTapWindow: Double = 0.3
+    public static let doubleSpaceWindow: Double = 0.3
 
     private var lastSpaceTap: Double?
     private var cycle: CycleState?
@@ -25,11 +27,12 @@ public struct SmartSpaceBar: Sendable {
     public mutating func spaceTapped(at time: Double,
                                      candidates: () -> [Candidate]) -> Decision {
         if var active = cycle {
+            let previous = active.current
             let next = active.advance()
             cycle = active
-            return .replaceMark(next)
+            return .replaceMark(next, replacing: previous)
         }
-        if let last = lastSpaceTap, time - last <= Self.doubleTapWindow,
+        if let last = lastSpaceTap, time - last <= Self.doubleSpaceWindow,
            let started = CycleState(candidates: candidates()) {
             cycle = started
             lastSpaceTap = nil

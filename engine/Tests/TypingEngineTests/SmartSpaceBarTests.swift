@@ -35,12 +35,12 @@ private let marks = [
     var bar = SmartSpaceBar()
     _ = bar.spaceTapped(at: 1.0, candidates: { marks })
     _ = bar.spaceTapped(at: 1.2, candidates: { marks })
-    #expect(bar.spaceTapped(at: 5.0, candidates: { marks }) == .replaceMark(Candidate(text: ".")))
-    #expect(bar.spaceTapped(at: 9.0, candidates: { marks }) == .replaceMark(Candidate(text: "!")))
+    #expect(bar.spaceTapped(at: 5.0, candidates: { marks }) == .replaceMark(Candidate(text: "."), replacing: Candidate(text: "?")))
+    #expect(bar.spaceTapped(at: 9.0, candidates: { marks }) == .replaceMark(Candidate(text: "!"), replacing: Candidate(text: ".")))
     _ = bar.spaceTapped(at: 10.0, candidates: { marks })
     _ = bar.spaceTapped(at: 11.0, candidates: { marks })
     // fifth advance wraps back to the top candidate
-    #expect(bar.spaceTapped(at: 12.0, candidates: { marks }) == .replaceMark(Candidate(text: "?")))
+    #expect(bar.spaceTapped(at: 12.0, candidates: { marks }) == .replaceMark(Candidate(text: "?"), replacing: Candidate(text: "\"", endsSentence: false)))
 }
 
 @Test func anyOtherKeyEndsTheCycle() {
