@@ -106,6 +106,28 @@ private func controller(
     }
 }
 
+// Spec AC 5: UILexicon arrives async after keyboard load; adopting it must
+// not reset session protection or the active bar.
+@Suite struct AutocorrectLexiconUpdate {
+    @Test func updateLexiconPreservesProtectionAndActiveBar() {
+        var c = controller(table: ["teh": ["the"], "adn": ["and"]])
+        _ = c.wordCommitted(context: "hi teh")
+        _ = c.barTapped(slot: 0)                    // protect "teh"
+        _ = c.wordCommitted(context: "hi teh adn")  // active bar for "adn"
+        c.updateLexicon(["Jayde"])
+        #expect(c.barSlots == ["adn"])
+        #expect(c.wordCommitted(context: "later teh") == .keep)
+    }
+
+    @Test func updateLexiconWordsStopBeingCorrected() {
+        var c = controller(table: ["jayde": ["jade"]])
+        #expect(c.wordCommitted(context: "hi jayde")
+                == .replace(original: "jayde", corrected: "jade", alternatives: []))
+        c.updateLexicon(["Jayde"])
+        #expect(c.wordCommitted(context: "hi jayde") == .keep)
+    }
+}
+
 // Spec AC 10: bar lifecycle at the seams.
 @Suite struct AutocorrectBarLifecycle {
     @Test func backspaceClearsBarButKeepsProtection() {
