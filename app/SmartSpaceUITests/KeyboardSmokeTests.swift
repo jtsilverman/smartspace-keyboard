@@ -56,6 +56,27 @@ final class KeyboardSmokeTests: XCTestCase {
 
         XCTAssertEqual(field.value as? String, "HiJ OK!")
 
+        // Hero feature: double-space inserts the engine's top mark, another
+        // space cycles it in place, and typing ends the cycle.
+        app.buttons["space"].tap()
+        app.buttons["H"].tap()          // auto-shift armed after "! "
+        app.buttons["o"].tap()
+        app.buttons["w"].tap()
+        app.buttons["space"].tap()
+        app.buttons["a"].tap()
+        app.buttons["r"].tap()
+        app.buttons["e"].tap()
+        app.buttons["space"].tap()
+        app.buttons["u"].tap()
+        app.buttons["space"].doubleTap()
+        XCTAssertEqual(field.value as? String, "HiJ OK! How are u? ",
+                       "double-space should insert the question mark")
+        app.buttons["space"].tap()
+        XCTAssertEqual(field.value as? String, "HiJ OK! How are u. ",
+                       "space again should cycle ? -> .")
+        app.buttons["K"].tap()          // typing ends the cycle; auto-shift caps it
+        XCTAssertEqual(field.value as? String, "HiJ OK! How are u. K")
+
         // App-group probe verdict (3.1): recorded from the badge either way.
         let ok = app.staticTexts["AG:OK"].exists
         let blocked = app.staticTexts["AG:BLOCKED"].exists
