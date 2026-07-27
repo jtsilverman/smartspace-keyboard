@@ -47,6 +47,6 @@ How the keyboard behaves, in plain language. Not visual design (no colors, fonts
 ## Behavior rules (edge cases)
 
 - Cycling window: tapping space cycles only while the punctuation just inserted is still adjacent to the cursor; type anything else and space returns to normal.
-- Double-space mid-sentence after an abbreviation the engine knows (`Mr`, `Dr`, `e.g`) still inserts a period but does not treat it as sentence end for capitalization.
+- Double-space mid-sentence after an abbreviation the engine knows still inserts a period that never ends the sentence. Titles (`Mr`, `Dr`, `St`) capitalize the next word (a name follows); mid-sentence abbreviations (`e.g`, `etc`, `vs`) leave it lowercase.
 - Autocorrect never fires on the word being protected by an undo tap (no correction loops).
 - All smart features individually degradable: any toggle off returns that behavior to stock-keyboard equivalent.

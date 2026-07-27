@@ -33,8 +33,11 @@ public enum CapitalizationRule {
         case "!", "?":
             return true
         case ".":
-            // "Mr." / "e.g." complete a token, not the sentence (AC7b).
-            return !PunctuationEngine.isKnownAbbreviation(trailingToken(in: context[..<i]))
+            // "e.g." / "etc." complete a token, not the sentence (AC7b) --
+            // but a title ("Mr.") precedes a name, which capitalizes anyway.
+            let token = trailingToken(in: context[..<i])
+            return !PunctuationEngine.isKnownAbbreviation(token) ||
+                PunctuationEngine.isTitleAbbreviation(token)
         default:
             return false
         }

@@ -52,6 +52,13 @@ public struct PunctuationEngine: Sendable {
         "mr", "mrs", "ms", "dr", "prof", "st", "ave", "etc", "vs", "approx"
     ]
 
+    /// The abbreviations that are titles: a proper name follows ("Mr.
+    /// Smith", "St. Louis"), so the next word capitalizes even though the
+    /// sentence continues.
+    private static let titleAbbreviations: Set<Substring> = [
+        "mr", "mrs", "ms", "dr", "prof", "st"
+    ]
+
     /// Abbreviations with internal dots, matched against the raw last token
     /// BEFORE sentence splitting (the splitter would chop "e.g" at its dot).
     private static let dottedAbbreviations: Set<String> = [
@@ -132,6 +139,14 @@ public struct PunctuationEngine: Sendable {
         if token.hasSuffix(".") { token.removeLast() }
         return Self.abbreviations.contains(token[...]) ||
             Self.dottedAbbreviations.contains(token)
+    }
+
+    /// Whether the token is a title abbreviation ("Mr.", "st") -- a proper
+    /// name follows, so the capitalization rule capitalizes the next word.
+    public static func isTitleAbbreviation(_ rawToken: String) -> Bool {
+        var token = rawToken.lowercased()
+        if token.hasSuffix(".") { token.removeLast() }
+        return Self.titleAbbreviations.contains(token[...])
     }
 
     /// Returns the ranked candidates plus which rule produced them -- the
