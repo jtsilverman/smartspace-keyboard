@@ -32,7 +32,7 @@ final class EmojiPanelTests: XCTestCase {
         // so the keys render uppercase.
         app.buttons["emoji-abc"].tap()
         XCTAssertTrue(app.buttons["space"].waitForExistence(timeout: 3))
-        app.buttons["A"].tap()
+        tapKey(app, "A")
         assertFieldValue(field, "😀A")
     }
 
@@ -41,8 +41,7 @@ final class EmojiPanelTests: XCTestCase {
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
 
-        app.buttons["A"].tap()      // auto-shift arms on the empty field
-        assertFieldValue(field, "A")
+        typeFirstLetter(app, field, "A", expecting: "A")  // auto-shift armed
 
         app.buttons["emoji-key"].tap()
         XCTAssertTrue(app.buttons["emoji-search"].waitForExistence(timeout: 3))
@@ -71,8 +70,7 @@ final class EmojiPanelTests: XCTestCase {
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
 
-        app.buttons["Z"].tap()      // anchor text (empty field reads as placeholder)
-        assertFieldValue(field, "Z")
+        typeFirstLetter(app, field, "Z", expecting: "Z")  // anchor text
 
         app.buttons["emoji-key"].tap()
         XCTAssertTrue(app.buttons["emoji-search"].waitForExistence(timeout: 3))
