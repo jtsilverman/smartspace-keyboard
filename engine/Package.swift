@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "PunctuationEngine",
+    platforms: [.iOS(.v17), .macOS(.v13)],
     products: [
         .library(name: "PunctuationEngine", targets: ["PunctuationEngine"]),
         .library(name: "TypingEngine", targets: ["TypingEngine"])
