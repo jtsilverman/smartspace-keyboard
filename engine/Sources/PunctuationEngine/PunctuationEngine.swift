@@ -115,9 +115,46 @@ public struct PunctuationEngine: Sendable {
     /// texting ("but actually it is,").
     private static let conjunctionOpeners: Set<Substring> = ["and", "but", "also", "plus"]
 
-    /// Verbs of speech that introduce a quotation when they end the sentence
-    /// ("she said" -> opening quote).
-    private static let sayVerbs: Set<Substring> = ["say", "says", "said", "saying"]
+    /// Verbs of speech/inscription that introduce a quotation when they end
+    /// the sentence ("she said", "the sign reads", "my aunt texted"). A
+    /// bounded linguistic class (say-verbs, manner-of-speaking, inscription),
+    /// not a corpus harvest.
+    private static let sayVerbs: Set<Substring> = [
+        "say", "says", "said", "saying", "goes", "went", "replied", "replies",
+        "texted", "wrote", "writes", "reads", "announced", "yelled",
+        "whispered", "shouted", "muttered", "screamed", "hissed", "chanted",
+        "mumbled", "blurted", "declared", "stated", "states", "exclaimed",
+        "admitted", "asked", "insisted", "captioned"
+    ]
+
+    /// Subjects that make final "goes/went" motion or outcome, never speech
+    /// ("guess how it went").
+    private static let nonSpeechGoSubjects: Set<Substring> = ["it", "this", "that"]
+
+    /// BE-forms and quotative particles: "was like", "is all", "were just like".
+    private static let beForms: Set<Substring> = ["was", "were", "is", "are", "r", "am"]
+    private static let quotativeParticles: Set<Substring> = ["like", "all"]
+
+    /// Communication-artifact nouns: as the subject of BE they promise a
+    /// quotation ("his exact words were"); followed by a preposition they head
+    /// a bare-NP introducer ("note on the windshield", "text from dad").
+    private static let commNouns: Set<Substring> = [
+        "words", "reply", "response", "message", "text", "line", "caption",
+        "answer", "quote", "note", "sign", "voicemail", "email", "error",
+        "banner", "sticker", "headline", "graffiti", "plaque", "memo",
+        "subject", "title", "motto", "slogan", "tagline", "sentence", "verse",
+        "lyrics", "bio", "speech"
+    ]
+
+    /// Manner-of-speaking verb stems, matched after stripping -s/-ed/-ing so
+    /// every inflection introduces a quote ("kept squawking", "sings").
+    private static let mannerVerbStems: Set<Substring> = [
+        "sing", "squawk", "scream", "chant", "holler", "repeat", "mumble",
+        "whisper", "yell", "shout", "mutter", "hiss", "blurt"
+    ]
+    private static let npPrepositions: Set<Substring> = [
+        "on", "from", "in", "at", "over", "under", "by"
+    ]
 
     /// Rank orders per prediction shape; comma and quote never end a sentence.
     private static func ranked(_ order: [String], firstEndsSentence: Bool = true) -> [Candidate] {
@@ -234,11 +271,58 @@ public struct PunctuationEngine: Sendable {
 
     private static func isQuoteIntroducer(_ words: [Substring]) -> Bool {
         guard let last = words.last else { return false }
-        if sayVerbs.contains(last) { return true }
+        let prev = words.count > 1 ? words[words.count - 2] : nil
+        if sayVerbs.contains(last) {
+            // "guess how it went": outcome, not speech.
+            if last == "goes" || last == "went",
+               let prev, nonSpeechGoSubjects.contains(prev) { return false }
+            return true
+        }
+        // "the plumber was like", "my niece is all", "they were just like"
+        // (one optional adverb may sit between BE and the particle).
+        if quotativeParticles.contains(last), let prev {
+            if beForms.contains(prev) { return true }
+            if ["just", "literally", "basically"].contains(prev), words.count > 2,
+               beForms.contains(words[words.count - 3]) { return true }
+        }
+        // "his exact words were", "the subject line is"
+        if beForms.contains(last), let prev, commNouns.contains(prev) {
+            return true
+        }
+        // Bare-NP introducer: a comm-artifact noun directly followed by a
+        // preposition ("note on the windshield") -- an imperative would take
+        // an object instead ("text me", "sign the slip").
+        if words.count <= 6 {
+            for i in words.indices.dropLast() where
+                commNouns.contains(words[i]) && npPrepositions.contains(words[i + 1]) {
+                return true
+            }
+        }
+        // Any inflection of a manner-of-speaking verb in final position
+        // ("kept squawking", "the jukebox started singing").
+        if mannerVerbStems.contains(stem(last)) { return true }
+        // Dangling introducer tails: "opens with", "she looked up and just".
+        if last == "with", prev != "come" { return true }
+        if last == "just", words.count >= 3, let first = words.first,
+           !pronouns.contains(first) { return true }
+        // Final BE with a communication noun anywhere as subject head:
+        // "the last verse of the song is".
+        if beForms.contains(last), words.contains(where: { commNouns.contains($0) }) {
+            return true
+        }
+        if words.contains("verbatim") { return true }
         // quote-forwarding idiom: "ever green quote ever told", "superb thought"
         if words.contains("quote") || words.contains("quotes") { return true }
         if last == "thought" || last == "thoughts" { return true }
         return false
+    }
+
+    /// Crude inflection strip for closed verb-class checks: -ing / -ed / -s.
+    private static func stem(_ word: Substring) -> Substring {
+        if word.hasSuffix("ing") { return word.dropLast(3) }
+        if word.hasSuffix("ed") { return word.dropLast(2) }
+        if word.hasSuffix("s") { return word.dropLast(1) }
+        return word
     }
 
     private static func isCommaContinuation(_ words: [Substring]) -> Bool {
