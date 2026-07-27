@@ -104,7 +104,6 @@ final class KeyboardViewController: UIInputViewController {
         let text = shift.isShifted ? letter.uppercased() : letter
         textDocumentProxy.insertText(text)
         shift.didTypeLetter()
-        log.debug("letter: \(text, privacy: .public)")
         refreshShiftAppearance()
     }
 
