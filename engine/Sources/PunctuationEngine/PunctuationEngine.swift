@@ -163,7 +163,7 @@ public struct PunctuationEngine: Sendable {
     /// Urgency markers that turn a short imperative into a burst
     /// ("call me right now", "text back asap").
     private static let urgencyMarkers: Set<Substring> = [
-        "now", "rn", "asap", "immediately", "quickly", "hurry"
+        "now", "rn", "asap", "immediately", "hurry"
     ]
 
     /// One-breath hazard interjections ("duck", "incoming").
@@ -396,8 +396,10 @@ public struct PunctuationEngine: Sendable {
         // Any inflection of a manner-of-speaking verb in final position
         // ("kept squawking", "the jukebox started singing").
         if mannerVerbStems.contains(stem(last)) { return true }
-        // Dangling introducer tails: "opens with", "she looked up and just".
-        if last == "with", prev != "come" { return true }
+        // Dangling introducer tails: "opens with", "pop up again with" --
+        // never gerund objects ("what im dealing with") or "come/put up with".
+        if last == "with", words.count <= 6, let prev,
+           !prev.hasSuffix("ing"), prev != "come", prev != "up" { return true }
         if last == "just", words.count >= 3, let first = words.first,
            !pronouns.contains(first) { return true }
         // Final BE with a communication noun anywhere as subject head:
@@ -458,13 +460,17 @@ public struct PunctuationEngine: Sendable {
            let last = words.last, ["side", "hand", "token"].contains(String(last)) {
             return true
         }
-        // Fronted evaluative to-infinitives: "to be fair", "to start".
-        if first == "to", words.count <= 4 { return true }
+        // Fronted evaluative to-infinitives only: "to be fair", "to start",
+        // "to make matters worse" -- not arbitrary "to X" phrases.
+        if first == "to", words.count <= 4, words.count > 1,
+           ["be", "start", "sum", "recap", "clarify", "make", "top"].contains(String(words[1])) {
+            return true
+        }
         // Trailing concession: "for real tho", "still though", "memes aside".
         if let last = words.last, words.count <= 3,
            last == "tho" || last == "though" || last == "aside" { return true }
         if singleDiscourseMarkers.contains(first), words.count <= 2 { return true }
-        if first == "attention" { return true }
+        if first == "attention", words.count <= 3 { return true }
         if ["ok", "okay"].contains(String(first)), words.count <= 3, words.count > 1 { return true }
         if first == "so", words.count > 1, words[1] == "about" { return true }
         let joined = words.joined(separator: " ")
@@ -512,17 +518,23 @@ public struct PunctuationEngine: Sendable {
         if words.count <= 3, words.contains(where: { bodyReactionBursts.contains($0) }) {
             return true
         }
-        // Urgent imperative: short command carrying an urgency marker
-        // ("call the vet right now", "keys now") -- statements about oneself
-        // ("im omw rn") and gerund updates ("leaving rn") stay calm.
-        if words.count <= 5, words.contains(where: { urgencyMarkers.contains($0) }),
+        // Urgent imperative: short command with the urgency marker in command
+        // position (final, or right after the verb: "leave now or..."). A BE
+        // form anywhere means a statement ("mom is home now"), not a command.
+        let hasUrgency = (words.last.map { urgencyMarkers.contains($0) } ?? false)
+            || (words.count > 1 && urgencyMarkers.contains(words[1]))
+            || first == "now" || first == "hurry"
+        if words.count <= 5, hasUrgency,
+           !words.contains(where: { beForms.contains($0) }),
            !pronouns.contains(first), !["the", "a", "my", "ur", "your", "im"].contains(String(first)),
            !first.hasSuffix("ing") {
             return true
         }
-        // Hazard interjections: "duck", "watch out", "heads up".
-        if words.count <= 2, hazardBursts.contains(first) { return true }
-        if joined.hasPrefix("watch out") || joined.hasPrefix("heads up") { return true }
+        // Hazard interjections: one-breath only ("duck"), plus fixed warnings.
+        if words.count == 1, hazardBursts.contains(first) { return true }
+        for prefix in ["watch out", "heads up", "hurry up"] where joined.hasPrefix(prefix) {
+            return true
+        }
         return false
     }
 
