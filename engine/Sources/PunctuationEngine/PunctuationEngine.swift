@@ -115,9 +115,130 @@ public struct PunctuationEngine: Sendable {
     /// texting ("but actually it is,").
     private static let conjunctionOpeners: Set<Substring> = ["and", "but", "also", "plus"]
 
-    /// Verbs of speech that introduce a quotation when they end the sentence
-    /// ("she said" -> opening quote).
-    private static let sayVerbs: Set<Substring> = ["say", "says", "said", "saying"]
+    /// Vocative openers: greeting + addressee continues with a comma
+    /// ("hey mom,"). A verb after the greeting means a message, not an address.
+    private static let vocativeOpeners: Set<Substring> = [
+        "hey", "yo", "hi", "hello", "sup", "psst"
+    ]
+    private static let vocativeVerbBlacklist: Set<Substring> = [
+        "come", "call", "text", "listen", "wait", "stop", "look", "check",
+        "send", "tell", "get", "go", "pick", "grab", "watch", "answer", "hurry"
+    ]
+
+    /// Meta-discourse heads: a short verbless NP ending in one of these sets
+    /// up the message ("quick thing,", "big news,").
+    private static let discourseNouns: Set<Substring> = [
+        "thing", "question", "favor", "ask", "update", "news", "note",
+        "problem", "idea", "story", "storytime", "fact", "reminder", "q",
+        "secret", "confession", "rant"
+    ]
+
+    /// Lead-in idiom tails ("just so you know,", "for what it's worth,").
+    private static let leadInTails: Set<Substring> = ["know", "forget", "worth"]
+
+    /// Two-word contrast/summary fragments ("best part,", "only catch,").
+    private static let contrastTailNouns: Set<Substring> = [
+        "side", "part", "catch", "lining", "upside", "downside", "bonus"
+    ]
+
+    /// Fronted contrastive/summative adverbial idioms -- a bounded English
+    /// idiom class, prefix-matched so trailing words don't break them.
+    private static let idiomPrefixes: [String] = [
+        "then again", "even so", "even then", "that said", "that being said",
+        "jokes aside", "long story short", "truth be told",
+        "one way or another", "worst comes to worst", "if nothing else",
+        "all things considered", "at the end of the day",
+        "as luck would have it", "for better or worse", "at the same time",
+        "by the same token", "come to think of it", "not gonna lie",
+        "now that", "real talk", "first things first", "first off",
+        "first of all", "on the other hand"
+    ]
+
+    /// Single-token discourse markers that always lead in ("ngl,", "fyi,").
+    private static let singleDiscourseMarkers: Set<Substring> = [
+        "ngl", "fyi", "btw", "psst", "listen", "storytime", "anyway",
+        "anyways", "tbh"
+    ]
+
+    /// Urgency markers that turn a short imperative into a burst
+    /// ("call me right now", "text back asap").
+    private static let urgencyMarkers: Set<Substring> = [
+        "now", "rn", "asap", "immediately", "hurry"
+    ]
+
+    /// One-breath hazard interjections ("duck", "incoming").
+    private static let hazardBursts: Set<Substring> = [
+        "duck", "run", "incoming", "brakes", "hide"
+    ]
+
+    /// Verbs of speech/inscription that introduce a quotation when they end
+    /// the sentence ("she said", "the sign reads", "my aunt texted"). A
+    /// bounded linguistic class (say-verbs, manner-of-speaking, inscription),
+    /// not a corpus harvest.
+    private static let sayVerbs: Set<Substring> = [
+        "say", "says", "said", "saying", "goes", "went", "replied", "replies",
+        "texted", "wrote", "writes", "reads", "announced", "yelled",
+        "whispered", "shouted", "muttered", "screamed", "hissed", "chanted",
+        "mumbled", "blurted", "declared", "stated", "states", "exclaimed",
+        "admitted", "asked", "insisted", "captioned"
+    ]
+
+    /// Subjects that make final "goes/went" motion or outcome, never speech
+    /// ("guess how it went").
+    private static let nonSpeechGoSubjects: Set<Substring> = ["it", "this", "that"]
+
+    /// BE-forms and quotative particles: "was like", "is all", "were just like".
+    private static let beForms: Set<Substring> = ["was", "were", "is", "are", "r", "am"]
+    private static let quotativeParticles: Set<Substring> = ["like", "all"]
+
+    /// Communication-artifact nouns: as the subject of BE they promise a
+    /// quotation ("his exact words were"); followed by a preposition they head
+    /// a bare-NP introducer ("note on the windshield", "text from dad").
+    private static let commNouns: Set<Substring> = [
+        "words", "reply", "response", "message", "text", "line", "caption",
+        "answer", "quote", "note", "sign", "voicemail", "email", "error",
+        "banner", "sticker", "headline", "graffiti", "plaque", "memo",
+        "subject", "title", "motto", "slogan", "tagline", "sentence", "verse",
+        "lyrics", "bio", "speech"
+    ]
+
+    /// Manner-of-speaking verb stems, matched after stripping -s/-ed/-ing so
+    /// every inflection introduces a quote ("kept squawking", "sings").
+    private static let mannerVerbStems: Set<Substring> = [
+        "sing", "squawk", "scream", "chant", "holler", "repeat", "mumble",
+        "whisper", "yell", "shout", "mutter", "hiss", "blurt"
+    ]
+
+    /// Hype adjectives that exclaim when predicated with BE ("that dunk was
+    /// bonkers"); bare "wild"/"nuts" mid-sentence stays neutral.
+    private static let hypeAdjectives: Set<Substring> = [
+        "unreal", "filthy", "wild", "nuts", "bonkers", "elite", "immaculate",
+        "flawless", "legendary", "perfection"
+    ]
+
+    /// One-breath body-reaction bursts ("goosebumps", "chills literally chills").
+    private static let bodyReactionBursts: Set<Substring> = ["goosebumps", "chills"]
+
+    /// Superlative detection: -est words minus common false friends.
+    private static let superlativeStopList: Set<Substring> = [
+        "west", "rest", "test", "guest", "chest", "vest", "nest", "pest",
+        "honest", "modest", "forest", "interest", "protest", "harvest",
+        "earnest", "latest"
+    ]
+
+    /// Scope windows that turn a superlative into a burst ("best news all
+    /// week", "loudest crowd ever").
+    private static let scopeWindows: Set<Substring> = [
+        "ever", "week", "year", "day", "life", "town", "earth", "time", "history"
+    ]
+
+    /// Second-person praise verbs ("you nailed it", "u crushed that set").
+    private static let praiseVerbs: Set<Substring> = [
+        "crushed", "killed", "nailed", "aced", "smashed"
+    ]
+    private static let npPrepositions: Set<Substring> = [
+        "on", "from", "in", "at", "over", "under", "by"
+    ]
 
     /// Rank orders per prediction shape; comma and quote never end a sentence.
     private static func ranked(_ order: [String], firstEndsSentence: Bool = true) -> [Candidate] {
@@ -190,6 +311,14 @@ public struct PunctuationEngine: Sendable {
             return Prediction(rule: .exclamation,
                               candidates: Self.ranked(["!", ".", "?", ",", "\""]))
         }
+        // First-person completion statements ("i finally...", "we just...")
+        // stay period-first but rank ! second: excited news recovers in one
+        // cycle tap. Same .fallback label -- ordering tweak, not a new rule.
+        if let first = words.first, ["i", "we", "im", "my"].contains(first),
+           words.contains("finally") || words.contains("just") {
+            return Prediction(rule: .fallback,
+                              candidates: Self.ranked([".", "!", "?", ",", "\""]))
+        }
         return Prediction(rule: .fallback,
                           candidates: Self.ranked([".", "?", "!", ",", "\""]))
     }
@@ -201,6 +330,9 @@ public struct PunctuationEngine: Sendable {
 
     private static func isQuestion(_ words: [Substring]) -> Bool {
         guard let first = words.first else { return false }
+        // Exclamative syntax, not a question: "what a game", "what an arm".
+        if first == "what" || first == "whats", words.count > 1,
+           words[1] == "a" || words[1] == "an" { return false }
         if whWords.contains(first) {
             // "when you land" is a subordinate clause, not a question --
             // "when" only asks when an auxiliary follows ("when do you land").
@@ -234,18 +366,68 @@ public struct PunctuationEngine: Sendable {
 
     private static func isQuoteIntroducer(_ words: [Substring]) -> Bool {
         guard let last = words.last else { return false }
-        if sayVerbs.contains(last) { return true }
+        let prev = words.count > 1 ? words[words.count - 2] : nil
+        if sayVerbs.contains(last) {
+            // "guess how it went": outcome, not speech.
+            if last == "goes" || last == "went",
+               let prev, nonSpeechGoSubjects.contains(prev) { return false }
+            return true
+        }
+        // "the plumber was like", "my niece is all", "they were just like"
+        // (one optional adverb may sit between BE and the particle).
+        if quotativeParticles.contains(last), let prev {
+            if beForms.contains(prev) { return true }
+            if ["just", "literally", "basically"].contains(prev), words.count > 2,
+               beForms.contains(words[words.count - 3]) { return true }
+        }
+        // "his exact words were", "the subject line is"
+        if beForms.contains(last), let prev, commNouns.contains(prev) {
+            return true
+        }
+        // Bare-NP introducer: a comm-artifact noun directly followed by a
+        // preposition ("note on the windshield") -- an imperative would take
+        // an object instead ("text me", "sign the slip").
+        if words.count <= 6 {
+            for i in words.indices.dropLast() where
+                commNouns.contains(words[i]) && npPrepositions.contains(words[i + 1]) {
+                return true
+            }
+        }
+        // Any inflection of a manner-of-speaking verb in final position
+        // ("kept squawking", "the jukebox started singing").
+        if mannerVerbStems.contains(stem(last)) { return true }
+        // Dangling introducer tails: "opens with", "pop up again with" --
+        // never gerund objects ("what im dealing with") or "come/put up with".
+        if last == "with", words.count <= 6, let prev,
+           !prev.hasSuffix("ing"), prev != "come", prev != "up" { return true }
+        if last == "just", words.count >= 3, let first = words.first,
+           !pronouns.contains(first) { return true }
+        // Final BE with a communication noun anywhere as subject head:
+        // "the last verse of the song is".
+        if beForms.contains(last), words.contains(where: { commNouns.contains($0) }) {
+            return true
+        }
+        if words.contains("verbatim") { return true }
         // quote-forwarding idiom: "ever green quote ever told", "superb thought"
         if words.contains("quote") || words.contains("quotes") { return true }
         if last == "thought" || last == "thoughts" { return true }
         return false
     }
 
+    /// Crude inflection strip for closed verb-class checks: -ing / -ed / -s.
+    private static func stem(_ word: Substring) -> Substring {
+        if word.hasSuffix("ing") { return word.dropLast(3) }
+        if word.hasSuffix("ed") { return word.dropLast(2) }
+        if word.hasSuffix("s") { return word.dropLast(1) }
+        return word
+    }
+
     private static func isCommaContinuation(_ words: [Substring]) -> Bool {
         guard let first = words.first else { return false }
         if subordinateOpeners.contains(first) { return true }
         if conjunctionOpeners.contains(first) { return true }
-        if first == "even", words.count > 1, words[1] == "if" { return true }
+        if first == "even", words.count > 1,
+           ["if", "tho", "though", "so", "then"].contains(String(words[1])) { return true }
         if first == "when", words.count > 1, !auxiliaries.contains(words[1]),
            !imperativeCapableAuxiliaries.contains(words[1]) { return true }
         // "good afternoon" usually continues with a name ("good afternoon, love")
@@ -253,6 +435,46 @@ public struct PunctuationEngine: Sendable {
            ["morning", "afternoon", "evening", "night"].contains(String(words[1])) {
             return true
         }
+        // Vocative: greeting + addressee ("hey mom"), never greeting + verb
+        // ("hey call me back") or doubled greeting ("hey hey").
+        if vocativeOpeners.contains(first), (2...3).contains(words.count),
+           !vocativeOpeners.contains(words[1]), !greetingOpeners.contains(words[1]),
+           !vocativeVerbBlacklist.contains(words[1]),
+           words[1] != "there" {  // "hey there" is a complete greeting
+            return true
+        }
+        // Meta-discourse lead-in: short verbless NP ("quick thing", "big news").
+        if let last = words.last, words.count <= 4, discourseNouns.contains(last) {
+            return true
+        }
+        // Lead-in idiom tails: "just so u know", "for what its worth".
+        if let last = words.last, words.count <= 5, leadInTails.contains(last) {
+            return true
+        }
+        // Two-word contrast/summary fragments: "best part", "only catch".
+        if let last = words.last, words.count <= 2, contrastTailNouns.contains(last) {
+            return true
+        }
+        // "on the flip side", "on the other hand"
+        if first == "on", words.count > 1, words[1] == "the",
+           let last = words.last, ["side", "hand", "token"].contains(String(last)) {
+            return true
+        }
+        // Fronted evaluative to-infinitives only: "to be fair", "to start",
+        // "to make matters worse" -- not arbitrary "to X" phrases.
+        if first == "to", words.count <= 4, words.count > 1,
+           ["be", "start", "sum", "recap", "clarify", "make", "top"].contains(String(words[1])) {
+            return true
+        }
+        // Trailing concession: "for real tho", "still though", "memes aside".
+        if let last = words.last, words.count <= 3,
+           last == "tho" || last == "though" || last == "aside" { return true }
+        if singleDiscourseMarkers.contains(first), words.count <= 2 { return true }
+        if first == "attention", words.count <= 3 { return true }
+        if ["ok", "okay"].contains(String(first)), words.count <= 3, words.count > 1 { return true }
+        if first == "so", words.count > 1, words[1] == "about" { return true }
+        let joined = words.joined(separator: " ")
+        for prefix in idiomPrefixes where joined.hasPrefix(prefix) { return true }
         return false
     }
 
@@ -261,12 +483,58 @@ public struct PunctuationEngine: Sendable {
         if words.contains(where: { exclamationWords.contains($0) }) { return true }
         let joined = words.joined(separator: " ")
         if exclamationPhrases.contains(joined) { return true }
-        if joined.hasPrefix("i cant wait") || joined.hasPrefix("cant wait") { return true }
+        for prefix in ["i cant wait", "cant wait", "no way", "no shot",
+                       "i cant believe", "cant believe", "i cant stop", "cant stop"]
+        where joined.hasPrefix(prefix) { return true }
         if thanksOpeners.contains(first) { return true }
         if greetingOpeners.contains(first), words.count <= 3 { return true }
-        if first == "happy", words.count > 1, occasions.contains(words[1]) { return true }
-        if first == "so", words.count > 1, emotionWords.contains(words[1]) { return true }
+        // Occasion wishes exclaim regardless of which occasion follows.
+        if first == "happy" || first == "merry" || first == "welcome",
+           words.count > 1 { return true }
+        // "so <emotion>" with up to two intensifiers between ("so stinkin proud").
+        if first == "so", words.count > 1,
+           words.prefix(4).dropFirst().contains(where: { emotionWords.contains($0) }) {
+            return true
+        }
         if first == "lets", words.count > 1, words[1].hasPrefix("go") { return true }
+        // Exclamative syntax: "what a comeback", "such a gorgeous view".
+        if (first == "what" || first == "whats" || first == "such"), words.count > 1,
+           words[1] == "a" || words[1] == "an" { return true }
+        // Superlative + scope window: "best news all week", "loudest crowd ever".
+        let hasSuperlative = words.contains {
+            $0 == "best" || $0 == "worst" ||
+            ($0.hasSuffix("est") && $0.count > 4 && !superlativeStopList.contains($0))
+        }
+        if hasSuperlative, words.contains(where: { scopeWindows.contains($0) }) {
+            return true
+        }
+        // Second-person praise: "you nailed the interview".
+        if first == "you" || first == "u" || first == "ya",
+           words.contains(where: { praiseVerbs.contains($0) }) { return true }
+        // Hype adjective predicated with BE: "that dunk was bonkers".
+        for i in words.indices.dropFirst() where hypeAdjectives.contains(words[i]) {
+            if beForms.contains(words[i - 1]) || words[i - 1] == "looks" { return true }
+        }
+        if words.count <= 3, words.contains(where: { bodyReactionBursts.contains($0) }) {
+            return true
+        }
+        // Urgent imperative: short command with the urgency marker in command
+        // position (final, or right after the verb: "leave now or..."). A BE
+        // form anywhere means a statement ("mom is home now"), not a command.
+        let hasUrgency = (words.last.map { urgencyMarkers.contains($0) } ?? false)
+            || (words.count > 1 && urgencyMarkers.contains(words[1]))
+            || first == "now" || first == "hurry"
+        if words.count <= 5, hasUrgency,
+           !words.contains(where: { beForms.contains($0) }),
+           !pronouns.contains(first), !["the", "a", "my", "ur", "your", "im"].contains(String(first)),
+           !first.hasSuffix("ing") {
+            return true
+        }
+        // Hazard interjections: one-breath only ("duck"), plus fixed warnings.
+        if words.count == 1, hazardBursts.contains(first) { return true }
+        for prefix in ["watch out", "heads up", "hurry up"] where joined.hasPrefix(prefix) {
+            return true
+        }
         return false
     }
 
