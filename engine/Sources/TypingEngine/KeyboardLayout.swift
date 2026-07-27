@@ -6,20 +6,110 @@ public enum KeyboardLayout {
         ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
         ["z", "x", "c", "v", "b", "n", "m"],
     ]
+
+    /// The "123" plane, mirroring the stock layout.
+    public static let numberRows: [[String]] = [
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+        ["-", "/", ":", ";", "(", ")", "$", "&", "@", "\""],
+        [".", ",", "?", "!", "'"],
+    ]
+
+    /// The "#+=" plane.
+    public static let symbolRows: [[String]] = [
+        ["[", "]", "{", "}", "#", "%", "^", "*", "+", "="],
+        ["_", "\\", "|", "~", "<", ">", "\u{20AC}", "\u{00A3}", "\u{00A5}", "\u{2022}"],
+        [".", ",", "?", "!", "'"],
+    ]
+
+    /// Long-press alternates, stock-parity for the common accents/currency.
+    public static let alternates: [String: [String]] = [
+        "a": ["\u{00E0}", "\u{00E1}", "\u{00E2}", "\u{00E4}", "\u{00E6}", "\u{00E3}", "\u{00E5}", "\u{0101}"],
+        "e": ["\u{00E8}", "\u{00E9}", "\u{00EA}", "\u{00EB}", "\u{0113}", "\u{0117}", "\u{0119}"],
+        "i": ["\u{00EE}", "\u{00EF}", "\u{00ED}", "\u{012B}", "\u{012F}", "\u{00EC}"],
+        "o": ["\u{00F4}", "\u{00F6}", "\u{00F2}", "\u{00F3}", "\u{0153}", "\u{00F8}", "\u{014D}", "\u{00F5}"],
+        "u": ["\u{00FB}", "\u{00FC}", "\u{00F9}", "\u{00FA}", "\u{016B}"],
+        "n": ["\u{00F1}", "\u{0144}"],
+        "c": ["\u{00E7}", "\u{0107}", "\u{010D}"],
+        "s": ["\u{00DF}", "\u{015B}", "\u{0161}"],
+        "y": ["\u{00FF}"],
+        "l": ["\u{0142}"],
+        "$": ["\u{20AC}", "\u{00A3}", "\u{00A5}", "\u{20A9}"],
+        "-": ["\u{2013}", "\u{2014}", "\u{2022}"],
+        "\"": ["\u{201C}", "\u{201D}", "\u{201E}", "\u{00AB}", "\u{00BB}"],
+        "'": ["\u{2018}", "\u{2019}", "\u{201A}"],
+        "?": ["\u{00BF}"],
+        "!": ["\u{00A1}"],
+    ]
 }
 
-/// One-shot shift: a tap arms uppercase for exactly the next letter.
-/// Caps lock and auto-shift arrive in WORKPLAN 3.2.
+public enum ShiftMode: Equatable, Sendable {
+    case off, oneShot, capsLock
+}
+
+/// Shift state machine: tap arms one-shot, double-tap within the window locks
+/// caps, tap while locked releases. Auto-shift arms one-shot at sentence
+/// starts via the shared CapitalizationRule.
 public struct ShiftState: Sendable {
-    public private(set) var isShifted = false
+    public private(set) var mode: ShiftMode = .off
+    private var lastTapTime: Double?
+
+    public static let doubleTapWindow: Double = 0.35
+
+    public var isShifted: Bool { mode != .off }
 
     public init() {}
 
-    public mutating func tapShift() {
-        isShifted.toggle()
+    /// - Parameter time: tap timestamp for double-tap detection; nil means
+    ///   an isolated tap (no double-tap possible).
+    public mutating func tapShift(at time: Double? = nil) {
+        defer { lastTapTime = time }
+        switch mode {
+        case .capsLock:
+            mode = .off
+        case .oneShot:
+            if let time, let last = lastTapTime, time - last <= Self.doubleTapWindow {
+                mode = .capsLock
+            } else {
+                mode = .off
+            }
+        case .off:
+            mode = .oneShot
+        }
     }
 
     public mutating func didTypeLetter() {
-        isShifted = false
+        if mode == .oneShot { mode = .off }
+    }
+
+    /// Arms one-shot at a sentence start; never touches caps lock or an
+    /// already-armed one-shot.
+    public mutating func armAutoShift(for context: String) {
+        guard mode == .off, CapitalizationRule.shouldCapitalize(before: context) else { return }
+        mode = .oneShot
+    }
+}
+
+/// Which key plane is showing; transitions mirror the stock keyboard's
+/// 123 / #+= / ABC buttons.
+public enum KeyboardLayer: Equatable, Sendable {
+    case letters, numbers, symbols
+
+    public mutating func toggle(_ target: KeyboardLayer) {
+        self = target
+    }
+}
+
+/// The label the return key shows for a host field's returnKeyType.
+public enum ReturnKeyLabel {
+    public static func label(for returnKeyType: String) -> String {
+        switch returnKeyType.lowercased() {
+        case "search": return "Search"
+        case "go": return "Go"
+        case "send": return "Send"
+        case "done": return "Done"
+        case "next": return "Next"
+        case "join": return "Join"
+        default: return "return"
+        }
     }
 }
