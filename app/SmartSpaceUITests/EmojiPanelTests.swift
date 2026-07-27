@@ -9,8 +9,13 @@ final class EmojiPanelTests: XCTestCase {
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
 
-        // AC4: open panel (fresh install has no recents -> smileys grid).
+        // AC4: open panel and pin the smileys tab explicitly — recents
+        // persist in the simulator across runs, so the default tab varies
+        // by run history and must not be what this assertion rides on.
         app.buttons["emoji-key"].tap()
+        XCTAssertTrue(app.buttons["emoji-cat-smileys"].waitForExistence(timeout: 3),
+                      "emoji panel missing")
+        app.buttons["emoji-cat-smileys"].tap()
         let grinning = app.buttons["emoji-item-😀"]
         XCTAssertTrue(grinning.waitForExistence(timeout: 3), "emoji grid missing")
         grinning.tap()
