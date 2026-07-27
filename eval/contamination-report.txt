@@ -1,0 +1,28 @@
+engine string-literal vocabulary: 184 entries
+corpus rows containing any engine cue word: 776/1201
+top overlapping words (informational; questions legitimately contain 'what'):
+  is: 60
+  you: 60
+  in: 57
+  when: 55
+  we: 46
+  if: 45
+  up: 40
+  out: 35
+  what: 34
+  still: 33
+  so: 32
+  it: 31
+  and: 31
+  was: 30
+  how: 24
+  right: 21
+  did: 21
+  she: 20
+  where: 20
+  said: 18
+  happy: 18
+  why: 17
+  do: 16
+  he: 15
+  there: 15
