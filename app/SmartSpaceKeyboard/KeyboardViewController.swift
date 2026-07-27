@@ -287,6 +287,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func alternateTapped(_ sender: UIButton) {
         if let title = sender.configuration?.title {
+            spaceBar.nonSpaceKey()
             textDocumentProxy.insertText(title)
             if layer == .letters { shift.didTypeLetter() }
         }
@@ -311,17 +312,29 @@ final class KeyboardViewController: UIInputViewController {
         switch decision {
         case .insertSpace:
             textDocumentProxy.insertText(" ")
+            armAutoShiftIfSentenceStart()
         case .insertMark(let mark):
             textDocumentProxy.deleteBackward()          // the first space
             textDocumentProxy.insertText(mark.text + " ")
             log.debug("smart insert: \(mark.text, privacy: .public)")
-        case .replaceMark(let mark):
-            textDocumentProxy.deleteBackward()          // trailing space
-            textDocumentProxy.deleteBackward()          // previous mark
+            if mark.endsSentence { armAutoShiftIfSentenceStart() }
+        case .replaceMark(let mark, let previous):
+            // The cursor may have moved since the insert; only edit if the
+            // text still ends with the mark we placed.
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            guard context.hasSuffix(previous.text + " ") else {
+                spaceBar.nonSpaceKey()
+                textDocumentProxy.insertText(" ")
+                armAutoShiftIfSentenceStart()
+                return
+            }
+            for _ in 0..<(previous.text.count + 1) {    // mark + trailing space
+                textDocumentProxy.deleteBackward()
+            }
             textDocumentProxy.insertText(mark.text + " ")
             log.debug("cycle to: \(mark.text, privacy: .public)")
+            if mark.endsSentence { armAutoShiftIfSentenceStart() }
         }
-        armAutoShiftIfSentenceStart()
     }
 
     @objc private func returnTapped() {
