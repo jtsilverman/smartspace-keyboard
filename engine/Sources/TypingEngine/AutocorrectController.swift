@@ -23,12 +23,21 @@ public struct AutocorrectController: Sendable {
     /// The bar shows at most the original plus two alternatives.
     private static let maxAlternatives = 2
 
+    private let checker: any SpellChecking
     private var engine: CorrectionEngine
     private var session = CorrectionSession()
     /// The correction currently shown in the bar; nil means the bar is empty.
     private var active: (original: String, corrected: String, alternatives: [String])?
 
     public init(checker: any SpellChecking, lexicon: Set<String> = []) {
+        self.checker = checker
+        engine = CorrectionEngine(checker: checker, lexicon: lexicon)
+    }
+
+    /// Adopts a lexicon that arrived after init (UILexicon is async).
+    /// Only the decision engine changes; session protection and the active
+    /// bar survive.
+    public mutating func updateLexicon(_ lexicon: Set<String>) {
         engine = CorrectionEngine(checker: checker, lexicon: lexicon)
     }
 

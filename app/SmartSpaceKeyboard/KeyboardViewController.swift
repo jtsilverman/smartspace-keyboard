@@ -32,8 +32,7 @@ final class KeyboardViewController: UIInputViewController {
         requestSupplementaryLexicon { [weak self] lexicon in
             let words = Set(lexicon.entries.map(\.userInput))
             DispatchQueue.main.async {
-                self?.autocorrect = AutocorrectController(
-                    checker: SystemSpellChecker(), lexicon: words)
+                self?.autocorrect.updateLexicon(words)
             }
         }
     }
@@ -396,10 +395,12 @@ final class KeyboardViewController: UIInputViewController {
         defer { refreshSuggestionBar() }
         guard case .replace(let original, let corrected, _) = commit else { return }
         // Trailing punctuation ("teh)") detaches the word from the tail;
-        // skip the edit rather than delete the wrong characters. Bar taps
-        // are suffix-guarded the same way, so a shown-but-unapplied bar
-        // cannot corrupt text.
-        guard context.hasSuffix(original) else { return }
+        // skip the edit rather than delete the wrong characters, and drop
+        // the bar so it never advertises a correction that was not made.
+        guard context.hasSuffix(original) else {
+            autocorrect.backspace()
+            return
+        }
         for _ in 0..<original.count { textDocumentProxy.deleteBackward() }
         textDocumentProxy.insertText(corrected)
         log.debug("autocorrect applied (\(original.count) -> \(corrected.count) chars)")
