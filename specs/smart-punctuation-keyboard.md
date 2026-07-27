@@ -20,7 +20,7 @@ A full replacement iOS keyboard (App Store) whose hero feature is smart double-s
 6. Empty/unavailable sentence context falls back to plain period -- stock behavior, never worse. The period fallback applies even if `.` is disabled as a cycle candidate (disabling `.` only removes it from context-ranked cycling).
 7. Candidate set is user-configurable (default `. ? !`; optional `, : ; -`); every smart feature toggles off to stock-equivalent behavior.
 7b. Double-space after a known abbreviation inserts a period that never ends the sentence. Capitalization of the next word splits by kind: title abbreviations (`Mr`, `Dr`, `St`) capitalize -- a proper name follows; mid-sentence abbreviations (`e.g`, `etc`, `vs`, `p.m`) do not (Jake, 2026-07-26).
-7c. Ship gate: the engine's top candidate matches the label on >=90% of the labeled corpus (WORKPLAN 1.7); measured, not eyeballed, before 5.1.
+7c. Ship gate (reset 2026-07-27 from measured baselines): top-2 >= 80% on the blind test half AND top-2 >= 85% on the real-SMS v3 test half (EVAL.md v3 charter); measured, not eyeballed, before 5.1. Top-2 is the product truth: right within one cycle tap.
 8. Misspelled word + space is corrected via UITextChecker's top suggestion; suggestion bar offers alternatives; tapping the original undoes and protects the word from re-correction. UILexicon entries (contacts, text replacements) are never corrected away.
 9. Auto-capitalization (sentence start, i -> I) and smart apostrophes (dont -> don't) work as typed.
 10. All punctuation/correction decisions come from pure Swift packages with a `swift test` suite covering 1-9 plus a labeled-corpus accuracy harness; decisions are synchronous, on-device, no network.

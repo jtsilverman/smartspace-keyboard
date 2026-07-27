@@ -1,0 +1,8 @@
+pool=1201 dropped_dup_rows=5 consensus=1196 ambiguous=0 intent_vs_consensus_disagreements=129
+label distribution: {'!': 211, '"': 158, ',': 200, '.': 295, '?': 332}
+dev=598 test=598
+  !: dev 104 / test 107
+  ": dev 79 / test 79
+  ,: dev 101 / test 99
+  .: dev 146 / test 149
+  ?: dev 168 / test 164

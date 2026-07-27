@@ -1,0 +1,181 @@
+.	tag-question	full	You're coming tonight, right
+?	tag-question	full	You're coming tonight, right
+?	tag-question	full	Dinner is still happening Sunday, no
+?	tag-question	full	She made it home okay, yeah
+?	tag-question	full	We said eight o'clock, correct
+?	tag-question	full	The meeting got moved to Thursday, didn't it
+?	tag-question	full	Your flight lands at noon, yes
+?	tag-question	full	He's driving us to the airport, right
+?	tag-question	full	The movie dragged on forever, huh
+?	tag-question	full	That was a wild game last night, eh
+?	tag-question	full	The dentist is on Elm Street, correct
+?	tag-question	full	Mom already knows about the trip, doesn't she
+?	tag-question	full	You locked the back door, yeah
+?	tag-question	full	We're splitting the check, right
+?	tag-question	full	The baby finally slept through the night, huh
+?	tag-question	full	Traffic was brutal this morning, eh
+?	tag-question	full	Fifty bucks should cover the gift, ya think
+?	tag-question	full	The cable guy is coming between two and four, correct
+?	tag-question	full	Kayla passed her driving test, no
+?	tag-question	full	That new taco place is a little overrated, don't you think
+?	tag-question	full	The rent check cleared, right
+?	tag-question	full	Your sister is watching the dogs, yes
+?	tag-question	full	It rained the whole weekend, huh
+?	tag-question	full	We still owe Grandma a call, don't we
+?	tag-question	full	The playoffs start Saturday, correct
+?	tag-question	txt	ur still down for trivia tonight, right
+?	tag-question	txt	u fed the cat, yeah
+?	tag-question	txt	the party got pushed to sat, no
+?	tag-question	txt	shes got a new bf, right
+?	tag-question	txt	that chem final was rough, huh
+?	tag-question	txt	we r good for 7, yeah
+?	tag-question	txt	u got the tickets already, yes
+?	tag-question	txt	gas is like 5 bucks now, huh
+?	tag-question	txt	ur mom said its fine, yeah
+?	tag-question	txt	coach cancelled practice, no
+?	tag-question	txt	im crashing at ur place, ok
+?	tag-question	txt	its freezing up there, eh
+?	tag-question	txt	the wifi passwords still the same, ya
+?	tag-question	txt	u already ate, huh
+?	tag-question	txt	thats enough pizza for everyone, ya think
+?	tag-question	txt	ur brother can pick us up, yea
+?	tag-question	txt	the deadline is fri, correct
+?	tag-question	txt	that call was total garbage, no
+?	tag-question	txt	u put the trash out, right
+?	tag-question	txt	the lease ends in aug, right
+?	tag-question	txt	shes not mad anymore, is she
+?	tag-question	txt	the game starts at 1, ok
+?	tag-question	txt	u saw my text about the deposit, right
+?	tag-question	frag	Still on for brunch, right
+?	tag-question	frag	Same spot as last time, yeah
+?	tag-question	frag	BYOB situation, no
+?	tag-question	frag	Your turn to drive, correct
+?	tag-question	frag	Kinda late to cancel now, huh
+?	tag-question	frag	Cold one out there, eh
+?	tag-question	frag	Enough seats for six, ya think
+?	tag-question	frag	Leaving at nine, right
+?	tag-question	frag	No dogs allowed, correct
+?	tag-question	frag	Leftovers again, huh
+?	tag-question	frag	Third time this week, no
+?	tag-question	frag	Rehearsal still at noon, yes
+?	tag-question	frag	Gate code still 4415, yeah
+?	tag-question	frag	Too early for margaritas, eh
+?	tag-question	frag	Off this weekend, ya
+?	tag-question	frag	Worth the hype, ya think
+?	tag-question	frag	Extra innings, huh
+?	tag-question	frag	Presents optional, right
+?	tag-question	frag	Plus one allowed, yes
+?	tag-question	frag	Terminal B, correct
+?	tag-question	frag	Waitlist only now, no
+?	tag-question	frag	Card on file, ok
+?	tag-question	frag	Halloween on a Friday this year, right
+?	rising-statement-question	full	The whole family is coming to the reunion
+?	rising-statement-question	full	She actually said yes
+?	rising-statement-question	full	That works for everyone
+?	rising-statement-question	full	The package finally showed up
+?	rising-statement-question	full	You already booked the hotel
+?	rising-statement-question	full	He got the job
+?	rising-statement-question	full	We're doing gifts this year
+?	rising-statement-question	full	The doctor called back
+?	rising-statement-question	full	You want the last slice
+?	rising-statement-question	full	They moved the wedding date
+?	rising-statement-question	full	Your car is fixed already
+?	rising-statement-question	full	The kids went down early
+?	rising-statement-question	full	You saw the final score
+?	rising-statement-question	full	This is the right exit
+?	rising-statement-question	full	We're really doing this
+?	rising-statement-question	full	The landlord approved the sublet
+?	rising-statement-question	full	You made it through security
+?	rising-statement-question	full	She knows about the surprise party
+?	rising-statement-question	full	The pool opened this weekend
+?	rising-statement-question	full	You need me to bring anything
+?	rising-statement-question	full	That was your ex at the bar
+?	rising-statement-question	full	The interview went well
+?	rising-statement-question	full	You left without saying goodbye
+?	rising-statement-question	txt	u home
+?	rising-statement-question	txt	we still on for tmrw
+?	rising-statement-question	txt	u coming
+?	rising-statement-question	txt	she texted u back
+?	rising-statement-question	txt	ur off work yet
+?	rising-statement-question	txt	u parked out front
+?	rising-statement-question	txt	u guys already left
+?	rising-statement-question	txt	the concert still happening
+?	rising-statement-question	txt	my venmo request went thru
+?	rising-statement-question	txt	were out of milk again
+?	rising-statement-question	txt	u rly ate the whole thing
+?	rising-statement-question	txt	ur bringing the switch
+?	rising-statement-question	txt	schools closed tmrw
+?	rising-statement-question	txt	u up
+?	rising-statement-question	txt	the flight got delayed
+?	rising-statement-question	txt	u told ur parents
+?	rising-statement-question	txt	we gotta dress up for this
+?	rising-statement-question	txt	ur good to drive
+?	rising-statement-question	txt	he still hasnt paid u
+?	rising-statement-question	txt	u down for ice cream
+?	rising-statement-question	txt	shes tagging along
+?	rising-statement-question	txt	the printer works now
+?	rising-statement-question	txt	u seen my keys
+?	rising-statement-question	txt	its supposed to snow tonight
+?	rising-statement-question	frag	Still up for it
+?	rising-statement-question	frag	Sold out already
+?	rising-statement-question	frag	Half day tomorrow
+?	rising-statement-question	frag	Everything okay over there
+?	rising-statement-question	frag	Front row seats
+?	rising-statement-question	frag	Back from the vet
+?	rising-statement-question	frag	Done with finals
+?	rising-statement-question	frag	Power back on
+?	rising-statement-question	frag	That bad
+?	rising-statement-question	frag	Home safe
+?	rising-statement-question	frag	New phone
+?	rising-statement-question	frag	Free tonight
+?	rising-statement-question	frag	Already in line
+?	rising-statement-question	frag	Feeling any better
+?	rising-statement-question	frag	Still raining there
+?	rising-statement-question	frag	Any word from the plumber
+?	rising-statement-question	frag	Just the two of us
+?	rising-statement-question	frag	Serious about quitting
+?	rising-statement-question	frag	Out of surgery yet
+?	rising-statement-question	frag	Mad at me
+?	rising-statement-question	frag	All packed
+?	rising-statement-question	frag	On your way
+?	rising-statement-question	frag	Room for one more
+?	elliptical-question	full	Coffee
+?	elliptical-question	full	Tomorrow instead
+?	elliptical-question	full	Rain check
+?	elliptical-question	full	Front door or back
+?	elliptical-question	full	Urgent
+?	elliptical-question	full	Thoughts
+?	elliptical-question	full	Window or aisle
+?	elliptical-question	full	Split an Uber
+?	elliptical-question	full	Decaf okay
+?	elliptical-question	full	Your place
+?	elliptical-question	full	Round two
+?	elliptical-question	full	Anything else
+?	elliptical-question	full	Pizza tonight
+?	elliptical-question	txt	u ok
+?	elliptical-question	txt	wine later
+?	elliptical-question	txt	boba run
+?	elliptical-question	txt	carpool tmrw
+?	elliptical-question	txt	b4 or after class
+?	elliptical-question	txt	movie 2nite
+?	elliptical-question	txt	borrow ur charger
+?	elliptical-question	txt	urs or mine
+?	elliptical-question	txt	need smth from cvs
+?	elliptical-question	txt	u nearby
+?	elliptical-question	txt	tacos or sushi
+?	elliptical-question	txt	ride home
+?	elliptical-question	txt	beach sat
+?	elliptical-question	txt	hike sun
+?	elliptical-question	frag	Usual time
+?	elliptical-question	frag	Extra ketchup
+?	elliptical-question	frag	This Friday
+?	elliptical-question	frag	Plan B
+?	elliptical-question	frag	Nightcap
+?	elliptical-question	frag	Both days
+?	elliptical-question	frag	Vegetarian option
+?	elliptical-question	frag	Cash or card
+?	elliptical-question	frag	Walk or bike
+?	elliptical-question	frag	After lunch
+?	elliptical-question	frag	Costume required
+?	elliptical-question	frag	Kids too
+?	elliptical-question	frag	Backup date

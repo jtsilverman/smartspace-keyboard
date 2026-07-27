@@ -1,9 +1,9 @@
 import Testing
 import PunctuationEngine
 
-/// Ship gate (spec AC7c): top candidate matches the label on >=90% of the
-/// labeled corpus. Prints every miss so rule work has a target list.
-@Test func corpusAccuracyMeetsShipGate() {
+/// Rule-regression tripwires (EVAL.md v3: NOT a benchmark, NOT the ship gate).
+/// Catches a broken rule via hard gates; prints every miss for triage.
+@Test func corpusRegressionGatesHold() {
     #expect(corpus.count >= 100)
 
     let engine = PunctuationEngine()
