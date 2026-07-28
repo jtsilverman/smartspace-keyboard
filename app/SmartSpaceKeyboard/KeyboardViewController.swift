@@ -13,6 +13,9 @@ final class KeyboardViewController: UIInputViewController {
     private let punctuation = PunctuationEngine()
     private var spaceBar = SmartSpaceBar()
     private var autocorrect = AutocorrectController(checker: SystemSpellChecker())
+    private var cursorDrag = SpacebarCursorDrag()
+    private let haptic = UIImpactFeedbackGenerator(style: .light)
+    private var keyPops: [UIButton: UIView] = [:]
     private let suggestionBar = UIStackView()
     private var rowsStack: UIStackView?
     private let probeBadge = UILabel()
@@ -39,8 +42,24 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        applyKeyboardAppearance()
         shift.armAutoShift(for: textDocumentProxy.documentContextBeforeInput ?? "")
         rebuildRows()
+    }
+
+    override func textDidChange(_ textInput: UITextInput?) {
+        super.textDidChange(textInput)
+        applyKeyboardAppearance()
+    }
+
+    /// The keyboard renders in the appearance the host field asks for, not
+    /// the system's (a dark host field in a light app gets dark keys).
+    private func applyKeyboardAppearance() {
+        switch textDocumentProxy.keyboardAppearance {
+        case .dark: view.overrideUserInterfaceStyle = .dark
+        case .light: view.overrideUserInterfaceStyle = .light
+        default: view.overrideUserInterfaceStyle = .unspecified
+        }
     }
 
     // MARK: - Layout
@@ -107,6 +126,7 @@ final class KeyboardViewController: UIInputViewController {
     private func rebuildRows() {
         guard let rows = rowsStack else { return }
         dismissAlternates()
+        dismissAllKeyPops()  // buttons are torn down; orphan pops would leak
         characterButtons = []
         shiftButton = nil
         rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -161,6 +181,9 @@ final class KeyboardViewController: UIInputViewController {
 
         let space = keyButton(title: "space")
         space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
+        let drag = UILongPressGestureRecognizer(target: self, action: #selector(spaceDragged(_:)))
+        drag.minimumPressDuration = 0.4
+        space.addGestureRecognizer(drag)
 
         let returnTitle = ReturnKeyLabel.label(
             for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default))
@@ -182,6 +205,9 @@ final class KeyboardViewController: UIInputViewController {
         let title = (layer == .letters && shift.isShifted) ? key.uppercased() : key
         let button = keyButton(title: title)
         button.addTarget(self, action: #selector(characterTapped(_:)), for: .touchUpInside)
+        button.addTarget(self, action: #selector(characterTouchDown(_:)), for: .touchDown)
+        button.addTarget(self, action: #selector(characterTouchEnded(_:)),
+                         for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit])
         if KeyboardLayout.alternates[key] != nil {
             let press = UILongPressGestureRecognizer(target: self, action: #selector(keyHeld(_:)))
             press.minimumPressDuration = 0.4
@@ -198,7 +224,14 @@ final class KeyboardViewController: UIInputViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0)
         let button = UIButton(configuration: config)
         button.titleLabel?.font = .systemFont(ofSize: 18)
+        button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
         return button
+    }
+
+    /// UX.md: every key press gets a haptic tick. Extensions without Full
+    /// Access may silently no-op; accepted (device verification owed).
+    @objc private func keyTouchDown() {
+        haptic.impactOccurred()
     }
 
     private func shiftTitle() -> String {
@@ -382,6 +415,80 @@ final class KeyboardViewController: UIInputViewController {
         applyAutocorrectOnCommit()
         textDocumentProxy.insertText("\n")
         armAutoShiftIfSentenceStart()
+    }
+
+    // MARK: - Spacebar cursor drag (WORKPLAN 3.5)
+
+    /// Long-press space + slide = move the cursor. Recognition cancels the
+    /// button's touch, so a drag never inserts a space.
+    @objc private func spaceDragged(_ gesture: UILongPressGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            dismissAlternates()
+            spaceBar.nonSpaceKey()
+            // Pending bar edits target the pre-move tail; drop them.
+            autocorrect.invalidateBar()
+            refreshSuggestionBar()
+            cursorDrag.began(at: gesture.location(in: view).x)
+        case .changed:
+            let delta = cursorDrag.moved(to: gesture.location(in: view).x)
+            if delta != 0 {
+                textDocumentProxy.adjustTextPosition(byCharacterOffset: delta)
+            }
+        case .ended, .cancelled, .failed:
+            armAutoShiftIfSentenceStart()
+        default:
+            break
+        }
+    }
+
+    // MARK: - Key-pop (WORKPLAN 3.5)
+
+    /// Magnified preview above a touched character key, stock-style.
+    /// Keyed per button: two-finger typing keeps each finger's pop
+    /// independent (releasing one never removes the other's).
+    private func showKeyPop(above button: UIButton) {
+        dismissKeyPop(for: button)
+        guard let title = button.configuration?.title else { return }
+        let pop = UILabel()
+        pop.text = title
+        pop.font = .systemFont(ofSize: 32)
+        pop.textAlignment = .center
+        pop.backgroundColor = .systemBackground
+        pop.layer.cornerRadius = 8
+        pop.clipsToBounds = true
+        pop.layer.borderWidth = 1
+        pop.layer.borderColor = UIColor.separator.cgColor
+        pop.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(pop)
+        let center = pop.centerXAnchor.constraint(equalTo: button.centerXAnchor)
+        center.priority = .defaultHigh  // yields at screen edges
+        NSLayoutConstraint.activate([
+            center,
+            pop.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 2),
+            pop.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -2),
+            pop.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -2),
+            pop.widthAnchor.constraint(equalTo: button.widthAnchor, multiplier: 1.4),
+            pop.heightAnchor.constraint(equalToConstant: 50),
+        ])
+        keyPops[button] = pop
+    }
+
+    private func dismissKeyPop(for button: UIButton) {
+        keyPops.removeValue(forKey: button)?.removeFromSuperview()
+    }
+
+    private func dismissAllKeyPops() {
+        keyPops.values.forEach { $0.removeFromSuperview() }
+        keyPops = [:]
+    }
+
+    @objc private func characterTouchDown(_ sender: UIButton) {
+        showKeyPop(above: sender)
+    }
+
+    @objc private func characterTouchEnded(_ sender: UIButton) {
+        dismissKeyPop(for: sender)
     }
 
     // MARK: - Autocorrect (WORKPLAN 3.4)
