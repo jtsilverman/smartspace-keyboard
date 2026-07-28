@@ -23,6 +23,11 @@ final class KeyboardViewController: UIInputViewController {
     private var selectedEmojiCategory: EmojiCategory?
     private var emojiRecents = EmojiRecents(store: DefaultsRecentsStore())
     private let emojiPanel = UIView()
+    private var personal = PersonalRanking()
+    private var outcomeTracker = OutcomeTracker()
+    private var outcomeLog = OutcomeLog(store: DefaultsOutcomeStore())
+    private var lastPrediction: Prediction?
+    private var lastContextWordCount = 0
     private let suggestionBar = UIStackView()
     private var rowsStack: UIStackView?
     private let probeBadge = UILabel()
@@ -36,6 +41,9 @@ final class KeyboardViewController: UIInputViewController {
         super.viewDidLoad()
         buildKeyboard()
         runAppGroupProbe()
+        // The candidate order adapts to this user's kept marks (2.4);
+        // counters rebuild from the persisted text-free log.
+        outcomeLog.records.forEach { personal.record($0) }
         // Contacts + text replacements: words the user owns are never
         // corrected away. Arrives async; the empty-lexicon controller
         // covers the gap.
@@ -57,6 +65,25 @@ final class KeyboardViewController: UIInputViewController {
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         applyKeyboardAppearance()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Send/dismiss mid-cycle still counts: the kept mark is whatever
+        // was on screen when the keyboard went away.
+        endSmartSpaceCycle()
+    }
+
+    /// A non-space key ends any smart-space cycle: close the double-tap
+    /// window and finalize the pending outcome record (WORKPLAN 3.7 --
+    /// counts and marks only, never text).
+    private func endSmartSpaceCycle() {
+        spaceBar.nonSpaceKey()
+        guard let record = outcomeTracker.finish() else { return }
+        outcomeLog.append(record)
+        personal.record(record)
+        // .notice persists to the log store (.debug does not), marks only.
+        log.notice("outcome: rule=\(record.rule.rawValue, privacy: .public) taps=\(record.cycleTaps, privacy: .public) kept=\(record.kept, privacy: .public)")
     }
 
     /// The keyboard renders in the appearance the host field asks for, not
@@ -285,7 +312,7 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func characterTapped(_ sender: UIButton) {
         guard let title = sender.configuration?.title else { return }
         dismissAlternates()
-        spaceBar.nonSpaceKey()
+        endSmartSpaceCycle()
         if emojiSearchActive {
             // Search mode: letters feed the query, never the document.
             // Shift is deliberately not consumed (query is case-insensitive).
@@ -319,7 +346,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func backspaceTapped() {
         dismissAlternates()
-        spaceBar.nonSpaceKey()
+        endSmartSpaceCycle()
         if emojiSearchActive {
             // Edits the query only; the document (and the autocorrect
             // session acting on it) is untouched.
@@ -395,7 +422,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func alternateTapped(_ sender: UIButton) {
         if let title = sender.configuration?.title {
-            spaceBar.nonSpaceKey()
+            endSmartSpaceCycle()
             textDocumentProxy.insertText(title)
             if layer == .letters { shift.didTypeLetter() }
         }
@@ -420,7 +447,10 @@ final class KeyboardViewController: UIInputViewController {
             // the sentence as typed.
             var context = textDocumentProxy.documentContextBeforeInput ?? ""
             if context.hasSuffix(" ") { context.removeLast() }
-            return punctuation.candidates(before: context)
+            let prediction = punctuation.prediction(before: context)
+            lastPrediction = prediction
+            lastContextWordCount = context.split(whereSeparator: \.isWhitespace).count
+            return personal.reranked(prediction)
         }
         switch decision {
         case .insertSpace:
@@ -430,6 +460,11 @@ final class KeyboardViewController: UIInputViewController {
         case .insertMark(let mark):
             textDocumentProxy.deleteBackward()          // the first space
             textDocumentProxy.insertText(mark.text + " ")
+            if let prediction = lastPrediction {
+                outcomeTracker.smartInsert(rule: prediction.rule,
+                                           guess: mark.text,
+                                           wordCount: lastContextWordCount)
+            }
             log.debug("smart insert: \(mark.text, privacy: .public)")
             if mark.endsSentence { armAutoShiftIfSentenceStart() }
         case .replaceMark(let mark, let previous):
@@ -438,6 +473,9 @@ final class KeyboardViewController: UIInputViewController {
             let context = textDocumentProxy.documentContextBeforeInput ?? ""
             guard context.hasSuffix(previous.text + " ") else {
                 spaceBar.nonSpaceKey()
+                // The cycle state and the document diverged: no record --
+                // a kept mark the text never held would corrupt the counters.
+                outcomeTracker.abandon()
                 textDocumentProxy.insertText(" ")
                 armAutoShiftIfSentenceStart()
                 return
@@ -446,6 +484,7 @@ final class KeyboardViewController: UIInputViewController {
                 textDocumentProxy.deleteBackward()
             }
             textDocumentProxy.insertText(mark.text + " ")
+            outcomeTracker.cycled(to: mark.text)
             log.debug("cycle to: \(mark.text, privacy: .public)")
             if mark.endsSentence { armAutoShiftIfSentenceStart() }
         }
@@ -457,7 +496,7 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         dismissAlternates()
-        spaceBar.nonSpaceKey()
+        endSmartSpaceCycle()
         applyAutocorrectOnCommit()
         textDocumentProxy.insertText("\n")
         armAutoShiftIfSentenceStart()
@@ -471,7 +510,7 @@ final class KeyboardViewController: UIInputViewController {
         switch gesture.state {
         case .began:
             dismissAlternates()
-            spaceBar.nonSpaceKey()
+            endSmartSpaceCycle()
             // Pending bar edits target the pre-move tail; drop them.
             autocorrect.invalidateBar()
             refreshSuggestionBar()
@@ -547,7 +586,7 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func emojiKeyTapped() {
         dismissAlternates()
         dismissAllKeyPops()
-        spaceBar.nonSpaceKey()
+        endSmartSpaceCycle()
         emojiPanelActive = true
         emojiSearchActive = false
         // Recents when there are any, else the first category.
@@ -708,7 +747,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func emojiItemTapped(_ sender: UIButton) {
         guard let emoji = sender.configuration?.title else { return }
-        spaceBar.nonSpaceKey()
+        endSmartSpaceCycle()
         textDocumentProxy.insertText(emoji)
         emojiRecents.record(emoji)
         if emojiSearchActive {
@@ -771,7 +810,7 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func suggestionTapped(_ sender: UIButton) {
         dismissAlternates()
-        spaceBar.nonSpaceKey()
+        endSmartSpaceCycle()
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
         // The correction must still be the document tail ("word" + the
         // separator that committed it). If the user typed on or moved the
