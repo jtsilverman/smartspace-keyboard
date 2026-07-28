@@ -14,18 +14,18 @@ final class KeyboardSmokeTests: XCTestCase {
 
         // Empty field -> auto-shift armed -> keys render uppercase.
         XCTAssertTrue(app.buttons["H"].waitForExistence(timeout: 3), "auto-shift did not arm")
-        app.buttons["H"].tap()          // consumes the one-shot
-        app.buttons["i"].tap()
+        typeFirstLetter(app, field, "H", expecting: "H")  // consumes the one-shot
+        tapKey(app, "i")
         app.buttons["shift"].tap()      // manual one-shot
-        app.buttons["J"].tap()
+        tapKey(app, "J")
         app.buttons["space"].tap()
-        app.buttons["m"].tap()
+        tapKey(app, "m")
         app.buttons["⌫"].tap()
 
         // Double-tap shift = caps lock; letters stay uppercase across taps.
         app.buttons["shift"].doubleTap()
-        app.buttons["O"].tap()
-        app.buttons["K"].tap()
+        tapKey(app, "O")
+        tapKey(app, "K")
         app.buttons["shift"].tap()      // release caps lock
 
         // 123 layer carries punctuation; ABC returns.
@@ -38,22 +38,22 @@ final class KeyboardSmokeTests: XCTestCase {
         // Hero feature: double-space inserts the engine's top mark, another
         // space cycles it in place, and typing ends the cycle.
         app.buttons["space"].tap()
-        app.buttons["H"].tap()          // auto-shift armed after "! "
-        app.buttons["o"].tap()
-        app.buttons["w"].tap()
+        tapKey(app, "H")          // auto-shift armed after "! "
+        tapKey(app, "o")
+        tapKey(app, "w")
         app.buttons["space"].tap()
-        app.buttons["a"].tap()
-        app.buttons["r"].tap()
-        app.buttons["e"].tap()
+        tapKey(app, "a")
+        tapKey(app, "r")
+        tapKey(app, "e")
         app.buttons["space"].tap()
-        app.buttons["u"].tap()
+        tapKey(app, "u")
         app.buttons["space"].doubleTap()
         assertFieldValue(field, "HiJ OK! How are u? ",
                          "double-space should insert the question mark")
         app.buttons["space"].tap()
         assertFieldValue(field, "HiJ OK! How are u. ",
                          "space again should cycle ? -> .")
-        app.buttons["K"].tap()          // typing ends the cycle; auto-shift caps it
+        tapKey(app, "K")          // typing ends the cycle; auto-shift caps it
         assertFieldValue(field, "HiJ OK! How are u. K")
 
         // App-group probe verdict (3.1): recorded from the badge either way.

@@ -11,9 +11,9 @@ final class AutocorrectBarTests: XCTestCase {
         let field = focusSmartSpaceKeyboard(app)
 
         // Auto-shift arms on the empty field: "Teh" -> commit -> "The ".
-        app.buttons["T"].tap()
-        app.buttons["e"].tap()
-        app.buttons["h"].tap()
+        typeFirstLetter(app, field, "T", expecting: "T")
+        tapKey(app, "e")
+        tapKey(app, "h")
         app.buttons["space"].tap()
         assertFieldValue(field, "The ",
                          "space should commit Teh and autocorrect to The")
@@ -26,9 +26,9 @@ final class AutocorrectBarTests: XCTestCase {
         assertFieldValue(field, "Teh ", "undo tap should restore the original word")
 
         // Protected for the session: the same word commits uncorrected.
-        app.buttons["t"].tap()
-        app.buttons["e"].tap()
-        app.buttons["h"].tap()
+        tapKey(app, "t")
+        tapKey(app, "e")
+        tapKey(app, "h")
         app.buttons["space"].tap()
         assertFieldValue(field, "Teh teh ", "an undone word must never be re-corrected")
     }
@@ -38,9 +38,9 @@ final class AutocorrectBarTests: XCTestCase {
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
 
-        app.buttons["T"].tap()
-        app.buttons["e"].tap()
-        app.buttons["h"].tap()
+        typeFirstLetter(app, field, "T", expecting: "T")
+        tapKey(app, "e")
+        tapKey(app, "h")
         app.buttons["space"].tap()
         assertFieldValue(field, "The ")
 

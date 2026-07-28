@@ -140,6 +140,20 @@ private func controller(
         #expect(c.wordCommitted(context: "third teh") == .keep)
     }
 
+    // Spec keyboard-polish AC 4: a cursor move invalidates the bar (pending
+    // edits would target the wrong tail) but protection survives.
+    @Test func invalidateBarClearsBarAndKeepsProtection() {
+        var c = controller(table: ["teh": ["the"], "adn": ["and"]])
+        _ = c.wordCommitted(context: "hi teh")
+        _ = c.barTapped(slot: 0)                    // protect "teh"
+        _ = c.wordCommitted(context: "hi teh adn")
+        #expect(c.barSlots == ["adn"])              // bar is genuinely active
+        c.invalidateBar()
+        #expect(c.barSlots.isEmpty)
+        #expect(c.currentCorrected == nil)
+        #expect(c.wordCommitted(context: "later teh") == .keep)
+    }
+
     @Test func backspaceClosesUndoWindow() {
         var c = controller()
         _ = c.wordCommitted(context: "hi teh")

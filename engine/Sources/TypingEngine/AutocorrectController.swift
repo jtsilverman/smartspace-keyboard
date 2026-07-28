@@ -90,10 +90,16 @@ public struct AutocorrectController: Sendable {
         return .swap(from: displaced, to: chosen)
     }
 
-    /// Backspace edits the tail the correction lives in: clear the bar,
-    /// which also closes the undo window (undo is only reachable through
-    /// an active bar). Protection (undone words) is untouched.
-    public mutating func backspace() {
+    /// The correction's tail edits are no longer valid (cursor moved, text
+    /// changed under it): clear the bar, which also closes the undo window
+    /// (undo is only reachable through an active bar). Protection (undone
+    /// words) is untouched.
+    public mutating func invalidateBar() {
         active = nil
+    }
+
+    /// Backspace edits the tail the correction lives in.
+    public mutating func backspace() {
+        invalidateBar()
     }
 }
