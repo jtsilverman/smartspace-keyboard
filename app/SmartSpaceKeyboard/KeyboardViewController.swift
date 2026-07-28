@@ -16,6 +16,13 @@ final class KeyboardViewController: UIInputViewController {
     private var cursorDrag = SpacebarCursorDrag()
     private let haptic = UIImpactFeedbackGenerator(style: .light)
     private var keyPops: [UIButton: UIView] = [:]
+    private var emojiPanelActive = false
+    private var emojiSearchActive = false
+    private var emojiQuery = ""
+    /// nil = recents tab.
+    private var selectedEmojiCategory: EmojiCategory?
+    private var emojiRecents = EmojiRecents(store: DefaultsRecentsStore())
+    private let emojiPanel = UIView()
     private let suggestionBar = UIStackView()
     private var rowsStack: UIStackView?
     private let probeBadge = UILabel()
@@ -83,6 +90,10 @@ final class KeyboardViewController: UIInputViewController {
         probeBadge.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(probeBadge)
 
+        emojiPanel.isHidden = true
+        emojiPanel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(emojiPanel)
+
         NSLayoutConstraint.activate([
             suggestionBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
             suggestionBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
@@ -93,6 +104,10 @@ final class KeyboardViewController: UIInputViewController {
             rows.topAnchor.constraint(equalTo: suggestionBar.bottomAnchor, constant: 4),
             rows.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
             rows.heightAnchor.constraint(equalToConstant: 216),
+            emojiPanel.leadingAnchor.constraint(equalTo: rows.leadingAnchor),
+            emojiPanel.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
+            emojiPanel.topAnchor.constraint(equalTo: rows.topAnchor),
+            emojiPanel.bottomAnchor.constraint(equalTo: rows.bottomAnchor),
             probeBadge.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -6),
             probeBadge.topAnchor.constraint(equalTo: view.topAnchor, constant: 2),
         ])
@@ -176,6 +191,10 @@ final class KeyboardViewController: UIInputViewController {
         let layerKey = keyButton(title: layer == .letters ? "123" : "ABC")
         layerKey.addTarget(self, action: #selector(layerTapped), for: .touchUpInside)
 
+        let emojiKey = keyButton(title: "😀")
+        emojiKey.accessibilityIdentifier = "emoji-key"
+        emojiKey.addTarget(self, action: #selector(emojiKeyTapped), for: .touchUpInside)
+
         let globe = keyButton(title: "🌐")
         globe.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
 
@@ -192,12 +211,14 @@ final class KeyboardViewController: UIInputViewController {
         returnKey.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
 
         bottomRow.addArrangedSubview(layerKey)
+        bottomRow.addArrangedSubview(emojiKey)
         bottomRow.addArrangedSubview(globe)
         bottomRow.addArrangedSubview(space)
         bottomRow.addArrangedSubview(returnKey)
         layerKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
-        globe.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
-        returnKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.22).isActive = true
+        emojiKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
+        globe.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
+        returnKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.2).isActive = true
         rows.addArrangedSubview(bottomRow)
     }
 
@@ -265,6 +286,13 @@ final class KeyboardViewController: UIInputViewController {
         guard let title = sender.configuration?.title else { return }
         dismissAlternates()
         spaceBar.nonSpaceKey()
+        if emojiSearchActive {
+            // Search mode: letters feed the query, never the document.
+            // Shift is deliberately not consumed (query is case-insensitive).
+            emojiQuery += title.lowercased()
+            refreshEmojiSearchStrip()
+            return
+        }
         textDocumentProxy.insertText(title)
         if layer == .letters, shift.mode == .oneShot {
             shift.didTypeLetter()
@@ -292,6 +320,13 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func backspaceTapped() {
         dismissAlternates()
         spaceBar.nonSpaceKey()
+        if emojiSearchActive {
+            // Edits the query only; the document (and the autocorrect
+            // session acting on it) is untouched.
+            if !emojiQuery.isEmpty { emojiQuery.removeLast() }
+            refreshEmojiSearchStrip()
+            return
+        }
         autocorrect.backspace()
         refreshSuggestionBar()
         textDocumentProxy.deleteBackward()
@@ -299,6 +334,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     @objc private func backspaceHeld(_ gesture: UILongPressGestureRecognizer) {
+        guard !emojiSearchActive else { return }    // repeats edit the document
         switch gesture.state {
         case .began:
             backspaceRepeats = 0
@@ -321,7 +357,8 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     @objc private func keyHeld(_ gesture: UILongPressGestureRecognizer) {
-        guard gesture.state == .began,
+        guard !emojiSearchActive,   // alternates insert into the document
+              gesture.state == .began,
               let button = gesture.view as? UIButton,
               let title = button.configuration?.title,
               let options = KeyboardLayout.alternates[title.lowercased()] else { return }
@@ -372,6 +409,11 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     @objc private func spaceTapped() {
+        if emojiSearchActive {
+            emojiQuery += " "
+            refreshEmojiSearchStrip()
+            return
+        }
         dismissAlternates()
         let decision = spaceBar.spaceTapped(at: CACurrentMediaTime()) {
             // Context minus the space the first tap inserted: the engine sees
@@ -410,6 +452,10 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     @objc private func returnTapped() {
+        if emojiSearchActive {
+            exitEmojiPanel()
+            return
+        }
         dismissAlternates()
         spaceBar.nonSpaceKey()
         applyAutocorrectOnCommit()
@@ -489,6 +535,216 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func characterTouchEnded(_ sender: UIButton) {
         dismissKeyPop(for: sender)
+    }
+
+    // MARK: - Emoji panel (WORKPLAN 3.6)
+
+    private static let emojiTabGlyphs: [(EmojiCategory, String)] = [
+        (.smileys, "😀"), (.people, "👋"), (.animals, "🐻"), (.food, "🍔"),
+        (.activity, "⚽"), (.travel, "🚗"), (.objects, "💡"), (.symbols, "❤️"),
+    ]
+
+    @objc private func emojiKeyTapped() {
+        dismissAlternates()
+        dismissAllKeyPops()
+        spaceBar.nonSpaceKey()
+        emojiPanelActive = true
+        emojiSearchActive = false
+        // Recents when there are any, else the first category.
+        selectedEmojiCategory = emojiRecents.all.isEmpty ? .smileys : nil
+        rebuildForEmojiState()
+    }
+
+    @objc private func emojiAbcTapped() {
+        exitEmojiPanel()
+    }
+
+    private func exitEmojiPanel() {
+        emojiPanelActive = false
+        emojiSearchActive = false
+        emojiQuery = ""
+        rebuildForEmojiState()
+        armAutoShiftIfSentenceStart()
+    }
+
+    /// One switch point for panel/search/letters visibility.
+    private func rebuildForEmojiState() {
+        if emojiPanelActive && !emojiSearchActive {
+            rowsStack?.isHidden = true
+            emojiPanel.isHidden = false
+            buildEmojiPanel()
+            refreshSuggestionBar()      // a live correction bar stays valid
+        } else {
+            emojiPanel.isHidden = true
+            rowsStack?.isHidden = false
+            if emojiSearchActive {
+                refreshEmojiSearchStrip()
+            } else {
+                refreshSuggestionBar()
+            }
+        }
+    }
+
+    private func buildEmojiPanel() {
+        emojiPanel.subviews.forEach { $0.removeFromSuperview() }
+
+        let tabs = UIStackView()
+        tabs.axis = .horizontal
+        tabs.distribution = .fillEqually
+        tabs.spacing = 2
+        tabs.translatesAutoresizingMaskIntoConstraints = false
+
+        let search = tabButton(title: "🔍", identifier: "emoji-search")
+        search.addTarget(self, action: #selector(emojiSearchTapped), for: .touchUpInside)
+        tabs.addArrangedSubview(search)
+
+        let recents = tabButton(title: "🕐", identifier: "emoji-cat-recents")
+        recents.addTarget(self, action: #selector(emojiTabTapped(_:)), for: .touchUpInside)
+        recents.tag = -1
+        tabs.addArrangedSubview(recents)
+
+        for (index, (category, glyph)) in Self.emojiTabGlyphs.enumerated() {
+            let tab = tabButton(title: glyph, identifier: "emoji-cat-\(category.rawValue)")
+            tab.tag = index
+            tab.addTarget(self, action: #selector(emojiTabTapped(_:)), for: .touchUpInside)
+            tabs.addArrangedSubview(tab)
+        }
+
+        let grid = UIScrollView()
+        grid.translatesAutoresizingMaskIntoConstraints = false
+        let gridContent = UIStackView()
+        gridContent.axis = .vertical
+        gridContent.spacing = 2
+        gridContent.translatesAutoresizingMaskIntoConstraints = false
+        grid.addSubview(gridContent)
+
+        let emoji: [String]
+        if let category = selectedEmojiCategory {
+            emoji = EmojiCatalog.entries(in: category).map(\.emoji)
+        } else {
+            emoji = emojiRecents.all
+        }
+        for chunk in stride(from: 0, to: emoji.count, by: 8) {
+            let row = UIStackView()
+            row.axis = .horizontal
+            row.distribution = .fillEqually
+            for item in emoji[chunk..<min(chunk + 8, emoji.count)] {
+                row.addArrangedSubview(emojiCell(item))
+            }
+            // Pad the last row so cells keep uniform width.
+            while row.arrangedSubviews.count < 8 {
+                row.addArrangedSubview(UIView())
+            }
+            gridContent.addArrangedSubview(row)
+        }
+
+        let bottom = UIStackView()
+        bottom.axis = .horizontal
+        bottom.spacing = 4
+        bottom.translatesAutoresizingMaskIntoConstraints = false
+        let abc = keyButton(title: "ABC")
+        abc.accessibilityIdentifier = "emoji-abc"
+        abc.addTarget(self, action: #selector(emojiAbcTapped), for: .touchUpInside)
+        let space = keyButton(title: "space")
+        space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
+        let returnKey = keyButton(title: ReturnKeyLabel.label(
+            for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default)))
+        returnKey.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
+        bottom.addArrangedSubview(abc)
+        bottom.addArrangedSubview(space)
+        bottom.addArrangedSubview(returnKey)
+        abc.widthAnchor.constraint(equalTo: bottom.widthAnchor, multiplier: 0.15).isActive = true
+        returnKey.widthAnchor.constraint(equalTo: bottom.widthAnchor, multiplier: 0.22).isActive = true
+
+        emojiPanel.addSubview(tabs)
+        emojiPanel.addSubview(grid)
+        emojiPanel.addSubview(bottom)
+        NSLayoutConstraint.activate([
+            tabs.topAnchor.constraint(equalTo: emojiPanel.topAnchor),
+            tabs.leadingAnchor.constraint(equalTo: emojiPanel.leadingAnchor),
+            tabs.trailingAnchor.constraint(equalTo: emojiPanel.trailingAnchor),
+            tabs.heightAnchor.constraint(equalToConstant: 36),
+            grid.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 4),
+            grid.leadingAnchor.constraint(equalTo: emojiPanel.leadingAnchor),
+            grid.trailingAnchor.constraint(equalTo: emojiPanel.trailingAnchor),
+            bottom.topAnchor.constraint(equalTo: grid.bottomAnchor, constant: 4),
+            bottom.leadingAnchor.constraint(equalTo: emojiPanel.leadingAnchor),
+            bottom.trailingAnchor.constraint(equalTo: emojiPanel.trailingAnchor),
+            bottom.bottomAnchor.constraint(equalTo: emojiPanel.bottomAnchor),
+            bottom.heightAnchor.constraint(equalToConstant: 44),
+            gridContent.topAnchor.constraint(equalTo: grid.contentLayoutGuide.topAnchor),
+            gridContent.bottomAnchor.constraint(equalTo: grid.contentLayoutGuide.bottomAnchor),
+            gridContent.leadingAnchor.constraint(equalTo: grid.contentLayoutGuide.leadingAnchor),
+            gridContent.trailingAnchor.constraint(equalTo: grid.contentLayoutGuide.trailingAnchor),
+            gridContent.widthAnchor.constraint(equalTo: grid.frameLayoutGuide.widthAnchor),
+        ])
+    }
+
+    private func tabButton(title: String, identifier: String) -> UIButton {
+        var config = UIButton.Configuration.plain()
+        config.title = title
+        config.contentInsets = .zero
+        let button = UIButton(configuration: config)
+        button.titleLabel?.font = .systemFont(ofSize: 16)
+        button.accessibilityIdentifier = identifier
+        return button
+    }
+
+    private func emojiCell(_ emoji: String) -> UIButton {
+        var config = UIButton.Configuration.plain()
+        config.title = emoji
+        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)
+        let button = UIButton(configuration: config)
+        button.titleLabel?.font = .systemFont(ofSize: 26)
+        button.accessibilityIdentifier = "emoji-item-\(emoji)"
+        button.addTarget(self, action: #selector(emojiItemTapped(_:)), for: .touchUpInside)
+        return button
+    }
+
+    @objc private func emojiTabTapped(_ sender: UIButton) {
+        selectedEmojiCategory = sender.tag >= 0 ? Self.emojiTabGlyphs[sender.tag].0 : nil
+        buildEmojiPanel()
+    }
+
+    @objc private func emojiItemTapped(_ sender: UIButton) {
+        guard let emoji = sender.configuration?.title else { return }
+        spaceBar.nonSpaceKey()
+        textDocumentProxy.insertText(emoji)
+        emojiRecents.record(emoji)
+        if emojiSearchActive {
+            exitEmojiPanel()    // a search insert is a completed errand
+        }
+    }
+
+    @objc private func emojiSearchTapped() {
+        emojiSearchActive = true
+        emojiQuery = ""
+        // The query strip takes over the correction bar's surface.
+        autocorrect.invalidateBar()
+        rebuildForEmojiState()
+    }
+
+    @objc private func emojiSearchCancelTapped() {
+        exitEmojiPanel()
+    }
+
+    /// Query strip in the suggestion-bar area: query label, up to 5 results,
+    /// cancel. Letter taps feed the query while this is up.
+    private func refreshEmojiSearchStrip() {
+        suggestionBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        let label = UILabel()
+        label.text = "🔍 " + emojiQuery
+        label.font = .systemFont(ofSize: 16)
+        label.accessibilityIdentifier = "emoji-search-query"
+        suggestionBar.addArrangedSubview(label)
+        for emoji in EmojiSearch.results(for: emojiQuery).prefix(5) {
+            let cell = emojiCell(emoji)
+            suggestionBar.addArrangedSubview(cell)
+        }
+        let cancel = keyButton(title: "✕")
+        cancel.accessibilityIdentifier = "emoji-search-cancel"
+        cancel.addTarget(self, action: #selector(emojiSearchCancelTapped), for: .touchUpInside)
+        suggestionBar.addArrangedSubview(cancel)
     }
 
     // MARK: - Autocorrect (WORKPLAN 3.4)

@@ -11,8 +11,8 @@ final class CursorDragTests: XCTestCase {
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
 
-        app.buttons["A"].tap()      // auto-shift arms on the empty field
-        app.buttons["b"].tap()
+        typeFirstLetter(app, field, "A", expecting: "A")  // auto-shift armed
+        tapKey(app, "b")
         assertFieldValue(field, "Ab")
 
         // One full cursor step left (1.5 * stepWidth = deterministically
@@ -26,7 +26,7 @@ final class CursorDragTests: XCTestCase {
         // A drag never inserts a space; plain-tap space coverage lives in
         // the smoke test (kept out of here: a trailing space commit would
         // couple this test to live UITextChecker behavior on "Ax").
-        app.buttons["x"].tap()
+        tapKey(app, "x")
         assertFieldValue(field, "Axb",
                          "drag should move the cursor one step left, no space inserted")
     }

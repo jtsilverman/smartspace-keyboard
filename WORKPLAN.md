@@ -32,7 +32,7 @@ Phased build order. Units are commit-sized; status lives here. Phases 1-2 build 
 - [x] 3.3 Wire hero feature: double-space -> engine -> insert/cycle via textDocumentProxy (SmartSpaceBar state machine; triple-space ellipsis stays dropped per 1.6). Simulator-verified end to end in the smoke test; REAL-IPHONE verification in Messages/Notes/Safari still owed (needs Apple Developer account + device)
 - [x] 3.4 Wire autocorrect-lite: real UITextChecker + UILexicon behind the Phase 2 seam; suggestion bar. AutocorrectController (pure TypingEngine state machine) + 40pt bar above the keys: auto-apply top suggestion on space/return commit, slot-0 tap undoes + protects for the session, alternative tap swaps, backspace closes the undo window. Live-verified by AutocorrectBarTests in simulator; typo benchmark unchanged at 90% on the shared SystemSpellChecker.
 - [x] 3.5 Spacebar cursor drag, haptics, key-pop, light/dark. SpacebarCursorDrag (pure 9pt-step math) drives adjustTextPosition from a long-press on space; per-button key-pop previews; light haptic every key (device verify owed with 3.3); overrideUserInterfaceStyle follows keyboardAppearance. Cursor drag live-verified (CursorDragTests); key-pop/dark verified by simulator screenshots.
-- [ ] 3.6 Emoji panel (search + recents)
+- [x] 3.6 Emoji panel (search + recents). Emoji key opens tabs/grid panel (recents-first, 8 categories, curated ~300-emoji catalog); stock-style search mode: letters filter live in the query strip, result tap inserts. Pure EmojiCatalog/EmojiSearch/EmojiRecents in TypingEngine; recents persist via UserDefaults. Live-verified by EmojiPanelTests.
 - [ ] 3.7 Wire stats counters into live key events (increment on smart insert / cycle / keep; counts only, no content)
 
 ## Phase 4 -- Host app
