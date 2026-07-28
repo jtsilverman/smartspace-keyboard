@@ -36,6 +36,14 @@ public struct CorrectionEngine: Sendable {
         guard let word = WordBoundary.lastWord(in: context) else { return .noChange }
         guard !lexicon.contains(word.lowercased()) else { return .noChange }
         guard !session.isProtected(word) else { return .noChange }
+        // Curated contraction fixes are deterministic and outrank the
+        // checker AND the acronym guard (DONT is a shouted contraction,
+        // not an acronym). Only when the fix actually differs -- a phantom
+        // I -> I correction would put an undo slot in the bar that, tapped,
+        // protects "i" and kills the fix for the session.
+        if let fixed = ContractionRule.transform(word), fixed != word {
+            return .correct(to: fixed, alternatives: [])
+        }
         // All-caps words are acronyms more often than typos; correcting
         // them mangles deliberate input.
         let letters = word.filter(\.isLetter)
