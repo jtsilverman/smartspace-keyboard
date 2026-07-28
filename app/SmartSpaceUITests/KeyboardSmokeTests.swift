@@ -10,28 +10,7 @@ final class KeyboardSmokeTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        let field = app.textFields["Type here to test the keyboard"]
-        XCTAssertTrue(field.waitForExistence(timeout: 10))
-        field.tap()
-
-        // Cycle keyboards until ours is up (stock -> emoji -> SmartSpace).
-        // Our keys are UIButtons ("space" exists as a button only on ours);
-        // the stock QWERTY exposes "emoji", the emoji keyboard "Next keyboard".
-        var hops = 0
-        while !app.buttons["space"].waitForExistence(timeout: 3) {
-            hops += 1
-            XCTAssertLessThan(hops, 5, "SmartSpace keyboard never appeared")
-            if app.buttons["Next keyboard"].exists {
-                app.buttons["Next keyboard"].tap()
-            } else if app.keys["Next keyboard"].exists {
-                app.keys["Next keyboard"].tap()
-            } else if app.buttons["emoji"].exists {
-                app.buttons["emoji"].tap()
-            } else {
-                XCTFail("no keyboard switcher key found")
-                break
-            }
-        }
+        let field = focusSmartSpaceKeyboard(app)
 
         // Empty field -> auto-shift armed -> keys render uppercase.
         XCTAssertTrue(app.buttons["H"].waitForExistence(timeout: 3), "auto-shift did not arm")
@@ -54,7 +33,7 @@ final class KeyboardSmokeTests: XCTestCase {
         app.buttons["!"].tap()
         app.buttons["ABC"].tap()
 
-        XCTAssertEqual(field.value as? String, "HiJ OK!")
+        assertFieldValue(field, "HiJ OK!")
 
         // Hero feature: double-space inserts the engine's top mark, another
         // space cycles it in place, and typing ends the cycle.
@@ -69,13 +48,13 @@ final class KeyboardSmokeTests: XCTestCase {
         app.buttons["space"].tap()
         app.buttons["u"].tap()
         app.buttons["space"].doubleTap()
-        XCTAssertEqual(field.value as? String, "HiJ OK! How are u? ",
-                       "double-space should insert the question mark")
+        assertFieldValue(field, "HiJ OK! How are u? ",
+                         "double-space should insert the question mark")
         app.buttons["space"].tap()
-        XCTAssertEqual(field.value as? String, "HiJ OK! How are u. ",
-                       "space again should cycle ? -> .")
+        assertFieldValue(field, "HiJ OK! How are u. ",
+                         "space again should cycle ? -> .")
         app.buttons["K"].tap()          // typing ends the cycle; auto-shift caps it
-        XCTAssertEqual(field.value as? String, "HiJ OK! How are u. K")
+        assertFieldValue(field, "HiJ OK! How are u. K")
 
         // App-group probe verdict (3.1): recorded from the badge either way.
         let ok = app.staticTexts["AG:OK"].exists

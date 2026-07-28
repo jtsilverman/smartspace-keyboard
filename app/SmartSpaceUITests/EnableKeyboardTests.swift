@@ -9,8 +9,14 @@ final class EnableKeyboardTests: XCTestCase {
         let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
         settings.launch()
 
-        let general = settings.cells.staticTexts["General"]
-        XCTAssertTrue(general.waitForExistence(timeout: 10))
+        var general = settings.cells.staticTexts["General"]
+        if !general.waitForExistence(timeout: 10) {
+            // Settings can restore into a sub-pane; relaunch clean once.
+            settings.terminate()
+            settings.launch()
+            general = settings.cells.staticTexts["General"]
+        }
+        XCTAssertTrue(general.waitForExistence(timeout: 10), "Settings root (General) never appeared")
         general.tap()
 
         let keyboard = settings.cells.staticTexts["Keyboard"]
