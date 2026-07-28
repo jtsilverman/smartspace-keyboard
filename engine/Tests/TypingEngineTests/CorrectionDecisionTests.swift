@@ -60,3 +60,47 @@ let checker = FakeChecker(misspellings: [
     #expect(engine.decision(for: "teh ") == .noChange)
     #expect(engine.decision(for: "room 4b") == .noChange)
 }
+
+// Spec smart-symbols-wire AC 1/2/2b: the contraction fix inside the
+// correction pipeline (bar/undo/protection ride along for free).
+@Test func contractionFixOutranksTheChecker() {
+    let engine = CorrectionEngine(checker: FakeChecker(misspellings: ["dont": ["donut"]]))
+    #expect(engine.decision(for: "i dont") ==
+        .correct(to: "don\u{2019}t", alternatives: []))
+}
+
+@Test func standaloneLowercaseIIsCapitalized() {
+    let engine = CorrectionEngine(checker: checker)
+    #expect(engine.decision(for: "well i") == .correct(to: "I", alternatives: []))
+}
+
+@Test func contractionKeepsLeadingCapAndAllCapsOutranksAcronymGuard() {
+    let engine = CorrectionEngine(checker: checker)
+    #expect(engine.decision(for: "Dont") ==
+        .correct(to: "Don\u{2019}t", alternatives: []))
+    #expect(engine.decision(for: "DONT") ==
+        .correct(to: "DON\u{2019}T", alternatives: []))
+}
+
+@Test func typedApostropheContractionStillRecased() {
+    let engine = CorrectionEngine(checker: checker)
+    #expect(engine.decision(for: "hey i'm") ==
+        .correct(to: "I\u{2019}m", alternatives: []))
+}
+
+@Test func alreadyCorrectFormsAreLeftAlone() {
+    let engine = CorrectionEngine(checker: checker)
+    #expect(engine.decision(for: "sure I") == .noChange)
+    #expect(engine.decision(for: "we don\u{2019}t") == .noChange)
+}
+
+@Test func protectionAndLexiconOutrankTheContractionFix() {
+    var session = CorrectionSession()
+    session.recordCorrection(original: "dont")
+    _ = session.undoLast()
+    let engine = CorrectionEngine(checker: checker)
+    #expect(engine.decision(for: "ok dont", session: session) == .noChange)
+
+    let lexiconEngine = CorrectionEngine(checker: checker, lexicon: ["dont"])
+    #expect(lexiconEngine.decision(for: "ok dont") == .noChange)
+}
