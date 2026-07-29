@@ -1,0 +1,179 @@
+sym-001	contraction-fix	i	dont	don’t	dont is not a word; standard apostrophe insertion
+sym-002	contraction-fix	no we	dont	don’t	mid-sentence contraction fix
+sym-004	contraction-fix	sorry i	cant	can’t	cant (jargon noun) too rare to block the fix; stock iOS fixes
+sym-005	contraction-fix	she	cant	can’t	common texting contraction fix
+sym-006	contraction-fix	it	wont	won’t	wont (habit) is archaic; contraction reading wins by default
+sym-007	contraction-fix	the app	wont	won’t	tech-support register fix
+sym-008	contraction-fix	EMPTY	im	I’m	adds apostrophe and capitalizes I
+sym-009	contraction-fix	lol	im	I’m	texting register fix
+sym-010	contraction-fix	EMPTY	im omw	I’m omw	fix hits only the contraction token
+sym-011	contraction-fix	EMPTY	ive	I’ve	adds apostrophe and capitalizes I
+sym-012	contraction-fix	omg	ive	I’ve	ive is never a word
+sym-013	contraction-fix	lol	youre	you’re	youre is never a word
+sym-014	contraction-fix	i swear	youre	you’re	second-person contraction fix
+sym-015	contraction-fix	i think	theyre	they’re	theyre is never a word
+sym-016	contraction-fix	omg	theyre	they’re	texting register fix
+sym-017	contraction-fix	it	wasnt	wasn’t	negative contraction fix
+sym-019	contraction-fix	i	didnt	didn’t	negative contraction fix
+sym-020	contraction-fix	u	didnt	didn’t	fix works after texting-shorthand context
+sym-021	contraction-fix	that	isnt	isn’t	negative contraction fix
+sym-022	contraction-fix	they	arent	aren’t	negative contraction fix
+sym-023	contraction-fix	she	doesnt	doesn’t	negative contraction fix
+sym-024	contraction-fix	i	couldnt	couldn’t	negative contraction fix
+sym-025	contraction-fix	you	shouldnt	shouldn’t	negative contraction fix
+sym-026	contraction-fix	he	wouldnt	wouldn’t	negative contraction fix
+sym-027	contraction-fix	i	havent	haven’t	negative contraction fix
+sym-028	contraction-fix	she	hasnt	hasn’t	negative contraction fix
+sym-029	contraction-fix	we	hadnt	hadn’t	negative contraction fix
+sym-030	contraction-fix	they	werent	weren’t	werent is never a word
+sym-031	contraction-fix	and	weve	we’ve	weve is never a word
+sym-032	contraction-fix	wow	youve	you’ve	perfect-tense contraction fix
+sym-033	contraction-fix	i bet	theyve	they’ve	perfect-tense contraction fix
+sym-034	contraction-fix	maybe	youll	you’ll	future contraction fix
+sym-035	contraction-fix	i hope	theyll	they’ll	future contraction fix
+sym-036	contraction-fix	figured	youd	you’d	conditional contraction fix
+sym-037	contraction-fix	i knew	theyd	they’d	conditional contraction fix
+sym-038	contraction-fix	lol	thats	that’s	thats is never a word
+sym-039	contraction-fix	omg	thats so cool	that’s so cool	fix inside a longer typed run
+sym-040	contraction-fix	idk	whos coming	who’s coming	whos is not a word; distinct from whose
+sym-041	contraction-fix	i think	hes	he’s	hes is never a word
+sym-042	contraction-fix	yeah	shes	she’s	shes is never a word
+sym-043	contraction-fix	ok	lets go	let’s go	lets is a verb but imperative reading dominates; stock iOS fixes
+sym-044	contraction-fix	alright	lets do it	let’s do it	imperative lets fix
+sym-045	contraction-fix	he	aint	ain’t	dialect contraction still gets the apostrophe
+sym-046	contraction-fix	you	mustnt	mustn’t	negative contraction fix
+sym-047	contraction-fix	yo	whats up	what’s up	whats is never a word
+sym-048	contraction-fix	lol	wheres the party	where’s the party	wheres is never a word
+sym-049	contraction-fix	so	hows it going	how’s it going	hows is never a word
+sym-050	contraction-fix	omg	theres a line	there’s a line	theres is never a word
+sym-051	contraction-fix	ok	heres the plan	here’s the plan	heres is never a word
+sym-052	contraction-fix	i think	itll work	it’ll work	itll is never a word
+sym-053	contraction-fix	yeah	thatll do	that’ll do	thatll is never a word
+sym-054	contraction-fix	i	couldve sworn	could’ve sworn	couldve is never a word
+sym-055	contraction-fix	you	shouldve seen it	should’ve seen it	shouldve is never a word
+sym-056	contraction-fix	we	wouldve won	would’ve won	wouldve is never a word
+sym-057	contraction-fix	hey	yall	y’all	yall fixes to y’all
+sym-058	contraction-fix	at 6	oclock	o’clock	oclock fixes to o’clock
+sym-059	contraction-fix	yes	maam	ma’am	maam fixes to ma’am
+sym-060	contraction-ambiguous-no	the old	well	well	noun after determiner; the classic wrongful we’ll misfire
+sym-062	contraction-ambiguous-no	oh	well	well	discourse marker; leave alone
+sym-063	contraction-ambiguous-no	it went really	well	well	adverb sense; leave alone
+sym-064	contraction-ambiguous-no	i feel	ill	ill	adjective after feel; not I’ll
+sym-067	contraction-ambiguous-no	my	id	id	ID-card sense after possessive; not I’d
+sym-071	contraction-ambiguous-no	what the	hell	hell	noun idiom; not he’ll
+sym-074	contraction-ambiguous-no	sea	shell	shell	noun after sea; not she’ll
+sym-078	contraction-ambiguous-no	we plan to	wed	wed	verb marry after to; not we’d
+sym-080	contraction-ambiguous-no	see you	Wed	Wed	weekday abbreviation; leave alone
+sym-081	contraction-ambiguous-no	the dog wagged	its	its	possessive its; never auto-apostrophized
+sym-084	contraction-ambiguous-no	they	were	were	past tense of be; not we’re
+sym-086	contraction-ambiguous-no	the tool	shed	shed	noun; not she’d
+sym-089	contraction-ambiguous-no	Professor	Cant	Cant	capitalized surname; leave alone
+sym-093	contraction-ambiguous-no	EMPTY	IM me later	IM me later	IM = instant message; leave alone
+sym-094	contraction-ambiguous-no	go to	example.com/dont-panic	example.com/dont-panic	URL slug untouched
+sym-095	contraction-ambiguous-no	email	dont.reply@shop.com	dont.reply@shop.com	email address untouched
+sym-096	contraction-ambiguous-no	his handle is	@wasnt_me	@wasnt_me	username untouched
+sym-097	contraction-ambiguous-no	EMPTY	#cantstopwontstop	#cantstopwontstop	hashtag untouched
+sym-098	quote-open	EMPTY	"hello	“hello	double quote at string start opens
+sym-100	quote-open	she	said "come over	said “come over	quote after space opens
+sym-102	quote-open	EMPTY	("so called	(“so called	quote directly after open paren opens
+sym-103	quote-open	EMPTY	["sic	[“sic	quote directly after open bracket opens
+sym-104	quote-open	the sign read —	"closed	“closed	quote directly after em dash introducing text opens
+sym-105	quote-open	he texted	back: "k	back: “k	quote after colon+space opens
+sym-106	quote-open	she	said, "hi	said, “hi	quote after comma+space opens
+sym-107	quote-open	the word	'moist' is gross	‘moist’ is gross	single-quote pair around a quoted word: open then close
+sym-108	quote-open	EMPTY	('best' behavior)	(‘best’ behavior)	single quote after open paren opens; pair closes
+sym-109	quote-open	EMPTY	'quotes' are hard	‘quotes’ are hard	string-start single quote before quoted word opens
+sym-110	quote-open	my favorite word is	"defenestration"	“defenestration”	open after space plus close after word char
+sym-111	quote-open	EMPTY	"wait" then "go"	“wait” then “go”	two pairs alternate correctly
+sym-113	quote-open	EMPTY	{"id": 1}	{"id": 1}	code-like JSON context keeps straight quotes (stock iOS wrongly curls)
+sym-114	quote-open	paste	curl -H "Accept: text/html"	curl -H "Accept: text/html"	shell command keeps straight quotes (stock iOS wrongly curls)
+sym-116	quote-close	she said “come	over"	over”	quote after word character closes
+sym-117	quote-close	“no	way"	way”	closes after letter
+sym-118	quote-close	he said “k	"	”	bare quote directly after letter closes
+sym-119	quote-close	she called it ‘art	'	’	single quote after word character closes
+sym-120	quote-close	“stop	it" pls	it” pls	close then continue typing
+sym-121	quote-close	she yelled “wait	--"	—”	interrupted speech: dash converts and quote CLOSES (Word-class algos wrongly open after a dash)
+sym-122	quote-close	“i never	--"	—”	interrupted speech again; closing direction is the contested must-get-right
+sym-123	quote-close	“fine (i guess)	"	”	quote after close paren closes
+sym-124	quote-close	it’s “fine	" honestly	” honestly	close then space and continue
+sym-126	quote-close	he said “brb	" and left	” and left	close after texting abbreviation
+sym-127	quote-close	my ‘so-called	' friends	’ friends	single close after hyphenated word
+sym-129	quote-close	she said “i’m 25	"	”	pending open quote outweighs digit-prime heuristic; close
+sym-132	quote-close	“ok	" she replied	” she replied	close before speech tag
+sym-133	quote-close	‘maybe	' idk	’ idk	single close after word char
+sym-135	quote-close	that word ‘yeet	' again	’ again	single close after slang word
+sym-136	quote-after-punct	she said “on my way	."	.”	period then closing quote
+sym-137	quote-after-punct	he asked “you coming	?"	?”	question mark then closing quote
+sym-138	quote-after-punct	she yelled “stop	!"	!”	exclamation then closing quote
+sym-139	quote-after-punct	“fine	," she said	,” she said	comma then close then speech tag
+sym-140	quote-after-punct	EMPTY	Done. "next"	Done. “next”	after period+space quote opens
+sym-144	quote-after-punct	‘done	.'	.’	period then single closing quote
+sym-145	quote-after-punct	she texted “omw	..."	…”	ellipsis converts and quote closes
+sym-146	quote-after-punct	hold on	; "sure"	; “sure”	after semicolon+space quote opens
+sym-150	quote-nested	she said “he calls it	'art'	‘art’	single quotes nest inside an open double quote
+sym-151	quote-nested	EMPTY	"a 'quick' fix"	“a ‘quick’ fix”	full nested pair typed in one run
+sym-153	quote-nested	he wrote “call it ‘done	'"	’”	nested quotes close in stack order
+sym-154	quote-nested	“it	's fine"	’s fine”	apostrophe inside an open double is not a nested opening single
+sym-156	quote-nested	EMPTY	'he said "go" i think'	‘he said “go” i think’	double nested inside single (British style)
+sym-158	quote-nested	“try 'restart	' first"	’ first”	nested single closes before outer double
+sym-159	quote-nested	EMPTY	"rock 'n' roll"	“rock ’n’ roll”	elision marks inside quotes are apostrophes not nested quotes
+sym-160	apostrophe-word-internal	i	don't	don’t	typed straight apostrophe curls to right single quote
+sym-163	apostrophe-word-internal	i think	it's	it’s	contraction typed with apostrophe; curl only no rewrite
+sym-164	apostrophe-word-internal	EMPTY	I'm	I’m	word-internal curl
+sym-166	apostrophe-word-internal	i	would've	would’ve	word-internal curl
+sym-167	apostrophe-word-internal	hey	y'all	y’all	word-internal curl
+sym-169	apostrophe-word-internal	at 7	o'clock	o’clock	word-internal curl
+sym-170	apostrophe-word-internal	EMPTY	rock 'n' roll	rock ’n’ roll	both marks are elisions; naive smart quotes open the first
+sym-171	apostrophe-word-internal	met	O'Brien	O’Brien	Irish surname apostrophe
+sym-173	apostrophe-word-internal	making	s'mores	s’mores	word-internal curl
+sym-174	apostrophe-word-internal	the	gov't	gov’t	abbreviation apostrophe
+sym-176	apostrophe-word-internal	lol	how'd it go	how’d it go	word-internal curl
+sym-180	apostrophe-word-internal	i was	goin' home	goin’ home	trailing elision curls as apostrophe
+sym-184	apostrophe-decade	music from the	'90s	’90s	leading mark is an apostrophe not an opening quote (naive smart quotes curl it wrong)
+sym-187	apostrophe-decade	EMPTY	'90s kids remember	’90s kids remember	string-start decade still an apostrophe
+sym-188	apostrophe-decade	class of	'09	’09	elided year apostrophe
+sym-190	apostrophe-decade	wait	'til tomorrow	’til tomorrow	elided until; apostrophe not opening quote
+sym-191	apostrophe-decade	get	'em	’em	elided them; apostrophe not opening quote
+sym-192	apostrophe-decade	just	'cause	’cause	elided because; apostrophe not opening quote
+sym-193	apostrophe-decade	EMPTY	'twas the night	’twas the night	elided it was; apostrophe not opening quote
+sym-194	apostrophe-decade	talk	'bout it	’bout it	elided about; apostrophe not opening quote
+sym-195	apostrophe-decade	see you	'round	’round	elided around; apostrophe not opening quote
+sym-196	prime-measurement	he’s	5'10"	5'10"	digit-adjacent marks are primes; keep straight (stock iOS wrongly curls)
+sym-199	prime-measurement	EMPTY	6'2"	6'2"	height at string start stays straight
+sym-200	prime-measurement	the ceiling is	9'	9'	feet-only prime stays straight
+sym-201	prime-measurement	an	8' ladder	8' ladder	feet prime mid-phrase stays straight
+sym-202	prime-measurement	a	32" monitor	32" monitor	inches after digit stays straight
+sym-204	prime-measurement	EMPTY	8.5" x 11" paper	8.5" x 11" paper	paper dimensions stay straight
+sym-205	prime-measurement	coordinates	40°26'46"N	40°26'46"N	arcminutes and arcseconds stay straight
+sym-208	emdash	EMPTY	wait--what	wait—what	double hyphen becomes em dash
+sym-211	emdash	i was	late -- again	late — again	spaced double hyphen still converts
+sym-212	emdash	EMPTY	--and another thing	—and another thing	message-start double hyphen converts
+sym-213	emdash	one rule	--no phones	—no phones	interruption dash converts
+sym-214	emdash	EMPTY	she was--is--my best friend	she was—is—my best friend	both pairs convert
+sym-216	emdash	run	npm install --save-dev	npm install --save-dev	CLI flag; keep hyphens (stock iOS wrongly converts)
+sym-217	emdash	EMPTY	git log --oneline	git log --oneline	CLI flag; keep hyphens
+sym-218	emdash	a	long-term plan	long-term plan	single hyphen never converts
+sym-219	emdash	i’m	twenty-two	twenty-two	hyphenated number untouched
+sym-220	emdash	works	9-5	9-5	range hyphen untouched
+sym-221	emdash	call	555-0192	555-0192	phone number untouched
+sym-222	emdash	EMPTY	---	---	markdown divider; leave (contested)
+sym-224	ellipsis	EMPTY	idk...	idk…	three periods collapse to ellipsis
+sym-226	ellipsis	EMPTY	wait... what	wait… what	mid-sentence ellipsis converts
+sym-227	ellipsis	EMPTY	...ok then	…ok then	leading ellipsis converts
+sym-231	ellipsis	EMPTY	..	..	two dots stay untouched
+sym-232	ellipsis	pages	1..10	1..10	numeric range stays untouched
+sym-233	ellipsis	EMPTY	. . .	. . .	spaced dots stay untouched
+sym-234	ellipsis	EMPTY	ok..	ok..	two-dot typo untouched
+sym-235	ellipsis	version	1.2.3	1.2.3	dotted version untouched
+sym-236	possessive-s	EMPTY	Jake's car	Jake’s car	possessive apostrophe curls right
+sym-237	possessive-s	the	dog's bowl	dog’s bowl	possessive apostrophe curls
+sym-238	possessive-s	EMPTY	James's idea	James’s idea	s-ending name possessive curls
+sym-240	possessive-s	EMPTY	everyone's invited	everyone’s invited	pronoun possessive curls
+sym-242	possessive-s	on	Chris' desk	Chris’ desk	trailing apostrophe after s is an apostrophe (closes right)
+sym-243	possessive-s	at the	kids' table	kids’ table	plural possessive trailing apostrophe
+sym-245	possessive-s	lunch at	McDonald's	McDonald’s	brand possessive curls
+sym-249	possessive-s	EMPTY	y'all's plans	y’all’s plans	double-apostrophe word both curl right
+sym-250	plural-not-possessive-no	EMPTY	three dogs	three dogs	plain plural; no apostrophe inserted
+sym-251	plural-not-possessive-no	in the	1990s	1990s	decade plural without apostrophe stays
+sym-252	plural-not-possessive-no	burning	CDs	CDs	initialism plural; no greengrocer apostrophe
+sym-254	plural-not-possessive-no	the	Smiths	Smiths	family-name plural stays
