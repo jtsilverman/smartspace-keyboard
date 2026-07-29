@@ -41,19 +41,30 @@ Extends the suite beyond punctuation+typos to every keyboard behavior: capitaliz
 
 **Checker-state protocol:** UITextChecker rankings adapt to typed text -- an XCUITest session shifted typo miscorrections 4 -> 18 on rerun. Checker-dependent benchmarks (protect/typos/completions/scenarios) run SOLO after `eval/v4/reset-lexicon.sh <udid>`, never alongside another xcodebuild session.
 
-Scores (dev / test, top-line = row-level pass):
+Scores (dev / test, top-line = row-level pass). Final = 2026-07-29 Pareto frontier:
 
-| set | baseline | after invariant pass |
+| set | baseline | final |
 |---|---|---|
 | cap | 90 / 87 | 94 / 92 |
-| symbols | 70 / 75 | 94 / 88 |
-| protect | 77 / 75 | 96 / 88 |
+| symbols | 70 / 75 | 94 / 89 |
+| protect | 77 / 75 | **100 / 97** |
 | typos v4 | 92 whole-set (mis 4) | 89 (mis 3) |
 | completions | 82 / 89 | 91 / 95 |
-| scenarios | pending first run | -- |
+| scenarios (whole-set) | ~52 (14/27 observed) | **92 (36/39)**, 1 {RET} skip |
 
-Distance-guard trade (accepted): rejecting checker suggestions past Damerau max(1, len/4) converts protection miscorrections (expensive: mangles intended text) into a few missed typo fixes (cheap: word stays as typed). Frozen v3 typo bench moved 90% corrected / 30 miscorrected -> 90% / 22 miscorrected. Remaining protect misses are all distance-1 checker guesses (sus->sis, imy->my, danke->dance) -- vocabulary, not distance; addressed by the shipped texting lexicon.
+Overfit guard held: blind v3 test 61/76 unchanged throughout; real-v3 test 65/84 -> 67/85; frozen v3 typo bench 90% corrected with miscorrections down 30 -> 23.
 
-Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`): ellipsis/emoji sentence terminators; non-word bare contraction curation criterion; em-dash word/text-start guard (CLI flags stay); digit primes stay straight; ... -> ellipsis collapse; proper-noun guard (capitalized mid-sentence, contraction included); <=2-letter shortform guard; 3+ letter-run elongation guard; @/# handle guard; lowercase-prefix proper-noun completion merge.
+Distance-guard trade (accepted): rejecting checker suggestions past Damerau max(1, len/4) converts protection miscorrections (expensive: mangles intended text) into a few missed typo fixes (cheap: word stays as typed). Remaining protect misses were distance-1 checker guesses (sus->sis, imy->my) -- vocabulary, not distance; closed by the shipped TextingLexicon (331 words, blind-compiled from public glossaries, eval/v4/texting-lexicon-source.txt).
 
-Accepted frontier (dev rows deliberately not chased): title-abbreviation autocap (gold disputes engine's Mr.-then-name behavior, 3 rows); code-context detection (JSON/CLI straight quotes, 1 row); single-quote elision vs nested-quote at type time ('n', 2 rows); text-start --- divider vs --aside (zero-sum, aside chosen, 1 row); one join-ambiguous authored row (sym-107).
+The e2e scenarios caught what no unit suite could: learned-state pollution (PersonalRanking lock-in -- five smoke-test ?->. cycles permanently demoted ? for every question; fixed by counting only deliberate cycles), the smart-period-after-abbreviation class (shift arm + proper-noun guard both re-derived "not a sentence end" from context after the user's explicit end-sentence gesture), and live-path integration gaps (greeting-prefixed questions, all-caps shouting, lowercase name/calendar capitalization, '90s elision direction).
+
+Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift` / `EvalV4PredictionInvariantTests.swift`): ellipsis/emoji sentence terminators; non-word bare contraction curation criterion; em-dash word/text-start guard (CLI flags stay); digit primes stay straight; ... -> ellipsis collapse; proper-noun guard with post-period sentence starts; <=2-letter shortform guard; 3+ letter-run elongation guard; @/# handle guard; Damerau distance guard; recased-suggestion priority (jake -> Jake); shipped TextingLexicon; lowercase-prefix proper-noun completion merge; greeting-prefixed questions; all-caps exclamation; smart period always terminal (1.4 criterion updated); sentence-start Ill/Id -> I'll/I'd; digit elision retro-fix ('90s); CalendarRule weekday/month capitalization; deliberate-only personal reranking; smart-mark shift arm.
+
+**Accepted frontier** (improving any of these costs another set or needs the ML/architecture phase):
+- Distance guard: 3-4 long-shot typo fixes (phonetic/casual d>=2 short words) traded for name/slang/loanword protection.
+- Uncommitted final word ("Text me your adress", "coming saturday" with no trailing space): corrections fire on commit; retro-correct-on-send is an architecture change.
+- Mid-sentence "ill" -> "I'll": needs next-word lookahead (delayed correction), ML-phase territory.
+- Title-abbreviation autocap gold dispute (3 cap rows: engine capitalizes after "Mr." because a name follows; blind gold says nocap).
+- Code-context detection (JSON/CLI straight quotes), single-quote elision vs quote at type time ('n' rock 'n' roll), text-start --- divider (aside chosen), one join-ambiguous authored row (sym-107).
+- Completions: NONE-rows (short valid words get junk completions) and context-aware ranking need a frequency/context model.
+- {RET} scenarios (2) need a multiline practice field (Phase 4 host-app work).

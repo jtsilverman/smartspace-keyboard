@@ -1,5 +1,4 @@
 ---
-status: active
 ---
 
 # Keyboard-wide blind eval + invariant iteration (eval v4)
@@ -37,5 +36,5 @@ Extend the frozen eval suite from punctuation+typos to every behavior a real key
 - [x] QC + assembly + dev/test split (714 kept, QC-REPORT.md)
 - [x] Harness (swift-test sets, simulator sets, XCUITest scenarios; reset-lexicon.sh protocol)
 - [x] Baseline scores -> EVAL.md v4 section
-- [ ] Invariant iteration to Pareto frontier (in progress: 10 class fixes landed; scenarios first run + texting lexicon outstanding)
-- [ ] Final frontier recorded, PR
+- [x] Invariant iteration to Pareto frontier (20 class fixes; final: cap 94/92, symbols 94/89, protect 100/97, completions 91/95, scenarios 36/39; blind v3 test unchanged, real-v3 test +2/+1, v3 typo miscorrections 30->23)
+- [x] Final frontier recorded in EVAL.md, PR opened
