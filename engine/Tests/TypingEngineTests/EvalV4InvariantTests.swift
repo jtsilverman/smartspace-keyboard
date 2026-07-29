@@ -62,3 +62,47 @@ import Testing
         #expect(ContractionRule.transform(word) == nil)
     }
 }
+
+// MARK: - Smart symbols: dashes and primes serve the text they sit in
+
+@Suite struct SymbolContextClasses {
+    /// -- collapses to an em dash only between words (so--anyway); after a
+    /// space it's CLI-flag territory (npm install --save-dev) and after
+    /// another hyphen it's a divider (---). Class rule: collapse requires a
+    /// word character immediately before the double hyphen.
+    @Test func doubleHyphenCollapsesOnlyAfterWordChar() {
+        #expect(SmartSymbols.decision(forTyping: "-", before: "so-")
+                == .replacePrevious(with: "\u{2014}"))
+        #expect(SmartSymbols.decision(forTyping: "-", before: "npm install -")
+                == .insert("-"))
+        #expect(SmartSymbols.decision(forTyping: "-", before: "--")
+                == .insert("-"))
+        #expect(SmartSymbols.decision(forTyping: "-", before: "")
+                == .insert("-"))
+    }
+
+    /// A quote right after a digit is a prime (5'10", 6', 9mm vs 9") and
+    /// stays straight -- unless an opening double quote is pending, where
+    /// closing wins ("i'm 25").
+    @Test func digitAdjacentQuotesStayStraight() {
+        #expect(SmartSymbols.decision(forTyping: "'", before: "5") == .insert("'"))
+        #expect(SmartSymbols.decision(forTyping: "\"", before: "5'10") == .insert("\""))
+        #expect(SmartSymbols.decision(forTyping: "\"", before: "she said \u{201C}i\u{2019}m 25")
+                == .insert("\u{201D}"))
+    }
+
+    /// Typing the third dot of ... collapses to a single-char ellipsis;
+    /// two dots (ranges, 1..10) and version strings never trigger it.
+    @Test func threeDotsCollapseToEllipsis() {
+        #expect(SmartSymbols.decision(forTyping: ".", before: "wait..")
+                == .replaceLast(2, with: "\u{2026}"))
+        #expect(SmartSymbols.decision(forTyping: ".", before: "wait.")
+                == .insert("."))
+        #expect(SmartSymbols.decision(forTyping: ".", before: "1.2")
+                == .insert("."))
+        // A fourth dot after the collapse starts a fresh count, and dots
+        // after an existing ellipsis char don't chain-collapse.
+        #expect(SmartSymbols.decision(forTyping: ".", before: "wait\u{2026}")
+                == .insert("."))
+    }
+}

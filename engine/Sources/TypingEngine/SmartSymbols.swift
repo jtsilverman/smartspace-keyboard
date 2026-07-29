@@ -4,6 +4,9 @@ public enum TypedSymbolDecision: Equatable, Sendable {
     /// Replace the character before the cursor with `with`
     /// (the -- to em-dash collapse).
     case replacePrevious(with: String)
+    /// Replace the last `n` characters before the cursor with `with`
+    /// (the ... to ellipsis collapse).
+    case replaceLast(Int, with: String)
 }
 
 /// Curly-quote and em-dash conversion for typed symbols -- the pair behind

@@ -95,6 +95,8 @@ func simulateTypedUnit(context: String, typed: String) -> String {
             text += s
         case .replacePrevious(let s):
             text = String(text.dropLast()) + s
+        case .replaceLast(let n, let s):
+            text = String(text.dropLast(n)) + s
         }
     }
     commit()
