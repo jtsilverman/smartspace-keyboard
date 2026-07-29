@@ -17,8 +17,11 @@ import TypingEngine
     #expect(ContractionRule.transform("i\u{2019}m") == "I\u{2019}m")
 }
 
+// "lets"/"wont" moved to the fix list with the v4 curation criterion
+// (bare form must be a COMMON modern word to stay; archaic homographs fix,
+// matching stock iOS). See EvalV4InvariantTests.
 @Test func ambiguousRealWordsAreNeverTransformed() {
-    for word in ["its", "ill", "id", "well", "shell", "were", "lets", "wont", "hell"] {
+    for word in ["its", "ill", "id", "well", "shell", "were", "hell"] {
         #expect(ContractionRule.transform(word) == nil, "word: \(word)")
     }
 }
