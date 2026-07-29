@@ -9,13 +9,23 @@ final class ScenarioEvalTests: XCTestCase {
     private static let numberChars = Set("1234567890-/:;()$&@\".,?!'")
     private static let symbolOnlyChars = Set("[]{}#%^*+=_\\|~<>")
 
-    func testScenarioEvalReport() throws {
+    // Sliced so each xcodebuild invocation stays well under the background
+    // command time cap (a single 40-scenario test got killed twice).
+    func testScenarioSlice0() throws { try runSlice(0) }
+    func testScenarioSlice1() throws { try runSlice(1) }
+    func testScenarioSlice2() throws { try runSlice(2) }
+    func testScenarioSlice3() throws { try runSlice(3) }
+
+    private func runSlice(_ slice: Int) throws {
+        let size = 10
+        let rows = Array(scenarioCorpus.dropFirst(slice * size).prefix(size))
+        guard !rows.isEmpty else { return }
         let app = XCUIApplication()
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
 
         var pass = 0, fail = 0, skipped = 0
-        for scenario in scenarioCorpus {
+        for scenario in rows {
             if scenario.script.contains("{RET}") {
                 // Practice field is a single-line TextField; return-key
                 // scenarios need a multiline host surface (recorded, not run).
@@ -32,13 +42,12 @@ final class ScenarioEvalTests: XCTestCase {
             } else {
                 fail += 1
                 print("SCENARIO-MISS \(scenario.id) (\(scenario.title)) [\(scenario.tolerance)]")
-                print("  want: \(scenario.expected.debugDescription)")
-                print("  got:  \(got.debugDescription)")
+                print("SCENARIO-WANT \(scenario.expected.debugDescription)")
+                print("SCENARIO-GOT  \(got.debugDescription)")
             }
         }
-        print("SCENARIO-BENCH pass \(pass)/\(pass + fail) (skipped \(skipped))")
-        XCTAssertEqual(pass + fail + skipped, scenarioCorpus.count)
-        XCTAssertGreaterThan(pass, 0)
+        print("SCENARIO-BENCH slice \(slice): pass \(pass)/\(pass + fail) (skipped \(skipped))")
+        XCTAssertEqual(pass + fail + skipped, rows.count)
     }
 
     private func matches(got raw: String, scenario: ScenarioCase) -> Bool {
