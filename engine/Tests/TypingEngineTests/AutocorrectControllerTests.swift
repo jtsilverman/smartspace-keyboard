@@ -292,3 +292,16 @@ private func controller(
         #expect(MinimalChecker().completions(for: "any") == [])
     }
 }
+
+// Trailing punctuation/digits mean no partial word: typing "!" after a
+// word must not resurrect that word's completions.
+@Suite struct CompletionPartialBoundary {
+    @Test func trailingPunctuationYieldsNoCompletions() {
+        var c = AutocorrectController(checker: TableChecker(
+            table: [:], completionTable: ["hi": ["high", "hind"]]))
+        c.typingUpdate(context: "hi")
+        #expect(c.barContent == .completions(typed: "hi", completions: ["high", "hind"]))
+        c.typingUpdate(context: "hi!")
+        #expect(c.barContent == .empty)
+    }
+}

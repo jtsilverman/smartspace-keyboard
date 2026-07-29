@@ -108,12 +108,25 @@ public struct AutocorrectController: Sendable {
     /// state, never a correction (its undo window survives the commit
     /// space).
     public mutating func typingUpdate(context: String) {
-        guard let partial = WordBoundary.lastWord(in: context) else {
+        guard let partial = Self.partialWord(in: context) else {
             if case .typing = state { state = .idle }
             return
         }
         let completions = Array(checker.completions(for: partial).prefix(Self.maxAlternatives))
         state = .typing(typed: partial, completions: completions)
+    }
+
+    /// The word actively being typed: the trailing run of letters and word
+    /// punctuation. Unlike WordBoundary.lastWord, a trailing "!" or digit
+    /// means NO partial -- "hi!" must not resurrect completions for "hi".
+    private static func partialWord(in context: String) -> String? {
+        var run: [Character] = []
+        for char in context.reversed() {
+            guard char.isLetter || char == "'" || char == "\u{2019}" || char == "-" else { break }
+            run.append(char)
+        }
+        guard !run.isEmpty else { return nil }
+        return String(run.reversed())
     }
 
     /// Correction state: slot 0 undoes, others swap. Typing state: slot 0
