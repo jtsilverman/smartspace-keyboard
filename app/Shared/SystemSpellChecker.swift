@@ -13,4 +13,11 @@ struct SystemSpellChecker: SpellChecking {
         guard miss.location != NSNotFound else { return [] }
         return checker.guesses(forWordRange: miss, in: word, language: "en_US") ?? []
     }
+
+    func completions(for prefix: String) -> [String] {
+        let checker = UITextChecker()
+        let range = NSRange(location: 0, length: (prefix as NSString).length)
+        return checker.completions(
+            forPartialWordRange: range, in: prefix, language: "en_US") ?? []
+    }
 }
