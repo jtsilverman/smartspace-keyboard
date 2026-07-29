@@ -368,6 +368,9 @@ final class KeyboardViewController: UIInputViewController {
         case .replacePrevious(let text):
             textDocumentProxy.deleteBackward()
             textDocumentProxy.insertText(text)
+        case .replaceLast(let n, let text):
+            for _ in 0..<n { textDocumentProxy.deleteBackward() }
+            textDocumentProxy.insertText(text)
         }
     }
 

@@ -15,6 +15,20 @@ struct SystemSpellChecker: SpellChecking {
     }
 
     func completions(for prefix: String) -> [String] {
+        let native = rawCompletions(for: prefix)
+        // The dictionary only completes proper nouns (Wednesday, December)
+        // from a capitalized prefix; a lowercase prefix merges them in so
+        // "wednes" still reaches Wednesday.
+        guard let first = prefix.first, first.isLowercase else { return native }
+        let capitalized = rawCompletions(for: first.uppercased() + prefix.dropFirst())
+            .filter { $0.first?.isUppercase == true && !native.contains($0) }
+        guard let top = native.first else { return capitalized }
+        // Slot the proper nouns right behind the native top pick so a
+        // 3-slot bar can still reach them (mondo, Monday, ...).
+        return [top] + capitalized + native.dropFirst()
+    }
+
+    private func rawCompletions(for prefix: String) -> [String] {
         let checker = UITextChecker()
         let range = NSRange(location: 0, length: (prefix as NSString).length)
         return checker.completions(
