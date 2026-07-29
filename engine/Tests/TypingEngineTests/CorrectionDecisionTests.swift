@@ -41,10 +41,12 @@ let checker = FakeChecker(misspellings: [
         .correct(to: "The", alternatives: ["Ten", "Tech"]))
 }
 
+// Sentence-start context: mid-sentence a capitalized unknown reads as a
+// proper noun and is protected (v4 guard, CorrectionGuardClasses).
 @Test func suggestionsWithTheirOwnCapitalsKeepTheCheckerCasing() {
     let brandChecker = FakeChecker(misspellings: ["iphnoe": ["iPhone"]])
     let engine = CorrectionEngine(checker: brandChecker)
-    #expect(engine.decision(for: "my Iphnoe") ==
+    #expect(engine.decision(for: "Iphnoe") ==
         .correct(to: "iPhone", alternatives: []))
 }
 

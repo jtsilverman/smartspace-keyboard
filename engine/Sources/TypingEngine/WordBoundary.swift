@@ -12,6 +12,9 @@ public enum WordBoundary {
         guard let lastChar = context.last, !lastChar.isWhitespace else { return nil }
         let token = context.split(whereSeparator: { $0.isWhitespace }).last!
         guard !token.contains(where: { $0.isNumber }) else { return nil }
+        // Handles and hashtags are addresses; the sigil marks the whole
+        // token untouchable, not just its letters.
+        guard token.first != "@", token.first != "#" else { return nil }
         guard let firstLetter = token.firstIndex(where: { $0.isLetter }),
               let lastLetter = token.lastIndex(where: { $0.isLetter }) else { return nil }
         let word = token[firstLetter...lastLetter]
