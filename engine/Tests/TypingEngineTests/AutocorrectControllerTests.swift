@@ -304,4 +304,12 @@ private func controller(
         c.typingUpdate(context: "hi!")
         #expect(c.barContent == .empty)
     }
+
+    @Test func trailingDigitYieldsNoCompletions() {
+        var c = AutocorrectController(checker: TableChecker(
+            table: [:], completionTable: ["hi": ["high"]]))
+        c.typingUpdate(context: "hi")
+        c.typingUpdate(context: "hi3")
+        #expect(c.barContent == .empty)
+    }
 }

@@ -135,19 +135,17 @@ public struct AutocorrectController: Sendable {
         switch state {
         case .idle:
             return .none
-        case .correction(_, let corrected, var alternatives):
+        case .correction(let original, let corrected, var alternatives):
             guard slot >= 0, slot <= alternatives.count else { return .none }
             if slot == 0 {
-                guard let original = session.undoLast() else { return .none }
+                guard let restored = session.undoLast() else { return .none }
                 state = .idle
-                return .undo(original: original, corrected: corrected)
+                return .undo(original: restored, corrected: corrected)
             }
             let chosen = alternatives[slot - 1]
             alternatives[slot - 1] = corrected
-            if case .correction(let original, _, _) = state {
-                state = .correction(original: original, corrected: chosen,
-                                    alternatives: alternatives)
-            }
+            state = .correction(original: original, corrected: chosen,
+                                alternatives: alternatives)
             return .swap(from: corrected, to: chosen)
         case .typing(let typed, let completions):
             guard slot >= 0, slot <= completions.count else { return .none }
