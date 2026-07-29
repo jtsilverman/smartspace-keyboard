@@ -145,6 +145,26 @@ private struct CannedChecker: SpellChecking {
     }
 }
 
+@Suite struct SentenceStartIContractions {
+    private let engine = CorrectionEngine(checker: CannedChecker(canned: [:]))
+
+    /// "Ill"/"Id" at a sentence start are autocap products of the typed
+    /// contraction (ill be there -> Ill -> I'll); mid-sentence and
+    /// lowercase forms keep the homograph protection.
+    @Test func autocappedIContractionsFixAtSentenceStart() {
+        #expect(engine.decision(for: "Ill") ==
+                .correct(to: "I\u{2019}ll", alternatives: []))
+        #expect(engine.decision(for: "Id") ==
+                .correct(to: "I\u{2019}d", alternatives: []))
+    }
+
+    @Test func homographProtectionSurvives() {
+        #expect(engine.decision(for: "feel ill") == .noChange)
+        #expect(engine.decision(for: "my id") == .noChange)
+        #expect(engine.decision(for: "scan my Id") == .noChange)
+    }
+}
+
 @Suite struct RecasedSuggestionPreference {
     /// When the checker's list contains the typed word merely recased
     /// (jake -> Jake), that IS the word -- it outranks any letter-changing
