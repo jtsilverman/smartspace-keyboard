@@ -145,6 +145,19 @@ private struct CannedChecker: SpellChecking {
     }
 }
 
+@Suite struct RecasedSuggestionPreference {
+    /// When the checker's list contains the typed word merely recased
+    /// (jake -> Jake), that IS the word -- it outranks any letter-changing
+    /// suggestion regardless of list order (jake -> take was a real miss).
+    @Test func recasingBeatsLetterChanges() {
+        let engine = CorrectionEngine(checker: CannedChecker(canned: [
+            "jake": ["take", "Jake", "fake"],
+        ]))
+        #expect(engine.decision(for: "tell jake") ==
+                .correct(to: "Jake", alternatives: ["take", "fake"]))
+    }
+}
+
 @Suite struct SuggestionDistanceGuard {
     private let engine = CorrectionEngine(checker: CannedChecker(canned: [
         "nkechi": ["Knit"], "saoirse": ["Satires"], "kylian": ["Chilean"],
@@ -170,6 +183,28 @@ private struct CannedChecker: SpellChecking {
                 .correct(to: "definitely", alternatives: []))
         #expect(engine.decision(for: "thnks") ==
                 .correct(to: "thanks", alternatives: []))
+    }
+}
+
+// MARK: - Shift: a smart-space terminal mark always starts a sentence
+
+@Suite struct SmartMarkShiftArm {
+    /// The context re-derivation can't know a smart-space period after an
+    /// abbreviation ("Ave.") was deliberately terminal -- the insert site
+    /// arms the shift directly instead.
+    @Test func armOneShotArmsFromOff() {
+        var shift = ShiftState()
+        shift.armOneShot()
+        #expect(shift.mode == .oneShot)
+    }
+
+    /// Caps lock and an armed one-shot are never disturbed.
+    @Test func armOneShotNeverDowngrades() {
+        var shift = ShiftState()
+        shift.tapShift(at: 0)
+        shift.tapShift(at: 0.1)   // double-tap -> caps lock
+        shift.armOneShot()
+        #expect(shift.mode == .capsLock)
     }
 }
 

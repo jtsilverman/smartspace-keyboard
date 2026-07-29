@@ -71,7 +71,13 @@ public struct CorrectionEngine: Sendable {
         // checker's guesses for both mangle intended text.
         if word.count <= 2 { return .noChange }
         if hasLetterRun(word, of: 3) { return .noChange }
-        let suggestions = checker.suggestions(for: word).map { recased($0, like: word) }
+        var suggestions = checker.suggestions(for: word).map { recased($0, like: word) }
+        // A suggestion that is the typed word merely recased (jake -> Jake)
+        // IS the word; it outranks any letter-changing suggestion.
+        if let i = suggestions.firstIndex(where: { $0.lowercased() == word.lowercased() }),
+           i > 0 {
+            suggestions.insert(suggestions.remove(at: i), at: 0)
+        }
         guard let top = suggestions.first else { return .noChange }
         // A top suggestion far from the typed word is the checker guessing
         // at a word it doesn't know (names, slang, loanwords) -- rejecting

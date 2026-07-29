@@ -514,7 +514,7 @@ final class KeyboardViewController: UIInputViewController {
                                            wordCount: lastContextWordCount)
             }
             log.debug("smart insert: \(mark.text, privacy: .public)")
-            if mark.endsSentence { armAutoShiftIfSentenceStart() }
+            if mark.endsSentence { armShiftForSmartMark() }
         case .replaceMark(let mark, let previous):
             // The cursor may have moved since the insert; only edit if the
             // text still ends with the mark we placed.
@@ -534,7 +534,12 @@ final class KeyboardViewController: UIInputViewController {
             textDocumentProxy.insertText(mark.text + " ")
             outcomeTracker.cycled(to: mark.text)
             log.debug("cycle to: \(mark.text, privacy: .public)")
-            if mark.endsSentence { armAutoShiftIfSentenceStart() }
+            if mark.endsSentence { armShiftForSmartMark() } else if shift.mode == .oneShot {
+                // Cycled to a non-terminal mark (,): the arm from the
+                // previous terminal guess no longer applies.
+                shift.didTypeLetter()
+                refreshShiftAppearance()
+            }
         }
     }
 
@@ -913,6 +918,15 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     /// Auto-shift re-arms whenever the context now reads as a sentence start.
+    /// A smart-space terminal mark is a sentence end by construction --
+    /// context re-derivation would wrongly veto it after an abbreviation
+    /// ("Ave." + smart period).
+    private func armShiftForSmartMark() {
+        let wasShifted = shift.isShifted
+        shift.armOneShot()
+        if shift.isShifted != wasShifted { refreshShiftAppearance() }
+    }
+
     private func armAutoShiftIfSentenceStart() {
         let before = textDocumentProxy.documentContextBeforeInput ?? ""
         let wasShifted = shift.isShifted
