@@ -70,15 +70,18 @@ import Testing
     /// space it's CLI-flag territory (npm install --save-dev) and after
     /// another hyphen it's a divider (---). Class rule: collapse requires a
     /// word character immediately before the double hyphen.
-    @Test func doubleHyphenCollapsesOnlyAfterWordChar() {
+    @Test func doubleHyphenCollapsesOnlyAfterWordCharOrTextStart() {
         #expect(SmartSymbols.decision(forTyping: "-", before: "so-")
                 == .replacePrevious(with: "\u{2014}"))
         #expect(SmartSymbols.decision(forTyping: "-", before: "npm install -")
                 == .insert("-"))
         #expect(SmartSymbols.decision(forTyping: "-", before: "--")
                 == .insert("-"))
-        #expect(SmartSymbols.decision(forTyping: "-", before: "")
-                == .insert("-"))
+        // Message-start aside: --and another thing. (Zero-sum vs a literal
+        // "---" divider typed at text start; the aside is the texting-real
+        // pattern, adjudicated on the v4 dev set.)
+        #expect(SmartSymbols.decision(forTyping: "-", before: "-")
+                == .replacePrevious(with: "\u{2014}"))
     }
 
     /// A quote right after a digit is a prime (5'10", 6', 9mm vs 9") and
