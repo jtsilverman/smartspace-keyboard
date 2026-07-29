@@ -50,8 +50,14 @@ public struct CorrectionEngine: Sendable {
         // Professor Cant); its capital came from the user, not autocap, so
         // no rewrite of any kind -- contraction fixes included. At a
         // sentence start the capital IS autocap and typos still fix.
+        // Sentence start here includes any trailing period ("Ave. Dont"):
+        // a smart-space period after an abbreviation deliberately ended
+        // the sentence even though CapitalizationRule reads it as one.
+        let prefix = String(context.dropLast(word.count))
+        let sentenceStart = CapitalizationRule.shouldCapitalize(before: prefix)
+            || prefix.last(where: { !$0.isWhitespace }).map { ".!?".contains($0) } == true
         if word.first?.isUppercase == true, word.dropFirst().contains(where: \.isLowercase),
-           !CapitalizationRule.shouldCapitalize(before: String(context.dropLast(word.count))) {
+           !sentenceStart {
             return .noChange
         }
         // Curated contraction fixes are deterministic and outrank the
