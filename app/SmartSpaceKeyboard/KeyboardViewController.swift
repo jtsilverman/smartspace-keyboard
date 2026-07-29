@@ -141,17 +141,43 @@ final class KeyboardViewController: UIInputViewController {
         rebuildRows()
     }
 
-    /// Rebuilds the suggestion-bar slots from controller state: original
-    /// word first (tap to undo), then alternatives (tap to swap).
+    /// Renders the controller's bar state. Correction: original first (tap
+    /// to undo), then alternatives (tap to swap). Completions: the word as
+    /// typed in quotes (tap to keep + protect), then completions (tap to
+    /// finish the word). This function never changes state -- only the
+    /// three typing trigger points call typingUpdate.
     private func refreshSuggestionBar() {
         suggestionBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        for (index, word) in autocorrect.barSlots.enumerated() {
-            let slot = keyButton(title: word)
-            slot.tag = index
-            slot.accessibilityIdentifier = "suggestion-\(index)"
-            slot.addTarget(self, action: #selector(suggestionTapped(_:)), for: .touchUpInside)
-            suggestionBar.addArrangedSubview(slot)
+        switch autocorrect.barContent {
+        case .empty:
+            break
+        case .correction(let slots):
+            for (index, word) in slots.enumerated() {
+                suggestionBar.addArrangedSubview(
+                    barSlot(title: word, tag: index, identifier: "suggestion-\(index)"))
+            }
+        case .completions(let typed, let completions):
+            suggestionBar.addArrangedSubview(barSlot(
+                title: "\u{201C}\(typed)\u{201D}", tag: 0, identifier: "completion-typed"))
+            for (index, word) in completions.enumerated() {
+                suggestionBar.addArrangedSubview(barSlot(
+                    title: word, tag: index + 1, identifier: "completion-\(index + 1)"))
+            }
         }
+    }
+
+    private func barSlot(title: String, tag: Int, identifier: String) -> UIButton {
+        let slot = keyButton(title: title)
+        slot.tag = tag
+        slot.accessibilityIdentifier = identifier
+        slot.addTarget(self, action: #selector(suggestionTapped(_:)), for: .touchUpInside)
+        return slot
+    }
+
+    /// Typing trigger: refreshes mid-word completions from the live context.
+    private func refreshTypingCompletions() {
+        autocorrect.typingUpdate(context: textDocumentProxy.documentContextBeforeInput ?? "")
+        refreshSuggestionBar()
     }
 
     /// Updates key titles in place -- button identity survives, so a
@@ -325,6 +351,7 @@ final class KeyboardViewController: UIInputViewController {
             shift.didTypeLetter()
             refreshShiftAppearance()
         }
+        refreshTypingCompletions()
     }
 
     /// Routes a typed key through SmartSymbols: curly quotes by position,
@@ -372,8 +399,8 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         autocorrect.backspace()
-        refreshSuggestionBar()
         textDocumentProxy.deleteBackward()
+        refreshTypingCompletions()
         armAutoShiftIfSentenceStart()
     }
 
@@ -393,7 +420,7 @@ final class KeyboardViewController: UIInputViewController {
             backspaceTimer?.invalidate()
             backspaceTimer = nil
             autocorrect.backspace()
-            refreshSuggestionBar()
+            refreshTypingCompletions()
             armAutoShiftIfSentenceStart()
         default:
             break
@@ -442,6 +469,7 @@ final class KeyboardViewController: UIInputViewController {
             endSmartSpaceCycle()
             insertSmart(title)
             if layer == .letters { shift.didTypeLetter() }
+            refreshTypingCompletions()
         }
         dismissAlternates()
         refreshShiftAppearance()
@@ -829,27 +857,49 @@ final class KeyboardViewController: UIInputViewController {
         dismissAlternates()
         endSmartSpaceCycle()
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
-        // The correction must still be the document tail ("word" + the
-        // separator that committed it). If the user typed on or moved the
-        // cursor, drop the bar instead of editing the wrong text.
-        guard let current = autocorrect.currentCorrected,
-              let separator = [" ", "\n"].first(where: { context.hasSuffix(current + $0) })
-        else {
-            autocorrect.backspace()
-            refreshSuggestionBar()
-            return
-        }
-        switch autocorrect.barTapped(slot: sender.tag) {
-        case .none:
+        defer { refreshSuggestionBar() }
+        switch autocorrect.barContent {
+        case .empty:
             break
-        case .undo(let original, let corrected):
-            replaceTail(corrected, separator: separator, with: original)
-            log.debug("autocorrect undone")
-        case .swap(let from, let to):
-            replaceTail(from, separator: separator, with: to)
-            log.debug("autocorrect swapped")
+        case .correction:
+            // The correction must still be the document tail ("word" + the
+            // separator that committed it). If the user typed on or moved
+            // the cursor, drop the bar instead of editing the wrong text.
+            guard let current = autocorrect.currentCorrected,
+                  let separator = [" ", "\n"].first(where: { context.hasSuffix(current + $0) })
+            else {
+                autocorrect.invalidateBar()
+                return
+            }
+            switch autocorrect.barTapped(slot: sender.tag) {
+            case .undo(let original, let corrected):
+                replaceTail(corrected, separator: separator, with: original)
+                log.debug("autocorrect undone")
+            case .swap(let from, let to):
+                replaceTail(from, separator: separator, with: to)
+                log.debug("autocorrect swapped")
+            default:
+                break
+            }
+        case .completions(let typed, _):
+            // Same guard class: the partial must still be the tail.
+            guard context.hasSuffix(typed) else {
+                autocorrect.invalidateBar()
+                return
+            }
+            switch autocorrect.barTapped(slot: sender.tag) {
+            case .acceptTyped:
+                textDocumentProxy.insertText(" ")
+                log.debug("completion: typed word accepted")
+            case .complete(let from, let to):
+                for _ in 0..<from.count { textDocumentProxy.deleteBackward() }
+                textDocumentProxy.insertText(to + " ")
+                log.debug("completion applied")
+            default:
+                break
+            }
+            armAutoShiftIfSentenceStart()
         }
-        refreshSuggestionBar()
     }
 
     private func replaceTail(_ current: String, separator: String, with replacement: String) {
