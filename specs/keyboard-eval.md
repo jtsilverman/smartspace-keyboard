@@ -33,9 +33,9 @@ Extend the frozen eval suite from punctuation+typos to every behavior a real key
 ## Progress
 
 - [x] Spec
-- [ ] Blind authoring (5 agent sets)
-- [ ] QC + assembly + dev/test split
-- [ ] Harness
-- [ ] Baseline scores -> EVAL.md v4 section
-- [ ] Invariant iteration to Pareto frontier
+- [x] Blind authoring (5 agent sets, 937 raw rows)
+- [x] QC + assembly + dev/test split (714 kept, QC-REPORT.md)
+- [x] Harness (swift-test sets, simulator sets, XCUITest scenarios; reset-lexicon.sh protocol)
+- [x] Baseline scores -> EVAL.md v4 section
+- [ ] Invariant iteration to Pareto frontier (in progress: 10 class fixes landed; scenarios first run + texting lexicon outstanding)
 - [ ] Final frontier recorded, PR

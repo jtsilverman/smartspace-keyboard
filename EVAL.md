@@ -47,10 +47,12 @@ Scores (dev / test, top-line = row-level pass):
 |---|---|---|
 | cap | 90 / 87 | 94 / 92 |
 | symbols | 70 / 75 | 94 / 88 |
-| protect | 77 / 75 | pending clean rerun |
-| typos v4 | 92 whole-set | pending clean rerun |
-| completions | 82 / 89 | pending clean rerun |
+| protect | 77 / 75 | 96 / 88 |
+| typos v4 | 92 whole-set (mis 4) | 89 (mis 3) |
+| completions | 82 / 89 | 91 / 95 |
 | scenarios | pending first run | -- |
+
+Distance-guard trade (accepted): rejecting checker suggestions past Damerau max(1, len/4) converts protection miscorrections (expensive: mangles intended text) into a few missed typo fixes (cheap: word stays as typed). Frozen v3 typo bench moved 90% corrected / 30 miscorrected -> 90% / 22 miscorrected. Remaining protect misses are all distance-1 checker guesses (sus->sis, imy->my, danke->dance) -- vocabulary, not distance; addressed by the shipped texting lexicon.
 
 Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`): ellipsis/emoji sentence terminators; non-word bare contraction curation criterion; em-dash word/text-start guard (CLI flags stay); digit primes stay straight; ... -> ellipsis collapse; proper-noun guard (capitalized mid-sentence, contraction included); <=2-letter shortform guard; 3+ letter-run elongation guard; @/# handle guard; lowercase-prefix proper-noun completion merge.
 

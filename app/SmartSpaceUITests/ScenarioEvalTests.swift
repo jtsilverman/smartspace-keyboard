@@ -23,6 +23,7 @@ final class ScenarioEvalTests: XCTestCase {
                 skipped += 1
                 continue
             }
+            print("SCENARIO-RUN \(scenario.id)")
             clearField(app, field)
             run(script: scenario.script, app: app)
             let got = fieldText(field)
