@@ -206,6 +206,40 @@ private struct CannedChecker: SpellChecking {
     }
 }
 
+// MARK: - Elision before digits, calendar capitalization
+
+@Suite struct DigitElisionRetrofix {
+    /// A digit right after a freshly opened single quote means the quote
+    /// was an elision apostrophe ('90s, '99), not an opening quote --
+    /// retro-flip it.
+    @Test func digitFlipsOpenSingleQuoteToApostrophe() {
+        #expect(SmartSymbols.decision(forTyping: "9", before: "like the \u{2018}")
+                == .replaceLast(1, with: "\u{2019}9"))
+        // A real opening quote before a letter stays open.
+        #expect(SmartSymbols.decision(forTyping: "m", before: "the word \u{2018}")
+                == .insert("m"))
+    }
+}
+
+@Suite struct CalendarCapitalization {
+    private let engine = CorrectionEngine(checker: CannedChecker(canned: [:]))
+
+    /// Weekdays and unambiguous months typed lowercase capitalize on
+    /// commit; march/may stay (common verb/auxiliary homographs).
+    @Test func lowercaseDayAndMonthCapitalize() {
+        #expect(engine.decision(for: "coming saturday") ==
+                .correct(to: "Saturday", alternatives: []))
+        #expect(engine.decision(for: "early december") ==
+                .correct(to: "December", alternatives: []))
+    }
+
+    @Test func homographMonthsAndCapitalizedFormsStay() {
+        #expect(engine.decision(for: "we march") == .noChange)
+        #expect(engine.decision(for: "you may") == .noChange)
+        #expect(engine.decision(for: "coming Saturday") == .noChange)
+    }
+}
+
 // MARK: - Shift: a smart-space terminal mark always starts a sentence
 
 @Suite struct SmartMarkShiftArm {
