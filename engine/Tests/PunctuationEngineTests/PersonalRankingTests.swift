@@ -1,9 +1,22 @@
 import Testing
 import PunctuationEngine
 
-private func outcome(_ rule: PredictionRule, kept: String) -> OutcomeRecord {
+private func outcome(_ rule: PredictionRule, kept: String,
+                     taps: Int = 1) -> OutcomeRecord {
     OutcomeRecord(rule: rule, guess: "?", kept: kept,
-                  cycleTaps: 0, lengthBucket: .short)
+                  cycleTaps: taps, lengthBucket: .short)
+}
+
+/// v4 e2e invariant: only deliberate cycles train the reranker. Passive
+/// keeps (0 taps) reinforce whatever is already offered -- five smoke-test
+/// cycles locked '.' over '?' for every question, then passive keeps made
+/// it permanent. No self-reinforcing lock-in.
+@Test func passiveKeepsNeverRerank() {
+    var ranking = PersonalRanking()
+    for _ in 1...20 {
+        ranking.record(outcome(.question, kept: ".", taps: 0))
+    }
+    #expect(ranking.reranked(questionPrediction) == questionPrediction.candidates)
 }
 
 private let questionPrediction = Prediction(rule: .question, candidates: [
