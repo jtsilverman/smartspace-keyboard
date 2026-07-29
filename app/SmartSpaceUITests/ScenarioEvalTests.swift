@@ -82,6 +82,20 @@ final class ScenarioEvalTests: XCTestCase {
         XCTAssertEqual(fieldText(field), "", "field never cleared")
     }
 
+    /// doubleTap can land outside the 0.3s double-space window under
+    /// simulator load, leaving two plain spaces and no mark. Detect and
+    /// retry once: back out the stray spaces and re-fire.
+    private func doubleSpace(_ app: XCUIApplication) {
+        let field = app.textFields.firstMatch
+        app.buttons["space"].doubleTap()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        if let value = field.value as? String, value.hasSuffix("  ") {
+            app.buttons["⌫"].tap()
+            app.buttons["⌫"].tap()
+            app.buttons["space"].doubleTap()
+        }
+    }
+
     private func run(script: String, app: XCUIApplication) {
         var rest = Substring(script)
         while let ch = rest.first {
@@ -90,7 +104,7 @@ final class ScenarioEvalTests: XCTestCase {
                 rest = rest[rest.index(after: close)...]
                 switch token {
                 case "SP": app.buttons["space"].tap()
-                case "DSP": app.buttons["space"].doubleTap()
+                case "DSP": doubleSpace(app)
                 case "BS": app.buttons["⌫"].tap()
                 case "RET": app.buttons["return-key"].tap()
                 default: XCTFail("unknown script token {\(token)}")
