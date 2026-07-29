@@ -320,10 +320,27 @@ final class KeyboardViewController: UIInputViewController {
             refreshEmojiSearchStrip()
             return
         }
-        textDocumentProxy.insertText(title)
+        insertSmart(title)
         if layer == .letters, shift.mode == .oneShot {
             shift.didTypeLetter()
             refreshShiftAppearance()
+        }
+    }
+
+    /// Routes a typed key through SmartSymbols: curly quotes by position,
+    /// -- collapses to an em dash, everything else inserts as typed.
+    private func insertSmart(_ title: String) {
+        guard title.count == 1, let char = title.first else {
+            textDocumentProxy.insertText(title)
+            return
+        }
+        let context = textDocumentProxy.documentContextBeforeInput ?? ""
+        switch SmartSymbols.decision(forTyping: char, before: context) {
+        case .insert(let text):
+            textDocumentProxy.insertText(text)
+        case .replacePrevious(let text):
+            textDocumentProxy.deleteBackward()
+            textDocumentProxy.insertText(text)
         }
     }
 
@@ -423,7 +440,7 @@ final class KeyboardViewController: UIInputViewController {
     @objc private func alternateTapped(_ sender: UIButton) {
         if let title = sender.configuration?.title {
             endSmartSpaceCycle()
-            textDocumentProxy.insertText(title)
+            insertSmart(title)
             if layer == .letters { shift.didTypeLetter() }
         }
         dismissAlternates()
