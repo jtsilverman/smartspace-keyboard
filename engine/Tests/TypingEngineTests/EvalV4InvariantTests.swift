@@ -122,6 +122,34 @@ private struct CannedChecker: SpellChecking {
     }
 }
 
+@Suite struct SuggestionDistanceGuard {
+    private let engine = CorrectionEngine(checker: CannedChecker(canned: [
+        "nkechi": ["Knit"], "saoirse": ["Satires"], "kylian": ["Chilean"],
+        "arigato": ["arrogate"], "ilysm": ["asylum"], "unalive": ["unlike"],
+        "wierd": ["weird"], "definately": ["definitely"], "thnks": ["thanks"],
+    ]))
+
+    /// A suggestion far from what was typed is the checker guessing at a
+    /// word it doesn't know (names, slang, loanwords) -- reject past
+    /// Damerau-Levenshtein max(1, len/3). Holds even at sentence start,
+    /// where the proper-noun guard can't help.
+    @Test(arguments: ["Nkechi", "Saoirse", "Kylian", "arigato", "ilysm", "unalive"])
+    func farSuggestionsAreGarbage(word: String) {
+        #expect(engine.decision(for: word) == .noChange)
+    }
+
+    /// Near suggestions still fire: transpositions count as distance 1
+    /// (Damerau), long-word phonetic fixes stay within len/3.
+    @Test func nearSuggestionsStillCorrect() {
+        #expect(engine.decision(for: "wierd") ==
+                .correct(to: "weird", alternatives: []))
+        #expect(engine.decision(for: "definately") ==
+                .correct(to: "definitely", alternatives: []))
+        #expect(engine.decision(for: "thnks") ==
+                .correct(to: "thanks", alternatives: []))
+    }
+}
+
 // MARK: - Smart symbols: dashes and primes serve the text they sit in
 
 @Suite struct SymbolContextClasses {
