@@ -122,6 +122,29 @@ private struct CannedChecker: SpellChecking {
     }
 }
 
+@Suite struct TextingLexiconProtection {
+    /// Distance-1 checker guesses at modern vocabulary (sus->sis, imy->my)
+    /// can only be stopped by knowing the words; the shipped texting
+    /// lexicon is default-on in the engine.
+    @Test func shippedLexiconBlocksVocabularyGuesses() {
+        let engine = CorrectionEngine(checker: CannedChecker(canned: [
+            "sus": ["sis"], "imy": ["my"], "chisme": ["chime"],
+            "danke": ["dance"], "rizz": ["ritz"],
+        ]))
+        for word in ["sus", "imy", "chisme", "danke", "rizz"] {
+            #expect(engine.decision(for: word) == .noChange, "word: \(word)")
+        }
+    }
+
+    /// The caller's UILexicon still unions on top.
+    @Test func callerLexiconStillApplies() {
+        let engine = CorrectionEngine(
+            checker: CannedChecker(canned: ["jsilv": ["silva"]]),
+            lexicon: ["jsilv"])
+        #expect(engine.decision(for: "jsilv") == .noChange)
+    }
+}
+
 @Suite struct SuggestionDistanceGuard {
     private let engine = CorrectionEngine(checker: CannedChecker(canned: [
         "nkechi": ["Knit"], "saoirse": ["Satires"], "kylian": ["Chilean"],
