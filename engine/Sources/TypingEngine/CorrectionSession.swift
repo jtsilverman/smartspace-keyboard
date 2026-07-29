@@ -25,6 +25,12 @@ public struct CorrectionSession: Sendable {
         return original
     }
 
+    /// Marks a word never-to-be-corrected without an undo round-trip --
+    /// the verbatim "keep what I typed" tap in the completion bar.
+    public mutating func protect(_ word: String) {
+        protectedWords.insert(word.lowercased())
+    }
+
     /// Whether the user has un-corrected this word (case-insensitive).
     public func isProtected(_ word: String) -> Bool {
         protectedWords.contains(word.lowercased())

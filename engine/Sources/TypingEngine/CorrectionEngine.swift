@@ -5,6 +5,14 @@ public protocol SpellChecking: Sendable {
     /// Ranked suggestions for a misspelled word, best first.
     /// Empty means the word is spelled correctly.
     func suggestions(for word: String) -> [String]
+
+    /// Dictionary completions for a partial word ("keyb" -> keyboard...).
+    /// Defaulted so suggestion-only checkers (and fakes) stay source-stable.
+    func completions(for prefix: String) -> [String]
+}
+
+extension SpellChecking {
+    public func completions(for prefix: String) -> [String] { [] }
 }
 
 /// What the keyboard should do with the word just committed.
