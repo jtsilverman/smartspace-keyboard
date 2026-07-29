@@ -30,9 +30,11 @@ public struct CorrectionEngine: Sendable {
     /// - Parameter lexicon: protected words (contact names, text
     ///   replacements) that are never corrected away, matched
     ///   case-insensitively. Phase 3 fills this from UILexicon.
+    /// The caller's lexicon (UILexicon: contacts, text replacements) unions
+    /// with the shipped TextingLexicon; both are never-correct words.
     public init(checker: any SpellChecking, lexicon: Set<String> = []) {
         self.checker = checker
-        self.lexicon = Set(lexicon.map { $0.lowercased() })
+        self.lexicon = TextingLexicon.words.union(lexicon.map { $0.lowercased() })
     }
 
     /// - Parameter session: undo memory; a word the user has un-corrected
