@@ -308,3 +308,20 @@ private struct CannedChecker: SpellChecking {
                 == .insert("."))
     }
 }
+
+@Suite struct PostPeriodSentenceStart {
+    private let engine = CorrectionEngine(checker: CannedChecker(canned: [:]))
+
+    /// After ANY period -- abbreviation included, since a smart-space
+    /// period after "Ave." deliberately ended the sentence -- a capitalized
+    /// word is a sentence start for correction purposes, not a proper noun.
+    @Test func contractionFixesAfterAbbreviationPeriod() {
+        #expect(engine.decision(for: "on 5th Ave. Dont") ==
+                .correct(to: "Don\u{2019}t", alternatives: []))
+    }
+
+    /// No period before it: still a proper-noun position.
+    @Test func titleNameSequencesStayProtected() {
+        #expect(engine.decision(for: "Professor Cant") == .noChange)
+    }
+}
