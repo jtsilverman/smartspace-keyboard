@@ -62,6 +62,12 @@ public struct CorrectionEngine: Sendable {
         if let fixed = ContractionRule.transform(word), fixed != word {
             return .correct(to: fixed, alternatives: [])
         }
+        // "Ill"/"Id" at a sentence start are the autocap products of typing
+        // an I-contraction (ill be there -> Ill); lowercase and mid-sentence
+        // forms keep the homograph protection above and in ContractionRule.
+        if let fixed = ["Ill": "I\u{2019}ll", "Id": "I\u{2019}d"][word] {
+            return .correct(to: fixed, alternatives: [])
+        }
         // All-caps words are acronyms more often than typos; correcting
         // them mangles deliberate input.
         let letters = word.filter(\.isLetter)
