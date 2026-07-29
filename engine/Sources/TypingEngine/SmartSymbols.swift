@@ -39,6 +39,10 @@ public enum SmartSymbols {
                 return .insert("-")
             }
             return .replacePrevious(with: "\u{2014}")
+        case let d where d.isNumber && context.last == "\u{2018}":
+            // A digit after a freshly opened single quote reveals an elision
+            // apostrophe ('90s), not a quotation -- retro-flip it.
+            return .replaceLast(1, with: "\u{2019}" + String(d))
         case "." where context.hasSuffix("..") && !context.hasSuffix("..."):
             // Third dot collapses to a single-char ellipsis. Requiring
             // exactly two trailing dots keeps ranges (1..10 typed dot by

@@ -68,6 +68,11 @@ public struct CorrectionEngine: Sendable {
         if let fixed = ["Ill": "I\u{2019}ll", "Id": "I\u{2019}d"][word] {
             return .correct(to: fixed, alternatives: [])
         }
+        // Calendar names typed lowercase capitalize (coming saturday ->
+        // Saturday); curated list, march/may homographs excluded.
+        if let fixed = CalendarRule.transform(word) {
+            return .correct(to: fixed, alternatives: [])
+        }
         // All-caps words are acronyms more often than typos; correcting
         // them mangles deliberate input.
         let letters = word.filter(\.isLetter)
