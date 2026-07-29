@@ -63,6 +63,65 @@ import Testing
     }
 }
 
+// MARK: - Autocorrect guards: never touch deliberate text
+
+private struct CannedChecker: SpellChecking {
+    let canned: [String: [String]]
+    func suggestions(for word: String) -> [String] { canned[word.lowercased()] ?? [] }
+}
+
+@Suite struct CorrectionGuardClasses {
+    private let engine = CorrectionEngine(checker: CannedChecker(canned: [
+        "sooo": ["so"], "plsss": ["plus's"], "duuude": ["dude"],
+        "gn": ["gun"], "rn": ["run"],
+        "nkechi": ["Knit"], "shein": ["She-in"], "pinkydoll": ["pinky-doll"],
+        "nofilter": ["no-filter"], "teh": ["the"], "wrod": ["word"],
+    ]))
+
+    /// Letter runs of 3+ are deliberate elongation (sooo, plsss, duuude),
+    /// never typos; the checker's suggestions for them are garbage anyway.
+    @Test(arguments: ["sooo", "plsss", "duuude"])
+    func elongationsStay(word: String) {
+        #expect(engine.decision(for: "omg \(word)") == .noChange)
+    }
+
+    /// Two-letter tokens are shortforms (gn, rn, ty, np); correcting them
+    /// mangles texting vocabulary.
+    @Test(arguments: ["gn", "rn"])
+    func twoLetterTokensStay(word: String) {
+        #expect(engine.decision(for: "ok \(word)") == .noChange)
+    }
+
+    /// A capitalized word mid-sentence is a proper noun (names, brands);
+    /// at a sentence start the capital is just autocap and typos still fix.
+    @Test func capitalizedMidSentenceIsAProperNoun() {
+        #expect(engine.decision(for: "text Nkechi") == .noChange)
+        #expect(engine.decision(for: "order it on Shein") == .noChange)
+        #expect(engine.decision(for: "Teh") ==
+                .correct(to: "The", alternatives: []))
+    }
+
+    /// The proper-noun read also outranks a contraction fix mid-sentence
+    /// (Professor Cant is a surname, not can't).
+    @Test func capitalizedMidSentenceContractionStays() {
+        #expect(engine.decision(for: "Professor Cant") == .noChange)
+        #expect(engine.decision(for: "Dont") ==
+                .correct(to: "Don\u{2019}t", alternatives: []))
+    }
+
+    /// Handles and hashtags are addresses, not words.
+    @Test func handleAndHashtagTokensStay() {
+        #expect(WordBoundary.lastWord(in: "follow @pinkydoll_") == nil)
+        #expect(WordBoundary.lastWord(in: "tag it #nofilter") == nil)
+    }
+
+    /// Control: plain lowercase typos mid-sentence still correct.
+    @Test func plainTyposStillCorrect() {
+        #expect(engine.decision(for: "read teh") ==
+                .correct(to: "the", alternatives: []))
+    }
+}
+
 // MARK: - Smart symbols: dashes and primes serve the text they sit in
 
 @Suite struct SymbolContextClasses {
