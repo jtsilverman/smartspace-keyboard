@@ -15,7 +15,13 @@ extension XCTestCase {
         var hops = 0
         while !app.buttons["space"].waitForExistence(timeout: 3) {
             hops += 1
-            XCTAssertLessThan(hops, 8, "SmartSpace keyboard never appeared")
+            // Hard stop, not just a recorded failure: XCTAssert only records,
+            // and a keyboard with no escape element (e.g. a panel state) spun
+            // this loop for 40 minutes in the 2026-07-29 overnight run.
+            guard hops < 8 else {
+                XCTFail("SmartSpace keyboard never appeared after \(hops) hops")
+                return field
+            }
             if app.buttons["Next keyboard"].exists {
                 app.buttons["Next keyboard"].tap()
             } else if app.keys["Next keyboard"].exists {
