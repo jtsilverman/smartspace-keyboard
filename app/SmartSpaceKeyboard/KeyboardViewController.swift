@@ -248,8 +248,14 @@ final class KeyboardViewController: UIInputViewController {
         emojiKey.accessibilityIdentifier = "emoji-key"
         emojiKey.addTarget(self, action: #selector(emojiKeyTapped), for: .touchUpInside)
 
-        let globe = keyButton(title: "🌐")
-        globe.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
+        let globe: UIButton?
+        if needsInputModeSwitchKey {
+            let key = keyButton(title: "🌐")
+            key.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
+            globe = key
+        } else {
+            globe = nil
+        }
 
         let space = keyButton(title: "space")
         space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
@@ -265,12 +271,12 @@ final class KeyboardViewController: UIInputViewController {
 
         bottomRow.addArrangedSubview(layerKey)
         bottomRow.addArrangedSubview(emojiKey)
-        bottomRow.addArrangedSubview(globe)
+        if let globe { bottomRow.addArrangedSubview(globe) }
         bottomRow.addArrangedSubview(space)
         bottomRow.addArrangedSubview(returnKey)
         layerKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
         emojiKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
-        globe.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
+        globe?.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
         returnKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.2).isActive = true
         rows.addArrangedSubview(bottomRow)
     }
