@@ -25,12 +25,17 @@ public enum CapitalizationRule {
         if i == context.startIndex { return true }
         // No separator after the last character: the user is mid-word.
         guard sawSeparator else { return false }
-        while i > context.startIndex, Self.closers.contains(context[context.index(before: i)]) {
+        // Closers and emoji (plus their separating spaces) can sit between
+        // the terminator and the cursor ("come over.\u{201D} ", "ok. 👍 ")
+        // without breaking the boundary.
+        while i > context.startIndex {
+            let prev = context[context.index(before: i)]
+            guard Self.closers.contains(prev) || prev.isEmojiLike || prev.isWhitespace else { break }
             i = context.index(before: i)
         }
         guard i > context.startIndex else { return false }
         switch context[context.index(before: i)] {
-        case "!", "?":
+        case "!", "?", "\u{2026}":
             return true
         case ".":
             // "e.g." / "etc." complete a token, not the sentence (AC7b) --
@@ -50,5 +55,16 @@ public enum CapitalizationRule {
             return String(head)
         }
         return String(head[head.index(after: lastOutside)...])
+    }
+}
+
+extension Character {
+    /// Emoji as rendered on the emoji keyboard: scalars with default emoji
+    /// presentation, or forced emoji via VS16 (❤️). Excludes digits and
+    /// other text-presentation characters that merely CAN be emoji.
+    var isEmojiLike: Bool {
+        unicodeScalars.contains {
+            $0.properties.isEmojiPresentation || $0.value == 0xFE0F
+        }
     }
 }

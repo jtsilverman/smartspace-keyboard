@@ -1,12 +1,15 @@
 import Testing
 import PunctuationEngine
 
-@Test func dottedAbbreviationGetsNonEndingPeriod() {
+// v4 criterion change: double-space is the end-my-sentence gesture, so the
+// smart period ends the sentence even after an abbreviation (the rule keeps
+// its period-first ranking). See SmartPeriodAlwaysTerminal.
+@Test func dottedAbbreviationKeepsPeriodFirstRanking() {
     let engine = PunctuationEngine()
     let top = engine.candidates(before: "bring snacks e.g").first
     #expect(top?.text == ".")
-    #expect(top?.endsSentence == false)
-    #expect(engine.candidates(before: "call me at 5 p.m").first?.endsSentence == false)
+    #expect(top?.endsSentence == true)
+    #expect(engine.candidates(before: "call me at 5 p.m").first?.text == ".")
 }
 
 @Test func apostrophizedFormsMatchTheirPlainRules() {

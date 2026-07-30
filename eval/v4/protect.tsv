@@ -1,0 +1,196 @@
+A001	slang	EMPTY	lol	baseline slang; must not capitalize or expand
+A002	slang	that was so funny	lmao	must survive commit unchanged
+A003	slang	EMPTY	tbh	must not become teh/the or expand
+A004	slang	EMPTY	ngl	must not become nil/gel
+A005	slang	EMPTY	fr	must not become for/far
+A006	slang	im so tired	frfr	reduplicated slang stays intact
+A007	slang	we	finna	must not become fauna/final
+A008	slang	that food was	bussin	must not become busing/bustin
+A009	slang	he got	rizz	must not become rise/ritz
+A010	slang	im	lowkey	compound slang stays one token
+A011	slang	she was	highkey	compound slang stays one token
+A012	slang	im	deadass	must not split or bowdlerize
+A013	slang	that guy is	sus	must not become sis/us
+A014	slang	she is so	delulu	2024+ slang; must not become Lulu
+A015	slang	EMPTY	gyat	must not become goat/gnat
+A016	slang	he is such a	sigma	stays lowercase, untouched
+A017	slang	EMPTY	skibidi	Gen Alpha slang; no correction
+A018	slang	pulling all the	huzz	2025 slang; must not become buzz/his
+A019	slang	that fit is	chopped	2025 slang usage; leave verbatim
+A020	slang	EMPTY	ong	must not become one/on
+A021	slang	EMPTY	istg	must not expand or correct
+A022	slang	EMPTY	ijbol	newer than lol; must not correct
+A023	slang	he is	goated	must not become goaded/gated
+A024	slang	stop being a	simp	must not become simple/imp
+A025	slang	i	stan	must not become Stan-forced-cap or scan
+A026	slang	EMPTY	bruh	must not become brush/bro
+A027	slang	whats good	fam	must not become farm/am
+A028	slang	EMPTY	bffr	2024+ slang; no correction
+A029	slang	EMPTY	icl	must not become ill/ice
+A030	slang	that would	pmo	must not become pro/pm
+A031	slang	EMPTY	sybau	2025 slang; no correction
+A032	slang	that car is	tuff	intentional spelling of tough
+A033	slang	im	boutta	must not become bought a/about
+A034	slang	check her	finsta	must not become fiesta
+A035	slang	dont	unalive	platform-speak; no correction
+A036	acronym-caps	ill get it done	ASAP	caps preserved, no lowercase
+A037	acronym-caps	EMPTY	FYI	caps preserved
+A038	acronym-caps	works at	NASA	caps preserved, no Nasa
+A039	acronym-caps	he is the	GOAT	caps preserved, not goat
+A040	acronym-caps	EMPTY	LMK	caps preserved
+A041	acronym-caps	EMPTY	IMO	must not become I'm/Imo
+A042	acronym-caps	date is	TBD	caps preserved
+A043	acronym-caps	whats your	ETA	must not become eat/eta lowercase
+A044	acronym-caps	its a	DIY	caps preserved
+A045	acronym-caps	i have	FOMO	caps preserved, not form
+A046	acronym-caps	EMPTY	POV	caps preserved
+A047	acronym-caps	EMPTY	IYKYK	long acronym untouched
+A048	acronym-caps	he is an	NPC	caps preserved
+A049	acronym-caps	todays	OOTD	caps preserved
+A050	acronym-caps	EMPTY	TLDR	caps preserved, no split
+A051	name	my friend	Jayden	common modern first name; not in old dictionaries
+A052	name	EMPTY	Nkechi	Nigerian name; must not mangle
+A053	name	EMPTY	Saoirse	Irish name; must not correct
+A054	name	her name is	Siobhan	Irish name; must not correct
+A055	name	EMPTY	Aoife	Irish name; must not become Aioli
+A056	name	ask	Priya	Indian name; untouched
+A057	name	EMPTY	Mateo	Spanish name; not mated
+A058	name	EMPTY	Thiago	Portuguese name; untouched
+A059	name	EMPTY	Ximena	Spanish name; X-initial preserved
+A060	name	saw	Zendaya	celebrity name; untouched
+A061	name	listening to	Kehlani	artist name; untouched
+A062	name	EMPTY	Jaxon	spelling variant of Jackson; keep as typed
+A063	name	EMPTY	Kaius	rare name; no correction
+A064	name	EMPTY	Anaya	name; must not become Ananya/Anya
+A065	name	EMPTY	Malia	name; must not become Malta/mail
+A066	name	text	Deshawn	name; untouched
+A067	name	EMPTY	Giannis	Greek name; untouched
+A068	name	EMPTY	Kylian	name; must not become Killian silently
+A069	name	EMPTY	Yuki	Japanese name; untouched
+A070	name	EMPTY	Aiyana	name; no correction
+A071	name	EMPTY	Latoya	name; untouched
+A072	name	EMPTY	Rashida	name; untouched
+A073	name	EMPTY	Oluwaseun	Yoruba name; must not mangle
+A074	name	EMPTY	Marisol	name; untouched
+A075	name	EMPTY	Dakari	name; untouched
+A076	brand	playing on	Spotify	brand casing preserved
+A077	brand	ill	Venmo	brand as verb; caps preserved
+A078	brand	asked	ChatGPT	internal caps preserved
+A079	brand	new	iPhone	lowercase-i camelcase preserved
+A080	brand	saw it on	TikTok	camelcase preserved
+A081	brand	add me on	Snapchat	brand untouched
+A082	brand	posted on	Instagram	brand untouched
+A083	brand	message me on	WhatsApp	camelcase preserved
+A084	brand	watching	Netflix	brand untouched
+A085	brand	practicing on	Duolingo	brand untouched
+A086	brand	booked an	Airbnb	camelcase preserved
+A087	brand	pay with	PayPal	camelcase preserved
+A088	brand	on my	Xbox	brand casing preserved
+A089	brand	got a	PlayStation	camelcase preserved
+A090	brand	ordered from	Shein	brand; must not become Shein->Shine
+A091	brand	send it on	Zelle	brand; must not become Belle/cell
+A092	brand	getting a	Lyft	brand; must not become Lift
+A093	brand	playing	Fortnite	brand; must not become Fortnight
+A094	brand	hes on	Roblox	brand untouched
+A095	brand	my	MacBook	camelcase preserved
+A096	url	go to	google.com	URL token untouched
+A097	url	EMPTY	youtube.com	URL token untouched
+A098	url	link is	bit.ly/3xYzAb	shortlink casing preserved
+A099	url	EMPTY	github.com/anthropics	path preserved
+A100	url	scores at	www.espn.com	www prefix preserved
+A101	url	EMPTY	https://open.spotify.com/track/abc123	full URL untouched
+A102	url	its on	docs.google.com	subdomain preserved
+A103	url	EMPTY	reddit.com/r/ios	subreddit path preserved
+A104	email	email me at	jake.smith@gmail.com	email untouched
+A105	email	EMPTY	saoirse_99@yahoo.com	underscore and digits preserved
+A106	email	send to	info@bakery.co	.co TLD not corrected to .com
+A107	email	use	jsilver+promo@outlook.com	plus-alias preserved
+A108	email	EMPTY	maria.gonzalez@uni.edu	email untouched
+A109	email	EMPTY	ktown4life@icloud.com	digit-mix local part preserved
+A110	hashtag	EMPTY	#tbt	hashtag token untouched
+A112	hashtag	EMPTY	#nofilter	compound hashtag not split
+A114	hashtag	EMPTY	#GRWM	caps hashtag preserved
+A115	hashtag	EMPTY	#SaturdayVibes	camelcase hashtag preserved
+A118	handle	follow	@jaydenw	handle untouched
+A122	handle	EMPTY	@pinkydoll_	trailing underscore preserved
+A123	handle	EMPTY	@itzkaitlyn	intentional z spelling preserved
+A126	stylization	im	sooo	elongation preserved, not so
+A127	stylization	EMPTY	yesss	elongation preserved, not yes
+A128	stylization	EMPTY	noooo	elongation preserved, not no
+A129	stylization	EMPTY	hahahah	laugh string untouched
+A131	stylization	EMPTY	plsss	elongated shortform preserved
+A132	stylization	EMPTY	omggg	elongation preserved
+A133	stylization	EMPTY	stoppp	elongation preserved, not stop
+A134	stylization	EMPTY	heyyy	elongation preserved, not hey
+A135	stylization	EMPTY	byeee	elongation preserved, not bye
+A136	stylization	EMPTY	okkk	elongation preserved, not ok
+A137	stylization	EMPTY	hmmm	thinking noise untouched
+A138	stylization	EMPTY	ughhh	elongated interjection preserved
+A139	stylization	EMPTY	lmaooo	elongated slang preserved
+A140	stylization	EMPTY	whyyy	elongation preserved, not why
+A141	stylization	EMPTY	yayyy	elongation preserved
+A142	stylization	EMPTY	wowww	elongation preserved
+A143	stylization	EMPTY	duuude	mid-word elongation preserved
+A144	shortform	im busy	rn	must not become in/run
+A145	shortform	im good	hbu	must not become hub/but
+A146	shortform	EMPTY	wyd	must not become why/was
+A147	shortform	EMPTY	idk	must not become ink/ids
+A148	shortform	EMPTY	omw	must not become own/now
+A149	shortform	EMPTY	ty	must not become to/tu
+A150	shortform	EMPTY	np	must not become no/nap
+A151	shortform	EMPTY	ily	must not become ill/oily
+A152	shortform	EMPTY	ilysm	compound shortform untouched
+A153	shortform	EMPTY	imy	must not become my/im
+A154	shortform	oh	nvm	must not become nam/nvm-expand
+A155	shortform	come thru	tho	must not become though/the
+A156	shortform	EMPTY	thx	must not become the/tax
+A157	shortform	EMPTY	pls	must not become plus/please
+A158	shortform	i	rly	must not become rely/fly
+A159	shortform	EMPTY	srsly	must not become seriously
+A160	shortform	cant	bc	must not become BC-caps or because
+A161	shortform	EMPTY	cuz	must not become cue/cut
+A162	shortform	so many	ppl	must not become people/pal
+A163	shortform	send me a	msg	must not become mag/message
+A164	shortform	EMPTY	def	must not become deaf/defect
+A165	shortform	EMPTY	prob	must not become probe/problem
+A166	shortform	see you	tmrw	must not expand or mangle
+A167	shortform	EMPTY	wya	must not become way/why
+A168	shortform	EMPTY	gn	must not become go/in
+A169	number-mix	its a	B2B	digit-mix caps preserved
+A170	number-mix	my	401k	digit prefix token untouched
+A171	number-mix	EMPTY	H2O	digit-mix caps preserved
+A172	number-mix	no	5G	digit prefix preserved
+A173	number-mix	enable	2FA	digit prefix preserved
+A174	number-mix	got my	W2	tax form token untouched
+A175	number-mix	EMPTY	K9	digit-mix preserved
+A176	number-mix	EMPTY	A1	must not become At/Al
+A177	number-mix	watching	F1	digit-mix preserved
+A178	number-mix	open	24/7	slash token untouched
+A179	profanity-mild	EMPTY	damn	must not become darn/dawn
+A180	profanity-mild	EMPTY	hell	must not become he'll
+A181	profanity-mild	oh	crap	must not become crap->crop
+A182	profanity-mild	dont	piss	must not become miss/kiss
+A183	profanity-mild	pain in the	ass	must not become as/add
+A184	profanity-mild	thats	badass	compound stays intact
+A185	non-english-loanword	EMPTY	gracias	Spanish; no correction
+A186	non-english-loanword	EMPTY	merci	French; must not become mercy
+A187	non-english-loanword	EMPTY	habibi	Arabic; no correction
+A188	non-english-loanword	EMPTY	hola	Spanish; must not become hold/hole
+A189	non-english-loanword	EMPTY	danke	German; must not become dance
+A190	non-english-loanword	EMPTY	arigato	Japanese; no correction
+A191	non-english-loanword	EMPTY	wallah	Arabic; must not become wallet
+A192	non-english-loanword	EMPTY	inshallah	Arabic; no correction
+A193	non-english-loanword	EMPTY	besos	Spanish; must not become besots
+A194	non-english-loanword	spill the	chisme	Spanish; must not become chime
+A195	interjection	EMPTY	ugh	must not become uh/ugh-correct
+A196	interjection	EMPTY	meh	must not become me/men
+A197	interjection	EMPTY	welp	must not become well/help
+A198	interjection	EMPTY	oof	must not become of/off
+A199	interjection	EMPTY	yeet	must not become yet/year
+A200	interjection	EMPTY	psst	must not become past/post
+A201	interjection	EMPTY	hmph	must not become humph-forced
+A202	interjection	EMPTY	ope	must not become open/one
+A203	interjection	EMPTY	sheesh	must not become sheets/she
+A204	interjection	EMPTY	whew	must not become when/where
+A205	interjection	EMPTY	aww	must not become saw/away
+A206	interjection	EMPTY	eep	must not become deep/keep

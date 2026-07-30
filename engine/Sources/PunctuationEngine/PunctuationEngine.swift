@@ -241,11 +241,9 @@ public struct PunctuationEngine: Sendable {
     ]
 
     /// Rank orders per prediction shape; comma and quote never end a sentence.
-    private static func ranked(_ order: [String], firstEndsSentence: Bool = true) -> [Candidate] {
-        order.enumerated().map { i, text in
-            let continuation = (text == "," || text == "\"")
-            let ends = continuation ? false : (i == 0 ? firstEndsSentence : true)
-            return Candidate(text: text, endsSentence: ends)
+    private static func ranked(_ order: [String]) -> [Candidate] {
+        order.map { text in
+            Candidate(text: text, endsSentence: text != "," && text != "\"")
         }
     }
 
@@ -275,10 +273,12 @@ public struct PunctuationEngine: Sendable {
     public func prediction(before context: String) -> Prediction {
         let rawLastToken = context.lowercased()
             .split(whereSeparator: { $0.isWhitespace }).last.map(String.init) ?? ""
+        // Double-space is the end-my-sentence gesture, so even an
+        // abbreviation's period ends the sentence here -- the abbreviation
+        // rules keep only their period-first ranking (v4 e2e invariant).
         if Self.dottedAbbreviations.contains(rawLastToken) {
             return Prediction(rule: .dottedAbbreviation,
-                              candidates: Self.ranked([".", "?", "!", ",", "\""],
-                                                      firstEndsSentence: false))
+                              candidates: Self.ranked([".", "?", "!", ",", "\""]))
         }
 
         let sentence = Self.currentSentence(in: context)
@@ -288,16 +288,31 @@ public struct PunctuationEngine: Sendable {
         }
         if let last = words.last, Self.abbreviations.contains(last) {
             return Prediction(rule: .abbreviation,
-                              candidates: Self.ranked([".", "?", "!", ",", "\""],
-                                                      firstEndsSentence: false))
+                              candidates: Self.ranked([".", "?", "!", ",", "\""]))
         }
 
         // A question can hide in the last comma-separated clause
-        // ("just got home babe, are you still awake").
+        // ("just got home babe, are you still awake") or behind a greeting
+        // opener ("hey are we still on").
         let clauseWords = Self.tokens(sentence.split(separator: ",").last ?? sentence)
-        if Self.isQuestion(words) || Self.isQuestion(clauseWords) {
+        var greetingStripped = words
+        if let first = greetingStripped.first,
+           Self.greetingOpeners.contains(first) || ["yo", "ok", "okay"].contains(first) {
+            greetingStripped.removeFirst()
+        }
+        if Self.isQuestion(words) || Self.isQuestion(clauseWords)
+            || Self.isQuestion(greetingStripped) {
             return Prediction(rule: .question,
                               candidates: Self.ranked(["?", ".", "!", ",", "\""]))
+        }
+        // A fully shouted sentence exclaims (WE WON) -- checked on the raw
+        // sentence because tokens() lowercases. Short single tokens (OK)
+        // are ordinary caps, not shouting.
+        let rawLetters = sentence.filter(\.isLetter)
+        if !rawLetters.isEmpty, rawLetters.allSatisfy(\.isUppercase),
+           words.count >= 2 || rawLetters.count >= 4 {
+            return Prediction(rule: .exclamation,
+                              candidates: Self.ranked(["!", ".", "?", ",", "\""]))
         }
         if Self.isCommaContinuation(words) {
             return Prediction(rule: .comma,

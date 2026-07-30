@@ -11,8 +11,12 @@ public struct PersonalRanking: Equatable, Sendable {
     public init() {
     }
 
-    /// Feeds one self-labeled outcome into the counters.
+    /// Feeds one self-labeled outcome into the counters. Only deliberate
+    /// choices count: a keep with zero cycle taps just reinforces whatever
+    /// was offered (self-reinforcing lock-in -- once a mark is demoted the
+    /// passive keeps of its replacement would make demotion permanent).
     public mutating func record(_ outcome: OutcomeRecord) {
+        guard outcome.cycleTaps > 0 else { return }
         keptCounts[outcome.rule, default: [:]][outcome.kept, default: 0] += 1
     }
 

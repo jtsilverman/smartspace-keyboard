@@ -87,6 +87,14 @@ public struct ShiftState: Sendable {
         guard mode == .off, CapitalizationRule.shouldCapitalize(before: context) else { return }
         mode = .oneShot
     }
+
+    /// Arms one-shot unconditionally (except caps lock): for sites that KNOW
+    /// a sentence just ended -- a smart-space terminal mark after an
+    /// abbreviation ("Ave.") where context re-derivation would say no.
+    public mutating func armOneShot() {
+        guard mode == .off else { return }
+        mode = .oneShot
+    }
 }
 
 /// Which key plane is showing; transitions mirror the stock keyboard's

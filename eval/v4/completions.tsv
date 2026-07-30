@@ -1,0 +1,93 @@
+cmp-001	common-word	EMPTY	tomo	tomorrow,Tomorrow	classic QuickType completion
+cmp-002	common-word	EMPTY	beca	because,became	high-frequency conjunction
+cmp-003	common-word	EMPTY	peop	people,peoples	very common noun
+cmp-004	common-word	EMPTY	thou	though,thought,thoughts,thousand	several frequent thou- words all fine
+cmp-005	common-word	EMPTY	frien	friend,friends,friendly	everyday noun plus plural
+cmp-006	common-word	EMPTY	someth	something	only one plausible completion
+cmp-007	common-word	EMPTY	weeke	weekend,weekends	common texting noun
+cmp-008	common-word	EMPTY	birthd	birthday,birthdays	unambiguous everyday word
+cmp-009	common-word	EMPTY	pictur	picture,pictures	plural also fine
+cmp-010	common-word	EMPTY	restau	restaurant,restaurants	long everyday noun
+cmp-011	common-word	EMPTY	everyth	everything	single obvious completion
+cmp-012	common-word	EMPTY	import	important,importance	adjective dominates in texting
+cmp-013	common-word	EMPTY	diffe	different,difference,differently	frequent adjective family
+cmp-014	common-word	EMPTY	quest	question,questions	question overwhelmingly likely
+cmp-015	common-word	EMPTY	worki	working	-ing form completion
+cmp-016	common-word	EMPTY	Tomo	Tomorrow	capitalized prefix should yield capitalized completion
+cmp-017	common-word	EMPTY	schoo	school,schools	everyday noun
+cmp-018	common-word	EMPTY	compu	computer,computers,computing	common noun family
+cmp-019	common-word	EMPTY	favo	favorite,favourite,favor,favour	US and UK spellings both fine
+cmp-020	common-word	EMPTY	iph	iPhone,iphone	hard row for brand casing
+cmp-021	long-word	EMPTY	approxim	approximately,approximate,approximation	long-word payoff case
+cmp-022	long-word	EMPTY	definit	definitely,definite,definition	frequent long word
+cmp-023	long-word	EMPTY	congratul	congratulations,congratulate	long celebratory word
+cmp-024	long-word	EMPTY	unfortun	unfortunately,unfortunate	single stem
+cmp-025	long-word	EMPTY	appreci	appreciate,appreciated,appreciation	common polite long word
+cmp-026	long-word	EMPTY	recommen	recommend,recommendation,recommended	frequent long stem
+cmp-027	long-word	EMPTY	immedi	immediately,immediate	unambiguous stem
+cmp-028	long-word	EMPTY	absolut	absolutely,absolute	texting intensifier
+cmp-029	long-word	EMPTY	underst	understand,understanding,understood	common verb family
+cmp-030	long-word	EMPTY	experien	experience,experienced,experiences	long everyday noun
+cmp-031	long-word	EMPTY	informat	information,informative	unambiguous long stem
+cmp-032	long-word	EMPTY	conversat	conversation,conversations	long everyday noun
+cmp-033	texting	EMPTY	prob	probably,problem,probable,problems	several frequent prob- words fine
+cmp-034	texting	EMPTY	def	definitely,definite,define,defense	texting shorthand for definitely
+cmp-035	texting	EMPTY	tonigh	tonight	classic texting word
+cmp-036	texting	EMPTY	gon	gonna,gone	casual contraction target
+cmp-037	texting	EMPTY	wan	want,wanna,wanted,wants	casual verb family
+cmp-038	texting	EMPTY	tex	text,texting,texted,Texas	messaging verb family
+cmp-039	texting	EMPTY	awes	awesome	single obvious texting word
+cmp-040	texting	EMPTY	hila	hilarious	common reaction word
+cmp-041	texting	EMPTY	seri	seriously,serious,series	frequent texting stem
+cmp-042	texting	EMPTY	amaz	amazing,amazed,amazingly	common reaction word
+cmp-043	texting	EMPTY	whate	whatever	single obvious completion
+cmp-044	texting	EMPTY	anyw	anyway,anyways,anywhere	several casual completions fine
+cmp-045	texting	EMPTY	obvi	obviously,obvious	texting shorthand target
+cmp-046	texting	EMPTY	liter	literally,literal,literature	texting intensifier dominates
+cmp-047	texting	EMPTY	supp	supposed,support,suppose,supper	several frequent supp- words fine
+cmp-048	day-month	EMPTY	wednes	Wednesday,wednesday	hardest-to-spell weekday
+cmp-049	day-month	EMPTY	Tues	Tuesday	capitalized weekday prefix
+cmp-050	day-month	EMPTY	thurs	Thursday,thursday	common weekday abbreviation
+cmp-051	day-month	EMPTY	Sat	Saturday	capitalized short weekday prefix
+cmp-052	day-month	EMPTY	mond	Monday,monday	unambiguous weekday stem
+cmp-053	day-month	EMPTY	Janu	January	capitalized month prefix
+cmp-054	day-month	EMPTY	febr	February,february	hard-to-spell month
+cmp-055	day-month	EMPTY	Aug	August	short capitalized month prefix
+cmp-056	day-month	EMPTY	septe	September,september	unambiguous month stem
+cmp-057	day-month	EMPTY	Octo	October	capitalized month prefix
+cmp-058	day-month	EMPTY	decem	December,december	unambiguous month stem
+cmp-059	day-month	EMPTY	sund	Sunday,sunday	unambiguous weekday stem
+cmp-060	greeting	EMPTY	Hell	Hello	capitalized greeting prefix
+cmp-061	greeting	EMPTY	morni	morning,mornings	greeting word
+cmp-062	greeting	EMPTY	afterno	afternoon	greeting time word
+cmp-063	greeting	EMPTY	eveni	evening,evenings	greeting time word
+cmp-064	greeting	EMPTY	wel	welcome,well	short greeting stem
+cmp-065	greeting	EMPTY	congrat	congrats,congratulations	celebratory greeting
+cmp-066	greeting	EMPTY	Than	Thanks,Thank	capitalized thanks stem
+cmp-067	greeting	EMPTY	goodby	goodbye,goodbyes	sign-off word
+cmp-068	after-context	See you 	tomo	tomorrow	context makes tomorrow the only fit
+cmp-069	after-context	Happy 	birthd	birthday	fixed collocation
+cmp-070	after-context	Good 	morni	morning	fixed greeting collocation
+cmp-071	after-context	Thanks so 	mu	much	collocation forces much
+cmp-072	after-context	I'll call you 	lat	later	context forces later
+cmp-073	after-context	Talk to you 	soo	soon	fixed sign-off phrase
+cmp-074	after-context	How are 	yo	you	context forces you
+cmp-075	after-context	Let me 	kno	know	fixed collocation
+cmp-076	after-context	On my 	wa	way	fixed texting phrase
+cmp-077	after-context	Merry 	Christ	Christmas	fixed holiday collocation
+cmp-078	after-context	Happy New 	Ye	Year,year	fixed holiday collocation
+cmp-079	after-context	Looking forward to 	seei	seeing	context forces gerund
+cmp-080	short-prefix	EMPTY	th	the,that,this,they,then,there,thanks	any top th- function word passes
+cmp-081	short-prefix	EMPTY	wh	what,when,where,why,which,who	any wh- question word passes
+cmp-083	short-prefix	EMPTY	mo	more,most,morning,mom,money,moment	several frequent mo- words fine
+cmp-085	short-prefix	EMPTY	st	still,stop,start,stay,stuff	several frequent st- words fine
+cmp-086	short-prefix	EMPTY	gr	great,green,group,grab,grocery	several frequent gr- words fine
+cmp-087	short-prefix	EMPTY	pl	please,play,plan,place,plus	several frequent pl- words fine
+cmp-088	short-prefix	EMPTY	co	come,could,cool,coffee,company	several frequent co- words fine
+cmp-089	short-prefix	EMPTY	fr	from,friend,free,Friday,front	several frequent fr- words fine
+cmp-090	no-completion-expected	EMPTY	and	NONE	complete conjunction with no common extension
+cmp-091	no-completion-expected	EMPTY	lol	NONE	complete texting token
+cmp-093	no-completion-expected	EMPTY	yep	NONE	complete casual affirmation
+cmp-094	no-completion-expected	EMPTY	zxq	NONE	random consonant run
+cmp-095	no-completion-expected	EMPTY	qqqq	NONE	repeated-letter gibberish
+cmp-096	no-completion-expected	EMPTY	dfgh	NONE	keyboard-row mash

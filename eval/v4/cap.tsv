@@ -1,0 +1,92 @@
+cap-001	empty-field	EMPTY	cap	empty field starts a new sentence
+cap-005	sentence-start	 	cap	field with only a space still at sentence start
+cap-006	sentence-start	  	cap	leading whitespace only, sentence not begun
+cap-007	after-period	Sounds good. 	cap	period plus space ends sentence
+cap-011	after-period	Done. 	cap	one-word sentence terminated
+cap-012	after-period	omw. 	cap	casual abbreviation-as-word still terminated by period
+cap-017	after-period	Meeting moved to Friday. 	cap	prose sentence ended
+cap-020	after-period	Dinner's ready. 	cap	apostrophe word then terminator
+cap-022	after-period	Done.  	cap	multiple spaces after period still sentence start
+cap-023	after-period	k. 	cap	single-letter texting reply terminated
+cap-029	after-question	Are you coming? 	cap	question mark ends sentence
+cap-031	after-question	u up? 	cap	casual question still terminated
+cap-032	after-question	Really? 	cap	one-word question ended
+cap-038	after-question	Seriously?? 	cap	doubled question marks still terminate
+cap-040	after-question	You did what?! 	cap	interrobang ?! terminates the sentence
+cap-041	after-exclaim	Let's go! 	cap	exclamation ends sentence
+cap-043	after-exclaim	Congrats! 	cap	one-word exclamation ended
+cap-048	after-exclaim	So excited!! 	cap	doubled exclamations still terminate
+cap-049	after-exclaim	yesss! 	cap	stretched texting word then exclamation
+cap-053	after-abbrev	Ask Mr. 	nocap	Mr. is a title abbreviation, not a sentence end
+cap-054	after-abbrev	I emailed Dr. 	nocap	Dr. abbreviation suppresses capitalization
+cap-055	after-abbrev	Tell Mrs. 	nocap	Mrs. title abbreviation mid-sentence
+cap-056	after-abbrev	This is Ms. 	nocap	Ms. title abbreviation, next word is a name typed by user choice
+cap-057	after-abbrev	citrus fruits, e.g. 	nocap	e.g. is an abbreviation, sentence continues
+cap-059	after-abbrev	the deadline, i.e. 	nocap	i.e. abbreviation mid-sentence
+cap-061	after-abbrev	snacks, drinks, etc. and	nocap	etc. mid-sentence continues in lowercase
+cap-062	after-abbrev	cats vs. 	nocap	vs. abbreviation mid-phrase
+cap-063	after-abbrev	on Main St. near	nocap	St. street abbreviation mid-sentence
+cap-064	after-abbrev	Ken Griffey Jr. 	nocap	Jr. suffix abbreviation, sentence continues
+cap-066	after-abbrev	office of Prof. 	nocap	Prof. title abbreviation
+cap-067	after-abbrev	it costs approx. 	nocap	approx. abbreviation mid-sentence
+cap-068	after-abbrev	Fifth Ave. between	nocap	Ave. abbreviation mid-sentence
+cap-069	after-abbrev	dinner at 6 p.m. 	nocap	p.m. abbreviation, sentence likely continues
+cap-071	after-abbrev	Sunset Blvd. and	nocap	Blvd. abbreviation mid-sentence
+cap-072	after-abbrev	my appt. is	nocap	appt. abbreviation, sentence continues
+cap-073	after-ellipsis	so... 	cap	trailing ellipsis then space acts as terminator on iOS
+cap-077	after-ellipsis	maybe… 	cap	Unicode single-char ellipsis also terminates
+cap-082	after-ellipsis	anyway.... 	cap	four dots still end the sentence
+cap-083	after-newline	ok\n	cap	return key starts a new line, treated as sentence start
+cap-086	after-newline	So that's the plan.\n	cap	terminator plus newline capitalizes
+cap-088	after-newline	Agenda:\n	cap	newline overrides the no-cap-after-colon rule
+cap-089	after-newline	one\ntwo\n	cap	each new line starts capitalized
+cap-090	after-newline	hello\n\n	cap	blank line then typing starts a sentence
+cap-093	after-newline	The meeting is at 3\n	cap	newline after number still capitalizes
+cap-097	after-quote	He said "That's enough." 	cap	terminator inside closing quote ends sentence
+cap-098	after-quote	"Stop!" 	cap	exclamation before closing quote capitalizes next word
+cap-100	after-quote	He asked "why?" 	cap	question mark inside quote ends sentence
+cap-101	after-quote	She said “I’m done.” 	cap	curly quotes with terminator inside also capitalize
+cap-102	after-quote	He said 'done.' 	cap	single-quote close after period still terminates
+cap-104	after-quote	he called it "fun" and 	nocap	quoted word mid-sentence, no terminator
+cap-108	after-quote	add the 'utils' folder to 	nocap	quoted identifier mid-sentence
+cap-109	after-emoji	Done! 🎉 	cap	terminator then emoji keeps sentence-ended state
+cap-111	after-emoji	That was wild! 😂😂 	cap	multiple emoji after terminator still capitalize
+cap-113	after-emoji	ok. 👍 	cap	texting period then emoji capitalizes next word
+cap-116	after-emoji	hey 😂 	nocap	emoji without terminator, sentence continues
+cap-120	after-emoji	that cat 🐱 is 	nocap	inline emoji mid-sentence
+cap-121	after-comma-no	sounds good, 	nocap	comma continues the sentence
+cap-124	after-comma-no	First, 	nocap	introductory word plus comma continues
+cap-130	after-comma-no	red, blue, 	nocap	list comma continues sentence
+cap-132	after-comma-no	btw, 	nocap	texting acronym plus comma continues
+cap-133	mid-sentence-no	I am going to the 	nocap	mid-sentence after space
+cap-139	mid-sentence-no	I'm at th	nocap	mid-word, next letter continues the word
+cap-141	mid-sentence-no	state-of-the-	nocap	hyphenated compound in progress
+cap-142	mid-sentence-no	don'	nocap	apostrophe mid-contraction
+cap-143	mid-sentence-no	we tried; 	nocap	semicolon does not capitalize
+cap-144	mid-sentence-no	It was fine - 	nocap	spaced hyphen dash is not a terminator
+cap-145	mid-sentence-no	mac & 	nocap	ampersand continues phrase
+cap-146	mid-sentence-no	and/	nocap	slash compound in progress
+cap-147	mid-sentence-no	I think (	nocap	open parenthesis mid-sentence
+cap-148	mid-sentence-no	pi is 3.14 and 	nocap	decimal point is not a sentence terminator
+cap-150	mid-sentence-no	check https://example.com/	nocap	inside a URL, no capitalization
+cap-152	mid-sentence-no	email me at jake@	nocap	typing an email address
+cap-155	mid-sentence-no	50% of 	nocap	percent mid-sentence
+cap-156	mid-sentence-no	room #	nocap	hash symbol mid-phrase
+cap-157	mid-sentence-no	got an A+ on 	nocap	plus sign mid-sentence
+cap-159	mid-sentence-no	T	nocap	first letter already typed, word in progress
+cap-161	mid-sentence-no	its giving 	nocap	lowercase texting register mid-fragment
+cap-165	standalone-i	i	cap	standalone i autocorrects to I on commit
+cap-166	standalone-i	can i	cap	standalone i before commit becomes I
+cap-174	standalone-i	idk if i	cap	final standalone i corrects, idk itself untouched
+cap-175	after-number	I got 100. 	cap	sentence ending in a number then period terminates
+cap-177	after-number	Meet at 5? 	cap	question after number capitalizes
+cap-178	after-number	Party ends at 10! 	cap	exclamation after number capitalizes
+cap-179	after-number	It costs $50. 	cap	currency amount then period terminates
+cap-183	after-parenthetical	He finally showed up (two hours late). 	cap	period after closing paren ends sentence
+cap-185	after-parenthetical	(No parking there.) 	cap	full sentence inside parens then space
+cap-187	after-parenthetical	I think (as usual) 	nocap	closing paren without terminator continues sentence
+cap-191	after-colon	Here's the plan: 	nocap	colon does not end a sentence on iOS
+cap-196	after-colon	meet at 3:	nocap	time colon, next chars continue the time
+cap-199	greeting-line	Hi John,\n	cap	newline after salutation starts new sentence
+cap-201	greeting-line	hey,\n	cap	casual greeting plus newline capitalizes
+cap-204	greeting-line	Dear Sir or Madam,\n	cap	formal salutation then return capitalizes
