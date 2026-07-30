@@ -27,7 +27,9 @@ The host app gets a settings screen whose toggles the keyboard actually obeys: f
 
 - [x] Spec drafted; pending Jake sign-off on intent/acceptance/non-goals
 - [x] Unit A: `KeyboardSettings` pure model + store seam (RED+GREEN, swift test)
-- [ ] Unit B: candidate-set filtering into SmartSpaceBar/prediction path
-- [ ] Unit C: extension consumption branches (each feature's off-path)
-- [ ] Unit D: SwiftUI settings screen writing app-group defaults
-- [ ] Unit E: live XCUITest (app toggle -> keyboard behavior) + full suite
+- [x] Unit B: candidate-set filtering into the spaceTapped prediction closure (written, unverified)
+- [x] Unit C: extension consumption branches (written, unverified: smartDoubleSpace/autocorrect/autoCap/smartSymbols/haptics guards; smart-double-space-off inserts a plain space, stock period-shortcut fallback is an OPEN QUESTION)
+- [x] Unit D: SwiftUI settings screen + stats screen + onboarding skeleton + TabView root (written, unverified)
+- [ ] Unit E: build + full sim suite + toggle XCUITests (blocked on the overnight regression owning the simulator)
+
+Skeleton scope creep, deliberate (Jake: "get the whole system ready"): 4.3 stats screen + app-group outcome-log migration and the 4.1 onboarding sheet ride this branch; split before PR if review wants it.
