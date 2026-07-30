@@ -30,6 +30,7 @@ The host app gets a settings screen whose toggles the keyboard actually obeys: f
 - [x] Unit B: candidate-set filtering into the spaceTapped prediction closure (written, unverified)
 - [x] Unit C: extension consumption branches (written, unverified: smartDoubleSpace/autocorrect/autoCap/smartSymbols/haptics guards; smart-double-space-off inserts a plain space, stock period-shortcut fallback is an OPEN QUESTION)
 - [x] Unit D: SwiftUI settings screen + stats screen + onboarding skeleton + TabView root (written, unverified)
-- [ ] Unit E: build + full sim suite + toggle XCUITests (blocked on the overnight regression owning the simulator)
+- [x] Unit E: toggle-consumption XCUITests green (app-seeded via launch args); smoke + SmartTypingTests green on the skeleton build
+- [ ] OPEN (AC 4): XCUITest cannot tap SwiftUI Form toggles on the iOS 26.5 sim, so the tap->write step is verified manually (Jake, in the design session); the write->extension pipeline is live-verified via the launch-arg hook
 
 Skeleton scope creep, deliberate (Jake: "get the whole system ready"): 4.3 stats screen + app-group outcome-log migration and the 4.1 onboarding sheet ride this branch; split before PR if review wants it.
