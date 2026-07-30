@@ -25,7 +25,10 @@ final class KeyboardViewController: UIInputViewController {
     private let emojiPanel = UIView()
     private var personal = PersonalRanking()
     private var outcomeTracker = OutcomeTracker()
-    private var outcomeLog = OutcomeLog(store: DefaultsOutcomeStore())
+    private var outcomeLog = OutcomeLog(store: AppGroupOutcomeStore())
+    /// Re-read on every appearance: toggling in the host app applies the
+    /// next time the keyboard comes up (spec host-app-settings AC 4).
+    private var settings = KeyboardSettings(store: AppGroupSettingsStore())
     private var lastPrediction: Prediction?
     private var lastContextWordCount = 0
     private let suggestionBar = UIStackView()
@@ -57,8 +60,12 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        settings = KeyboardSettings(store: AppGroupSettingsStore())
+        log.notice("settings: dsp=\(self.settings.smartDoubleSpace, privacy: .public) ac=\(self.settings.autocorrect, privacy: .public) cands=\(String(self.settings.enabledCandidates.sorted()), privacy: .public)")
         applyKeyboardAppearance()
-        shift.armAutoShift(for: textDocumentProxy.documentContextBeforeInput ?? "")
+        if settings.autoCapitalization {
+            shift.armAutoShift(for: textDocumentProxy.documentContextBeforeInput ?? "")
+        }
         rebuildRows()
     }
 
@@ -176,6 +183,7 @@ final class KeyboardViewController: UIInputViewController {
 
     /// Typing trigger: refreshes mid-word completions from the live context.
     private func refreshTypingCompletions() {
+        guard settings.autocorrect else { return }
         autocorrect.typingUpdate(context: textDocumentProxy.documentContextBeforeInput ?? "")
         refreshSuggestionBar()
     }
@@ -311,6 +319,7 @@ final class KeyboardViewController: UIInputViewController {
     /// UX.md: every key press gets a haptic tick. Extensions without Full
     /// Access may silently no-op; accepted (device verification owed).
     @objc private func keyTouchDown() {
+        guard settings.haptics else { return }
         haptic.impactOccurred()
     }
 
@@ -363,7 +372,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Routes a typed key through SmartSymbols: curly quotes by position,
     /// -- collapses to an em dash, everything else inserts as typed.
     private func insertSmart(_ title: String) {
-        guard title.count == 1, let char = title.first else {
+        guard settings.smartSymbols, title.count == 1, let char = title.first else {
             textDocumentProxy.insertText(title)
             return
         }
@@ -496,6 +505,16 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         dismissAlternates()
+        // Smart double-space off: every space is a plain space (spec
+        // host-app-settings AC 3; stock period-shortcut fallback is an open
+        // spec question).
+        guard settings.smartDoubleSpace else {
+            endSmartSpaceCycle()
+            applyAutocorrectOnCommit()
+            textDocumentProxy.insertText(" ")
+            armAutoShiftIfSentenceStart()
+            return
+        }
         let decision = spaceBar.spaceTapped(at: CACurrentMediaTime()) {
             // Context minus the space the first tap inserted: the engine sees
             // the sentence as typed.
@@ -504,7 +523,12 @@ final class KeyboardViewController: UIInputViewController {
             let prediction = punctuation.prediction(before: context)
             lastPrediction = prediction
             lastContextWordCount = context.split(whereSeparator: \.isWhitespace).count
-            return personal.reranked(prediction)
+            // Candidate-set setting: drop disabled marks, keep engine order.
+            return personal.reranked(prediction).filter { candidate in
+                candidate.text.count == 1 && candidate.text.first.map {
+                    settings.enabledCandidates.contains($0)
+                } == true
+            }
         }
         switch decision {
         case .insertSpace:
@@ -851,6 +875,7 @@ final class KeyboardViewController: UIInputViewController {
     /// and rewrites it in the document. Called BEFORE the separator is
     /// inserted so the word is still the exact document tail.
     private func applyAutocorrectOnCommit() {
+        guard settings.autocorrect else { return }
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
         let commit = autocorrect.wordCommitted(context: context)
         defer { refreshSuggestionBar() }
@@ -928,12 +953,14 @@ final class KeyboardViewController: UIInputViewController {
     /// context re-derivation would wrongly veto it after an abbreviation
     /// ("Ave." + smart period).
     private func armShiftForSmartMark() {
+        guard settings.autoCapitalization else { return }
         let wasShifted = shift.isShifted
         shift.armOneShot()
         if shift.isShifted != wasShifted { refreshShiftAppearance() }
     }
 
     private func armAutoShiftIfSentenceStart() {
+        guard settings.autoCapitalization else { return }
         let before = textDocumentProxy.documentContextBeforeInput ?? ""
         let wasShifted = shift.isShifted
         shift.armAutoShift(for: before)
