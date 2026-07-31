@@ -25,4 +25,11 @@ Double-space works for lists (Jake 2026-07-31): comma is always one cycle tap fr
 
 ## Progress
 
-- [x] Spec signed (Jake, in-chat 2026-07-31: "yep" + /goal)
+- [x] Spec signed (Jake, in-chat 2026-07-31: "yep" + /goal); close-on-and refinement added from Jake's chips/watermelon/ice/sprite example
+- [x] AC 1 comma-second ranking (RED+GREEN): fallback/abbreviation `. , ? ! "`, first-person completion `. , ! ? "`; corpus top-2 gate re-baselined 0.97 -> 0.96, !-second invariant now !-third
+- [x] AC 2 `.list` rule (RED+GREEN): comma boundary + short chunk -> `, . ? ! "`; and/or chunk falls through to period-first
+- [x] AC 3 blind benchmark: 139 rows (2 blind authors, blind QC ALL PASS), dev/test 66/73 via crc32, frozen gates 0.65/0.90; first run dev 72%/93% test 73%/94% (item-2 94%, item-3+/close 100%, item-1 0% top-1 by design with comma one tap)
+- [x] AC 4 frozen blind-corpus delta: top-1 unchanged (dev 407/598, test 367/598); top-2 dev 81->72, test 76->67 (`,` top-2 75-80 -> 97, `?` top-2 98 -> 60 -- missed-question rescue now two taps; Jake accepted the trade for one-tap list commas)
+- [x] AC 5: PersonalRanking untouched (.list becomes its own learning bucket automatically)
+
+V2 candidates (measured, not built): intro-verb item-1 rule (both blind authors want comma at item 1; 0% top-1 is the ceiling it would lift); clause-opener guard for the 4 dev comma-lookalike over-fires ("its cold out, bring a jacket" guesses comma -- one-tap cost).
