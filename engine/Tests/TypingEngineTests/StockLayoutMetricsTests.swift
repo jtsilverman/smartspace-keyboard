@@ -59,10 +59,17 @@ private func near(_ a: Double, _ b: Double, tol: Double = 0.5) -> Bool {
     }
 }
 
-@Test func numberPlaneBottomRowsScaleLikeStock() {
-    // 123 plane: row 3 is [#+= cell][5 punctuation cells][delete].
+@Test func numberPlanePunctuationRowMatchesMeasuredStock() {
+    // AX dump of the stock 123 plane (2026-07-31): 5 cells, x0 63.67,
+    // pitch 55.33, ending flush against delete at 348.
     let cells = StockLayoutMetrics.cells(width: 402, plane: KeyboardLayout.numberRows)
-    #expect(cell("1", cells) != nil && cell("__shift", cells) != nil)
+    let dot = cell(".", cells)!
+    #expect(near(dot.frame.x, 63.67) && near(dot.frame.width, 55.33)
+            && near(dot.frame.y, 108))
+    let comma = cell(",", cells)!
+    #expect(near(comma.frame.x, 119.0))
+    let apostrophe = cell("'", cells)!
+    #expect(near(apostrophe.frame.x, 285.0) && near(apostrophe.frame.width, 55.33))
     #expect(cell("__delete", cells) != nil && cell("__space", cells) != nil)
 }
 

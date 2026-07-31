@@ -40,5 +40,14 @@ final class StockMetricsDumpTests: XCTestCase {
         }
         let other = app.otherElements["Keyboard"]
         if other.exists { print("STOCK-METRICS keyboard frame=\(other.frame)") }
+
+        // 123 plane: the punctuation row's geometry is measured, not guessed.
+        if app.keys["more"].exists {
+            app.keys["more"].tap()
+            _ = app.keys["1"].waitForExistence(timeout: 3)
+            for key in app.keys.allElementsBoundByIndex {
+                print("STOCK-METRICS-123 key '\(key.identifier.isEmpty ? key.label : key.identifier)' frame=\(key.frame)")
+            }
+        }
     }
 }

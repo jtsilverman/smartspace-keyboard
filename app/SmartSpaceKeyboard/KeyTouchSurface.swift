@@ -40,8 +40,11 @@ final class KeyTouchSurface: UIView {
     }
 
     var onTouchDown: ((String) -> Void)?
-    var onTouchMoved: ((String) -> Void)?
+    /// (from, to): the finger slid from one character key to another.
+    var onTouchMoved: ((String, String) -> Void)?
     var onCommit: ((String) -> Void)?
+    /// The finger slid off the character keys; that touch types nothing.
+    var onTouchExit: ((String) -> Void)?
     var onCancel: (() -> Void)?
     var onHold: ((String) -> Void)?
 
@@ -88,13 +91,21 @@ final class KeyTouchSurface: UIView {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            guard let current = tracked[touch],
-                  let key = characterKey(at: touch.location(in: self)),
-                  key != current else { continue }
-            tracked[touch] = key
+            guard let current = tracked[touch] else { continue }
+            let key = characterKey(at: touch.location(in: self))
+            if key == current { continue }
             holdTimers[touch]?.invalidate()
             holdTimers[touch] = nil
-            onTouchMoved?(key)
+            if let key {
+                // Slid to a neighboring character key: stock retargets.
+                tracked[touch] = key
+                onTouchMoved?(current, key)
+            } else {
+                // Slid onto a function key or off the surface: stock
+                // cancels -- releasing there must not type the old key.
+                tracked[touch] = nil
+                onTouchExit?(current)
+            }
         }
     }
 
