@@ -326,6 +326,14 @@ public struct PunctuationEngine: Sendable {
             return Prediction(rule: .exclamation,
                               candidates: Self.ranked(["!", ".", "?", ",", "\""]))
         }
+        // comma-lists AC 2: from item 2 onward the sentence itself says
+        // "list" -- a comma boundary followed by a short chunk. An "and"/"or"
+        // chunk is the final item, so the guess falls through to period-first.
+        if sentence.contains(","), (1...3).contains(clauseWords.count),
+           let opener = clauseWords.first, opener != "and", opener != "or" {
+            return Prediction(rule: .list,
+                              candidates: Self.ranked([",", ".", "?", "!", "\""]))
+        }
         // First-person completion statements ("i finally...", "we just...")
         // stay period-first but rank ! second: excited news recovers in one
         // cycle tap. Same .fallback label -- ordering tweak, not a new rule.
