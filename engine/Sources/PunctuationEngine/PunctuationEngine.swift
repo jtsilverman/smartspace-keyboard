@@ -329,8 +329,11 @@ public struct PunctuationEngine: Sendable {
         // comma-lists AC 2: from item 2 onward the sentence itself says
         // "list" -- a comma boundary followed by a short chunk. An "and"/"or"
         // chunk is the final item, so the guess falls through to period-first.
-        if sentence.contains(","), (1...3).contains(clauseWords.count),
-           let opener = clauseWords.first, opener != "and", opener != "or" {
+        // Digit-grouping commas ("3,000") are separators, not boundaries.
+        let delisted = Self.strippingDigitGroupCommas(sentence)
+        let listChunk = Self.tokens(delisted.split(separator: ",").last ?? delisted)
+        if delisted.contains(","), (1...3).contains(listChunk.count),
+           let opener = listChunk.first, opener != "and", opener != "or" {
             return Prediction(rule: .list,
                               candidates: Self.ranked([",", ".", "?", "!", "\""]))
         }
@@ -562,6 +565,20 @@ public struct PunctuationEngine: Sendable {
     }
 
     /// The sentence being typed: text after the last terminal mark.
+    /// Removes commas flanked by digits ("3,000" -> "3000") so number
+    /// grouping never reads as a list boundary (reviewer finding).
+    private static func strippingDigitGroupCommas(_ sentence: Substring) -> Substring {
+        var out = ""
+        out.reserveCapacity(sentence.count)
+        let chars = Array(sentence)
+        for (i, ch) in chars.enumerated() {
+            if ch == ",", i > 0, i + 1 < chars.count,
+               chars[i - 1].isNumber, chars[i + 1].isNumber { continue }
+            out.append(ch)
+        }
+        return Substring(out)
+    }
+
     private static func currentSentence(in context: String) -> Substring {
         context.split(omittingEmptySubsequences: false,
                       whereSeparator: { ".!?".contains($0) }).last ?? ""
