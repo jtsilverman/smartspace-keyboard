@@ -33,7 +33,7 @@ How the keyboard behaves, in plain language. Not visual design (no colors, fonts
 
 ## Journey 4: settings (in the host app)
 
-- Punctuation candidates: toggle which marks double-space may choose from. Default on: `. ? !`. Available: `, : ; -`. Order of the cycle follows engine confidence, not a fixed list.
+- Punctuation candidates: toggle which marks double-space may choose from. Default on: `. ? ! , "`. Available: `: ; -`. Order of the cycle follows engine confidence, not a fixed list.
 - Toggles: smart double-space (off = stock double-space-period), triple-space ellipsis, autocorrect, auto-capitalization, smart quotes/dashes, haptics.
 - Everything works offline forever; there is no account, no sign-in, no sync.
 - Fallback plan: if iOS blocks settings sharing between app and keyboard without the Full Access permission (open question, probed early in the build), settings and stats move into a panel opened from a gear key on the keyboard itself -- same functionality, different door. We never ask for Full Access either way.
