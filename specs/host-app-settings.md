@@ -12,7 +12,7 @@ The host app gets a settings screen whose toggles the keyboard actually obeys: f
 
 1. Engine (swift test): a pure `KeyboardSettings` model in TypingEngine decodes from an injected key-value store (same seam pattern as `EmojiRecents`/`OutcomeLog`): empty store yields defaults (all features on, candidates `. ? !`), stored overrides round-trip, unknown/corrupt values degrade to defaults per-key (never crash, never all-or-nothing).
 2. Engine: the candidate set filters `PunctuationEngine` output without reordering it (order stays engine confidence); disabling a mark removes it from double-space candidates and cycling.
-3. Extension: each toggle off produces stock behavior — smart double-space off = double-space inserts two spaces (stock period-shortcut untouched by us); autocorrect off = no auto-replace, no suggestion bar; auto-cap off = shift only manual; smart symbols off = straight quotes/hyphens as typed; haptics off = no impact feedback. XCUITest covers smart double-space off and autocorrect off (the two observable in the practice field); the rest verified at the engine/branch level.
+3. Extension: each toggle off produces stock behavior — smart double-space off = stock double-space-period (locked decision 1 superseded the original "two plain spaces" reading); autocorrect off = no auto-replace, no suggestion bar; auto-cap off = shift only manual; smart symbols off = straight quotes/hyphens as typed; haptics off = no impact feedback. XCUITest covers smart double-space off and autocorrect off (the two observable in the practice field); the rest verified at the engine/branch level.
 4. App: a SwiftUI settings screen writes the same keys to the app-group defaults; toggling in the app changes keyboard behavior on next keyboard appearance (one XCUITest: toggle smart double-space off in app, switch to practice field, double-space yields no smart mark).
 5. Settings default-on: a fresh install with no writes behaves exactly as today (all Phase 3 behavior unchanged; full existing suite green).
 
@@ -28,10 +28,12 @@ The host app gets a settings screen whose toggles the keyboard actually obeys: f
 - [x] Spec drafted; pending Jake sign-off on intent/acceptance/non-goals
 - [x] Unit A: `KeyboardSettings` pure model + store seam (RED+GREEN, swift test)
 - [x] Unit B: candidate-set filtering into the spaceTapped prediction closure (written, unverified)
-- [x] Unit C: extension consumption branches (written, unverified: smartDoubleSpace/autocorrect/autoCap/smartSymbols/haptics guards; smart-double-space-off inserts a plain space, stock period-shortcut fallback is an OPEN QUESTION)
+- [x] Unit C: extension consumption branches (written, unverified: smartDoubleSpace/autocorrect/autoCap/smartSymbols/haptics guards; the open stock-period question was resolved by locked decision 1 and built in Unit F)
 - [x] Unit D: SwiftUI settings screen + stats screen + onboarding skeleton + TabView root (written, unverified)
 - [x] Unit E: toggle-consumption XCUITests green (app-seeded via launch args); smoke + SmartTypingTests green on the skeleton build
 - [ ] OPEN (AC 4): XCUITest cannot tap SwiftUI Form toggles on the iOS 26.5 sim, so the tap->write step is verified manually (Jake, in the design session); the write->extension pipeline is live-verified via the launch-arg hook
+- [x] Unit F (locked decision 1): StockDoubleSpace in TypingEngine, wired into the settings-off branch of spaceTapped; engine tests 271 green, SettingsToggleTests green on-sim (testSmartDoubleSpaceOffYieldsStockPeriod expects "hi. ", doubleTap+retry against the 0.3s-window flake)
+- [x] Unit G (locked decision 2): OutcomeRecord.epochDay (6-part line, 5-part legacy parses as pre-timestamp), VC stamps today at finish, StatsView This Week section (epochDay >= today-6); codec/tracker tests green. This Week rendering not XCUITest-covered (needs seeded stamped records; all-time list rendering was already manual-verified in the design session)
 
 Skeleton scope creep, deliberate (Jake: "get the whole system ready"): 4.3 stats screen + app-group outcome-log migration and the 4.1 onboarding sheet ride this branch; split before PR if review wants it.
 
