@@ -170,13 +170,18 @@ final class KeyboardViewController: UIInputViewController {
         NSLayoutConstraint.activate([
             suggestionBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
             suggestionBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-            suggestionBar.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
-            suggestionBar.heightAnchor.constraint(equalToConstant: 40),
-            rows.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
-            rows.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-            rows.topAnchor.constraint(equalTo: suggestionBar.bottomAnchor, constant: 4),
-            rows.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
-            rows.heightAnchor.constraint(equalToConstant: 216),
+            suggestionBar.topAnchor.constraint(equalTo: view.topAnchor),
+            suggestionBar.heightAnchor.constraint(equalToConstant: 44),
+            // Full-width key area, flush to the view bottom: the cell grid
+            // carries its own side inset, and stock leaves no extra pad.
+            rows.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            rows.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            rows.topAnchor.constraint(equalTo: suggestionBar.bottomAnchor),
+            // Measured: our input view's bottom sits 7pt above where stock
+            // lands its key area, so the grid overhangs by that much to
+            // line the rows up with stock against the system's globe/mic bar.
+            rows.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 7),
+            rows.heightAnchor.constraint(equalToConstant: StockLayoutMetrics.keyAreaHeight),
             emojiPanel.leadingAnchor.constraint(equalTo: rows.leadingAnchor),
             emojiPanel.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
             emojiPanel.topAnchor.constraint(equalTo: rows.topAnchor),
@@ -292,7 +297,8 @@ final class KeyboardViewController: UIInputViewController {
         layerKey.addTarget(self, action: #selector(layerTapped), for: .touchUpInside)
         planeButtons["__layer"] = layerKey
 
-        let emojiKey = keyButton(title: "😀")
+        // Stock draws the emoji key as a smiley glyph, not an emoji.
+        let emojiKey = keyButton(symbol: "face.smiling")
         emojiKey.accessibilityIdentifier = "emoji-key"
         emojiKey.addTarget(self, action: #selector(emojiKeyTapped), for: .touchUpInside)
         planeButtons["__emoji"] = emojiKey
@@ -303,17 +309,26 @@ final class KeyboardViewController: UIInputViewController {
             planeButtons["__globe"] = globe
         }
 
-        let space = keyButton(title: "space")
+        // Stock's space bar carries no label; the identifier keeps it
+        // findable for accessibility and the UI suite.
+        let space = keyButton(title: "")
+        space.accessibilityIdentifier = "space"
+        space.accessibilityLabel = "space"
         space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
         let drag = UILongPressGestureRecognizer(target: self, action: #selector(spaceDragged(_:)))
         drag.minimumPressDuration = 0.4
         space.addGestureRecognizer(drag)
         planeButtons["__space"] = space
 
+        // Stock shows the ⏎ glyph for a plain return and a word for the
+        // action variants (Search, Go, Send).
         let returnTitle = ReturnKeyLabel.label(
             for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default))
-        let returnKey = keyButton(title: returnTitle)
+        let returnKey = returnTitle == "return"
+            ? keyButton(symbol: "return")
+            : keyButton(title: returnTitle)
         returnKey.accessibilityIdentifier = "return-key"
+        returnKey.accessibilityLabel = returnTitle
         returnKey.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
         planeButtons["__return"] = returnKey
 
@@ -353,7 +368,14 @@ final class KeyboardViewController: UIInputViewController {
         currentCells = cellRects
         for (id, button) in planeButtons {
             guard let cell = cellRects[id] else { continue }
-            button.frame = cell.insetBy(dx: 3, dy: 6)
+            // Visible cap inside the touch cell, measured off stock.
+            let cap = StockLayoutMetrics.capFrame(in: Rect(
+                x: cell.origin.x, y: cell.origin.y,
+                width: cell.width, height: cell.height))
+            button.frame = CGRect(x: cap.x, y: cap.y, width: cap.width, height: cap.height)
+            button.layer.shadowPath = UIBezierPath(
+                roundedRect: button.bounds,
+                cornerRadius: StockLayoutMetrics.capCornerRadius).cgPath
         }
         touchSurface.invalidateZones()
     }
@@ -389,25 +411,55 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     /// Function keys that stock iOS draws as SF Symbols (globe, shift).
-    private func keyButton(symbol: String) -> UIButton {
-        var config = UIButton.Configuration.gray()
-        config.image = UIImage(systemName: symbol)
-        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-        config.baseForegroundColor = .label
-        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0)
-        let button = UIButton(configuration: config)
+    /// Stock cap fill: white in light mode, mid-grey in dark. Measured off
+    /// the stock keyboard (screenshot scan 2026-07-31) -- our old
+    /// `.gray()` configuration read as grey-on-grey and made the keys look
+    /// smaller than stock even at matching size.
+    private static let capColor = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(white: 0.42, alpha: 1)
+            : .white
+    }
+
+    /// Shared cap chrome: fill, stock corner radius, and the 1pt bottom
+    /// shadow stock draws under every key.
+    private func styleAsKeyCap(_ button: UIButton) {
+        // The radius must live on the configuration's background: a
+        // configuration's default .dynamic corner style overrides
+        // layer.cornerRadius and rounded our caps into pills.
+        button.configuration?.cornerStyle = .fixed
+        button.configuration?.background.cornerRadius = StockLayoutMetrics.capCornerRadius
+        button.configuration?.background.backgroundColor = Self.capColor
+        button.layer.shadowColor = UIColor.black.withAlphaComponent(0.28).cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 1)
+        button.layer.shadowRadius = 0
+        button.layer.shadowOpacity = 1
         button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+    }
+
+    private func keyButton(symbol: String) -> UIButton {
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: symbol)
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
+        config.baseForegroundColor = .label
+        config.contentInsets = .zero
+        let button = UIButton(configuration: config)
+        styleAsKeyCap(button)
         return button
     }
 
     private func keyButton(title: String) -> UIButton {
-        var config = UIButton.Configuration.gray()
+        var config = UIButton.Configuration.plain()
         config.title = title
         config.baseForegroundColor = .label
-        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0)
+        config.contentInsets = .zero
         let button = UIButton(configuration: config)
-        button.titleLabel?.font = .systemFont(ofSize: 18)
-        button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+        // Stock letter caps are ~22pt regular; word keys (123, space,
+        // return) sit smaller.
+        let size: CGFloat = title.count == 1 ? 22 : 16
+        button.titleLabel?.font = .systemFont(ofSize: size, weight: .regular)
+        button.titleLabel?.adjustsFontSizeToFitWidth = true
+        styleAsKeyCap(button)
         return button
     }
 
@@ -861,7 +913,11 @@ final class KeyboardViewController: UIInputViewController {
         let abc = keyButton(title: "ABC")
         abc.accessibilityIdentifier = "emoji-abc"
         abc.addTarget(self, action: #selector(emojiAbcTapped), for: .touchUpInside)
-        let space = keyButton(title: "space")
+        // Stock's space bar carries no label; the identifier keeps it
+        // findable for accessibility and the UI suite.
+        let space = keyButton(title: "")
+        space.accessibilityIdentifier = "space"
+        space.accessibilityLabel = "space"
         space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
         let returnKey = keyButton(title: ReturnKeyLabel.label(
             for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default)))

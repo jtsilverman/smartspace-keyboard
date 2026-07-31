@@ -24,6 +24,18 @@ The keyboard types, looks, and feels indistinguishable from the stock Apple iPho
 - Landscape and iPad layouts (portrait iPhone first; others follow the same metrics table later).
 - Sound effects (keyboard clicks are a system service tied to Full Access; revisit with the fork).
 
+## Measured visible key caps (pixel scan of stock, 402pt @3x, 2026-07-31)
+
+Accessibility frames are TOUCH CELLS, not the key you see; the visible cap
+was measured by scanning screenshot pixels. Stock: cap 32.83 x 43.0pt,
+horizontal gap 6.67, vertical gap 11.0, row pitch 54, first cap x 7.0,
+row-2 indent half a cell, corner radius ~5pt, caps WHITE on the grey
+backdrop. Cap sits 1pt below its cell top, so the cell hangs 10pt lower
+than the key. Cap row tops: 591.33 / 645 / 699 / 753.
+
+Ours after this spec (same scan): rows 591 / 645 / 699 / 753, cap 33.0 x
+43.0, gaps 6.5 / 11.0, pitch 54 -- every row within 0.33pt of stock.
+
 ## Measured stock geometry (iPhone 17 Pro class, 402pt wide, AX dump 2026-07-31)
 
 Hit cells abut edge-to-edge (no dead gutters -- AX frames are touch zones, the
@@ -41,5 +53,7 @@ return 99 at x 300.67. Suggestions bar sits above row 1 (~44pt).
 - [x] Unit D: AG badge gone; probe verdict logs only
 - [x] Unit E: completion refresh coalesced off the tap's touch-event cycle
 - [x] Sim verification: engine 298 green; smoke/smart/settings/emoji/cursor-drag/autocorrect-bar/completion-bar suites green on the final build
-- [ ] Jake device feel-verification (AC 2/5 device halves; AC 1 visual eyeball vs stock)
+- [x] Unit F (Jake, device: "keys are still smaller"): visible caps were never measured, only touch cells -- the guessed 3/6pt inset plus a `.gray()` configuration (grey-on-grey) and the configuration's default `.dynamic` corner style (pill-shaped caps) made keys read small. Now: measured cap inset, white caps, fixed 5pt radius, stock 1pt bottom shadow, stock glyphs for emoji/return, blank space bar, 44pt bar + flush 216pt key area (+7pt measured overhang). Verified pixel-for-pixel against a stock screenshot.
+- [ ] Jake device feel-verification (AC 2/5 device halves; AC 1 now pixel-verified in the simulator)
+- [ ] Empty suggestion bar: stock always shows three predictions, ours is blank until typing (QuickType parity is a spec non-goal; the empty grey band is the visible tell)
 - [ ] Sim-state gotcha recorded: mistrained PersonalRanking lives in the group-container plist (Containers/Shared/AppGroup/<id>/Library/Preferences/group.com.jtsilverman.smartspace.plist), invisible to `simctl spawn defaults read group...`
