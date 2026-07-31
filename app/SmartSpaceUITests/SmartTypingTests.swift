@@ -34,20 +34,26 @@ final class SmartTypingTests: XCTestCase {
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
 
+        // Eval v4 invariant: -- collapses only after a letter/digit
+        // (so--anyway); after a quote it stays a literal hyphen run.
         typeFirstLetter(app, field, "A", expecting: "A")
         app.buttons["123"].tap()
         XCTAssertTrue(app.buttons["\""].waitForExistence(timeout: 3))
         app.buttons["\""].tap()          // after "A": closing quote
         app.buttons["-"].tap()
-        app.buttons["-"].tap()           // collapses to em dash
-        app.buttons["\""].tap()          // after em dash: closing side? opener set decides
-        assertFieldValue(field, "A\u{201D}\u{2014}\u{201D}",
-                         "quote after letter closes; -- collapses to em dash")
+        app.buttons["-"].tap()           // after a quote: NO collapse
+        assertFieldValue(field, "A\u{201D}--",
+                         "quote after letter closes; -- after a quote stays literal")
 
-        // Space then quote opens.
+        // Space then quote opens; -- after a letter collapses to an em dash.
         app.buttons["space"].tap()
         app.buttons["\""].tap()
-        assertFieldValue(field, "A\u{201D}\u{2014}\u{201D} \u{201C}",
-                         "quote after a space should be an opening curly")
+        tapKey(app, "ABC")
+        tapKey(app, "b")
+        app.buttons["123"].tap()
+        app.buttons["-"].tap()
+        app.buttons["-"].tap()
+        assertFieldValue(field, "A\u{201D}-- \u{201C}b\u{2014}",
+                         "quote after a space opens; -- after a letter collapses")
     }
 }

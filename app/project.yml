@@ -24,6 +24,8 @@ targets:
       - target: SmartSpaceKeyboard
       - package: Engine
         product: TypingEngine
+      - package: Engine
+        product: PunctuationEngine
   SmartSpaceKeyboard:
     type: app-extension
     platform: iOS
