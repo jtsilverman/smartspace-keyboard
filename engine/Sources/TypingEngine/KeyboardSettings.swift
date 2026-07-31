@@ -21,8 +21,8 @@ public struct KeyboardSettings {
 
     /// Marks the settings screen may offer, and the only ones a stored
     /// candidate string can enable.
-    public static let availableCandidates: Set<Character> = [".", "?", "!", ",", ":", ";", "-"]
-    public static let defaultCandidates: Set<Character> = [".", "?", "!"]
+    public static let availableCandidates: Set<Character> = [".", "?", "!", ",", "\"", ":", ";", "-"]
+    public static let defaultCandidates: Set<Character> = [".", "?", "!", ",", "\""]
 
     public let smartDoubleSpace: Bool
     public let autocorrect: Bool
