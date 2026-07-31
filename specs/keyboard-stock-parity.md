@@ -24,6 +24,15 @@ The keyboard types, looks, and feels indistinguishable from the stock Apple iPho
 - Landscape and iPad layouts (portrait iPhone first; others follow the same metrics table later).
 - Sound effects (keyboard clicks are a system service tied to Full Access; revisit with the fork).
 
+## Measured stock geometry (iPhone 17 Pro class, 402pt wide, AX dump 2026-07-31)
+
+Hit cells abut edge-to-edge (no dead gutters -- AX frames are touch zones, the
+visible key is the cell minus visual insets). Row pitch exactly 54pt, rows at
+y 590/644/698/752 (4 x 54 = 216). Letter cell pitch 39.33 = (402 - 2x4.67)/10;
+row 2 indents half a cell (A at x 24.33). shift/delete cells 51.3w. Bottom row:
+123 cell 49.33 at x 4.67, emoji 49.33 at x 54, space 197.33 at x 103.33,
+return 99 at x 300.67. Suggestions bar sits above row 1 (~44pt).
+
 ## Progress
 
 - [ ] Unit A: stock metrics table + layout conformance (sizes, gaps, insets, radii)
