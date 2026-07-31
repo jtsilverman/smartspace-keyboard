@@ -10,7 +10,7 @@ import TypingEngine
 /// Container that never claims touches itself: interactive children (the
 /// function keys) win, everything else falls through to KeyTouchSurface
 /// beneath. Plain UIView.hitTest would return self and swallow the touch.
-final class PassthroughStackView: UIStackView {
+final class PassthroughView: UIView {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hit = super.hitTest(point, with: event)
         return hit === self ? nil : hit

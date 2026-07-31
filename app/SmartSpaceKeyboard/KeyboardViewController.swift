@@ -37,12 +37,16 @@ final class KeyboardViewController: UIInputViewController {
     private var lastPrediction: Prediction?
     private var lastContextWordCount = 0
     private let suggestionBar = UIStackView()
-    private var rowsStack: UIStackView?
+    private var rowsStack: UIView?
     private var backspaceTimer: Timer?
     private var backspaceRepeats = 0
     private var alternatesView: UIView?
     private var characterButtons: [(button: UIButton, key: String)] = []
     private var shiftButton: UIButton?
+    /// Every key button of the current plane by cell id ("__" = function).
+    private var planeButtons: [String: UIButton] = [:]
+    /// The laid-out hit cells, source of both key frames and touch zones.
+    private var currentCells: [String: CGRect] = [:]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -118,10 +122,7 @@ final class KeyboardViewController: UIInputViewController {
         suggestionBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(suggestionBar)
 
-        let rows = PassthroughStackView()
-        rows.axis = .vertical
-        rows.distribution = .fillEqually
-        rows.spacing = 8
+        let rows = PassthroughView()
         rows.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rows)
         rowsStack = rows
@@ -234,70 +235,57 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     /// Rebuilds the visible plane from pure layout data + current state.
+    /// Buttons are created here and framed in layoutPlane() from the
+    /// measured stock cell geometry (stock-parity AC 1).
     private func rebuildRows() {
         guard let rows = rowsStack else { return }
         dismissAlternates()
         dismissAllKeyPops()  // buttons are torn down; orphan pops would leak
         characterButtons = []
         shiftButton = nil
-        rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        planeButtons = [:]
+        rows.subviews.forEach { $0.removeFromSuperview() }
 
-        let plane: [[String]]
-        switch layer {
-        case .letters: plane = KeyboardLayout.letterRows
-        case .numbers: plane = KeyboardLayout.numberRows
-        case .symbols: plane = KeyboardLayout.symbolRows
-        }
-
-        for (index, keys) in plane.enumerated() {
-            let row = PassthroughStackView()
-            row.axis = .horizontal
-            row.distribution = .fillEqually
-            row.spacing = 4
+        for keys in currentPlane() {
             for key in keys {
-                row.addArrangedSubview(characterButton(for: key))
+                let button = characterButton(for: key)
+                planeButtons[key] = button
+                rows.addSubview(button)
             }
-            if index == plane.count - 1 {
-                let leading: UIButton
-                if layer == .letters {
-                    leading = keyButton(symbol: shiftSymbolName())
-                    leading.accessibilityIdentifier = "shift"
-                    leading.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
-                    shiftButton = leading
-                } else {
-                    leading = keyButton(title: layer == .numbers ? "#+=" : "123")
-                    leading.addTarget(self, action: #selector(subLayerTapped), for: .touchUpInside)
-                }
-                row.insertArrangedSubview(leading, at: 0)
-
-                let backspace = keyButton(title: "⌫")
-                let press = UILongPressGestureRecognizer(target: self, action: #selector(backspaceHeld(_:)))
-                press.minimumPressDuration = 0.4
-                backspace.addGestureRecognizer(press)
-                backspace.addTarget(self, action: #selector(backspaceTapped), for: .touchUpInside)
-                row.addArrangedSubview(backspace)
-            }
-            rows.addArrangedSubview(row)
         }
 
-        let bottomRow = PassthroughStackView()
-        bottomRow.axis = .horizontal
-        bottomRow.spacing = 4
+        let leading: UIButton
+        if layer == .letters {
+            leading = keyButton(symbol: shiftSymbolName())
+            leading.accessibilityIdentifier = "shift"
+            leading.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
+            shiftButton = leading
+        } else {
+            leading = keyButton(title: layer == .numbers ? "#+=" : "123")
+            leading.addTarget(self, action: #selector(subLayerTapped), for: .touchUpInside)
+        }
+        planeButtons["__shift"] = leading
+
+        let backspace = keyButton(title: "⌫")
+        let press = UILongPressGestureRecognizer(target: self, action: #selector(backspaceHeld(_:)))
+        press.minimumPressDuration = 0.4
+        backspace.addGestureRecognizer(press)
+        backspace.addTarget(self, action: #selector(backspaceTapped), for: .touchUpInside)
+        planeButtons["__delete"] = backspace
 
         let layerKey = keyButton(title: layer == .letters ? "123" : "ABC")
         layerKey.addTarget(self, action: #selector(layerTapped), for: .touchUpInside)
+        planeButtons["__layer"] = layerKey
 
         let emojiKey = keyButton(title: "😀")
         emojiKey.accessibilityIdentifier = "emoji-key"
         emojiKey.addTarget(self, action: #selector(emojiKeyTapped), for: .touchUpInside)
+        planeButtons["__emoji"] = emojiKey
 
-        let globe: UIButton?
         if needsInputModeSwitchKey {
-            let key = keyButton(symbol: "globe")
-            key.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
-            globe = key
-        } else {
-            globe = nil
+            let globe = keyButton(symbol: "globe")
+            globe.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
+            planeButtons["__globe"] = globe
         }
 
         let space = keyButton(title: "space")
@@ -305,23 +293,54 @@ final class KeyboardViewController: UIInputViewController {
         let drag = UILongPressGestureRecognizer(target: self, action: #selector(spaceDragged(_:)))
         drag.minimumPressDuration = 0.4
         space.addGestureRecognizer(drag)
+        planeButtons["__space"] = space
 
         let returnTitle = ReturnKeyLabel.label(
             for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default))
         let returnKey = keyButton(title: returnTitle)
         returnKey.accessibilityIdentifier = "return-key"
         returnKey.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
+        planeButtons["__return"] = returnKey
 
-        bottomRow.addArrangedSubview(layerKey)
-        bottomRow.addArrangedSubview(emojiKey)
-        if let globe { bottomRow.addArrangedSubview(globe) }
-        bottomRow.addArrangedSubview(space)
-        bottomRow.addArrangedSubview(returnKey)
-        layerKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
-        emojiKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
-        globe?.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
-        returnKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.2).isActive = true
-        rows.addArrangedSubview(bottomRow)
+        for (id, button) in planeButtons where id.hasPrefix("__") {
+            rows.addSubview(button)
+        }
+        layoutPlane()
+    }
+
+    private func currentPlane() -> [[String]] {
+        switch layer {
+        case .letters: return KeyboardLayout.letterRows
+        case .numbers: return KeyboardLayout.numberRows
+        case .symbols: return KeyboardLayout.symbolRows
+        }
+    }
+
+    /// Stock hit cells from the measured metrics; visible key = cell minus
+    /// the stock visual insets. When the system wants a globe key it takes
+    /// the emoji cell and the emoji key takes the leading slice of space.
+    private func layoutPlane() {
+        guard let rows = rowsStack, rows.bounds.width > 0 else { return }
+        var cellRects: [String: CGRect] = [:]
+        for c in StockLayoutMetrics.cells(width: rows.bounds.width, plane: currentPlane()) {
+            cellRects[c.id] = CGRect(x: c.frame.x, y: c.frame.y,
+                                     width: c.frame.width, height: c.frame.height)
+        }
+        if planeButtons["__globe"] != nil, let emoji = cellRects["__emoji"],
+           var space = cellRects["__space"] {
+            cellRects["__globe"] = emoji
+            cellRects["__emoji"] = CGRect(x: space.minX, y: space.minY,
+                                          width: emoji.width, height: emoji.height)
+            space = CGRect(x: space.minX + emoji.width, y: space.minY,
+                           width: space.width - emoji.width, height: space.height)
+            cellRects["__space"] = space
+        }
+        currentCells = cellRects
+        for (id, button) in planeButtons {
+            guard let cell = cellRects[id] else { continue }
+            button.frame = cell.insetBy(dx: 3, dy: 6)
+        }
+        touchSurface.invalidateZones()
     }
 
     /// Character keys are passive visuals: KeyTouchSurface owns their
@@ -338,39 +357,20 @@ final class KeyboardViewController: UIInputViewController {
         characterButtons.first(where: { $0.key == key })?.button
     }
 
-    /// Layout changes only mark the map dirty; the surface rebuilds zones
-    /// from live frames on the next touch (stacks settle after this fires).
+    /// Re-frame the plane whenever the container size settles.
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        touchSurface.invalidateZones()
+        layoutPlane()
     }
 
-    /// Zone map from the laid-out key frames: character keys by name,
-    /// everything else (shift, backspace, bottom row) as passthrough zones
-    /// so the surface never steals their gutters.
+    /// Touch zones are the same stock hit cells the buttons are framed
+    /// from: character keys by name, "__" cells pass through to their
+    /// interactive buttons.
     private func buildZones() -> [KeyZone] {
-        guard let rows = rowsStack else { return [] }
-        var zones: [KeyZone] = []
-        let charSet = Set(characterButtons.map(\.button))
-        var functionIndex = 0
-        func walk(_ v: UIView) {
-            if let button = v as? UIButton {
-                let f = button.convert(button.bounds, to: touchSurface)
-                if let key = characterButtons.first(where: { $0.button == button })?.key {
-                    zones.append(KeyZone(id: key, frame: Rect(
-                        x: f.origin.x, y: f.origin.y, width: f.width, height: f.height)))
-                } else if !charSet.contains(button) {
-                    zones.append(KeyZone(id: "\(KeyTouchSurface.passthroughPrefix)\(functionIndex)",
-                                         frame: Rect(x: f.origin.x, y: f.origin.y,
-                                                     width: f.width, height: f.height)))
-                    functionIndex += 1
-                }
-                return
-            }
-            v.subviews.forEach(walk)
+        currentCells.map { id, r in
+            KeyZone(id: id, frame: Rect(x: r.origin.x, y: r.origin.y,
+                                        width: r.width, height: r.height))
         }
-        walk(rows)
-        return zones
     }
 
     /// Function keys that stock iOS draws as SF Symbols (globe, shift).
