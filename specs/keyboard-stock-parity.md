@@ -35,9 +35,11 @@ return 99 at x 300.67. Suggestions bar sits above row 1 (~44pt).
 
 ## Progress
 
-- [ ] Unit A: stock metrics table + layout conformance (sizes, gaps, insets, radii)
-- [ ] Unit B: custom touch surface -- rolled/multitouch, gutter hit zones, touch-down feedback
-- [ ] Unit C: key preview bubbles on all character keys
-- [ ] Unit D: AG badge removed; probe verdict to log only
-- [ ] Unit E: per-keystroke work off the touch critical path
-- [ ] Device install + Jake feel-verification loop after each unit lands
+- [x] Unit A: StockLayoutMetrics from the AX-measured stock table (TDD, measured-frame oracle); keyboard renders frame-based from the cells; cells double as touch zones
+- [x] Unit B: KeyTouchSurface -- rolled multitouch per-finger tracking, gutter/edge hit zones, hold-for-alternates; buttons passive under PassthroughView rows (an over-layer culled them from AX; stacks swallowed fall-through touches; eager zone capture read stale frames -- all three found by sim suites)
+- [x] Unit C: key-pop bubbles driven by the surface at touch-down/move (pre-existing pops, now on every character touch path)
+- [x] Unit D: AG badge gone; probe verdict logs only
+- [x] Unit E: completion refresh coalesced off the tap's touch-event cycle
+- [x] Sim verification: engine 298 green; smoke/smart/settings/emoji/cursor-drag/autocorrect-bar/completion-bar suites green on the final build
+- [ ] Jake device feel-verification (AC 2/5 device halves; AC 1 visual eyeball vs stock)
+- [ ] Sim-state gotcha recorded: mistrained PersonalRanking lives in the group-container plist (Containers/Shared/AppGroup/<id>/Library/Preferences/group.com.jtsilverman.smartspace.plist), invisible to `simctl spawn defaults read group...`
