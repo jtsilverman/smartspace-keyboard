@@ -35,7 +35,6 @@ final class KeyboardViewController: UIInputViewController {
     private var lastContextWordCount = 0
     private let suggestionBar = UIStackView()
     private var rowsStack: UIStackView?
-    private let probeBadge = UILabel()
     private var backspaceTimer: Timer?
     private var backspaceRepeats = 0
     private var alternatesView: UIView?
@@ -124,10 +123,6 @@ final class KeyboardViewController: UIInputViewController {
         view.addSubview(rows)
         rowsStack = rows
 
-        probeBadge.font = .systemFont(ofSize: 10, weight: .semibold)
-        probeBadge.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(probeBadge)
-
         emojiPanel.isHidden = true
         emojiPanel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(emojiPanel)
@@ -146,8 +141,6 @@ final class KeyboardViewController: UIInputViewController {
             emojiPanel.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
             emojiPanel.topAnchor.constraint(equalTo: rows.topAnchor),
             emojiPanel.bottomAnchor.constraint(equalTo: rows.bottomAnchor),
-            probeBadge.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -6),
-            probeBadge.topAnchor.constraint(equalTo: view.topAnchor, constant: 2),
         ])
         rebuildRows()
     }
@@ -1001,11 +994,11 @@ final class KeyboardViewController: UIInputViewController {
 
     // MARK: - App-group probe (WORKPLAN 3.1)
 
+    /// Verdict goes to the system log only (stock-parity AC 4: no debug
+    /// chrome on the keyboard surface). .notice so it persists on device.
     private func runAppGroupProbe() {
         let value = UserDefaults(suiteName: appGroupID)?.string(forKey: probeKey)
         let ok = value == probeValue
-        probeBadge.text = ok ? "AG:OK" : "AG:BLOCKED"
-        probeBadge.textColor = ok ? .systemGreen : .systemRed
-        log.debug("app-group probe: \(ok ? "OK" : "BLOCKED", privacy: .public)")
+        log.notice("app-group probe: \(ok ? "OK" : "BLOCKED", privacy: .public)")
     }
 }

@@ -56,10 +56,9 @@ final class KeyboardSmokeTests: XCTestCase {
         tapKey(app, "K")          // typing ends the cycle; auto-shift caps it
         assertFieldValue(field, "HiJ OK! How are u. K")
 
-        // App-group probe verdict (3.1): recorded from the badge either way.
-        let ok = app.staticTexts["AG:OK"].exists
-        let blocked = app.staticTexts["AG:BLOCKED"].exists
-        XCTAssertTrue(ok || blocked, "probe badge missing")
-        print("APP-GROUP-PROBE-VERDICT: \(ok ? "AG:OK" : "AG:BLOCKED")")
+        // App-group probe verdict moved to the system log (stock-parity
+        // AC 4): the keyboard surface carries no debug chrome.
+        XCTAssertFalse(app.staticTexts["AG:OK"].exists, "probe badge must be gone")
+        XCTAssertFalse(app.staticTexts["AG:BLOCKED"].exists, "probe badge must be gone")
     }
 }
