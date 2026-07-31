@@ -23,14 +23,19 @@ public struct OutcomeRecord: Equatable, Sendable {
     public let kept: String
     public let cycleTaps: Int
     public let lengthBucket: LengthBucket
+    /// Days since the Unix epoch; nil on records written before the weekly
+    /// stats window existed (host-app-settings, locked decision 2).
+    public let epochDay: Int?
 
     public init(rule: PredictionRule, guess: String, kept: String,
-                cycleTaps: Int, lengthBucket: LengthBucket) {
+                cycleTaps: Int, lengthBucket: LengthBucket,
+                epochDay: Int? = nil) {
         self.rule = rule
         self.guess = guess
         self.kept = kept
         self.cycleTaps = cycleTaps
         self.lengthBucket = lengthBucket
+        self.epochDay = epochDay
     }
 }
 
