@@ -18,6 +18,9 @@ final class KeyboardViewController: UIInputViewController {
     private var cursorDrag = SpacebarCursorDrag()
     private let haptic = UIImpactFeedbackGenerator(style: .light)
     private var keyPops: [UIButton: UIView] = [:]
+    /// Stock-parity touch layer over the character keys (rolled multitouch,
+    /// gutter hit zones); function keys stay plain buttons beneath it.
+    private let touchSurface = KeyTouchSurface()
     private var emojiPanelActive = false
     private var emojiSearchActive = false
     private var emojiQuery = ""
@@ -115,13 +118,44 @@ final class KeyboardViewController: UIInputViewController {
         suggestionBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(suggestionBar)
 
-        let rows = UIStackView()
+        let rows = PassthroughStackView()
         rows.axis = .vertical
         rows.distribution = .fillEqually
         rows.spacing = 8
         rows.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rows)
         rowsStack = rows
+
+        // Below the rows: disabled character buttons let touches fall
+        // through the stack to the surface, while staying fully visible to
+        // accessibility (an overlay above them culls them from the AX tree).
+        touchSurface.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(touchSurface, belowSubview: rows)
+        touchSurface.zoneProvider = { [weak self] in self?.buildZones() ?? [] }
+        touchSurface.onTouchDown = { [weak self] key in
+            guard let self else { return }
+            self.keyTouchDown()
+            if let button = self.characterButton(named: key) { self.showKeyPop(above: button) }
+        }
+        touchSurface.onTouchMoved = { [weak self] key in
+            guard let self else { return }
+            self.dismissAllKeyPops()
+            if let button = self.characterButton(named: key) { self.showKeyPop(above: button) }
+        }
+        touchSurface.onCommit = { [weak self] key in
+            guard let self else { return }
+            if let button = self.characterButton(named: key) { self.dismissKeyPop(for: button) }
+            self.commitCharacter(key)
+        }
+        touchSurface.onCancel = { [weak self] in self?.dismissAllKeyPops() }
+        touchSurface.onHold = { [weak self] key in
+            guard let self, !self.emojiSearchActive,
+                  let options = KeyboardLayout.alternates[key],
+                  let button = self.characterButton(named: key) else { return }
+            self.dismissAllKeyPops()
+            self.showAlternates(options, above: button,
+                                shifted: self.layer == .letters && self.shift.isShifted)
+        }
 
         emojiPanel.isHidden = true
         emojiPanel.translatesAutoresizingMaskIntoConstraints = false
@@ -141,6 +175,10 @@ final class KeyboardViewController: UIInputViewController {
             emojiPanel.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
             emojiPanel.topAnchor.constraint(equalTo: rows.topAnchor),
             emojiPanel.bottomAnchor.constraint(equalTo: rows.bottomAnchor),
+            touchSurface.leadingAnchor.constraint(equalTo: rows.leadingAnchor),
+            touchSurface.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
+            touchSurface.topAnchor.constraint(equalTo: rows.topAnchor),
+            touchSurface.bottomAnchor.constraint(equalTo: rows.bottomAnchor),
         ])
         rebuildRows()
     }
@@ -212,7 +250,7 @@ final class KeyboardViewController: UIInputViewController {
         }
 
         for (index, keys) in plane.enumerated() {
-            let row = UIStackView()
+            let row = PassthroughStackView()
             row.axis = .horizontal
             row.distribution = .fillEqually
             row.spacing = 4
@@ -242,7 +280,7 @@ final class KeyboardViewController: UIInputViewController {
             rows.addArrangedSubview(row)
         }
 
-        let bottomRow = UIStackView()
+        let bottomRow = PassthroughStackView()
         bottomRow.axis = .horizontal
         bottomRow.spacing = 4
 
@@ -286,20 +324,53 @@ final class KeyboardViewController: UIInputViewController {
         rows.addArrangedSubview(bottomRow)
     }
 
+    /// Character keys are passive visuals: KeyTouchSurface owns their
+    /// touches (rolled multitouch, gutters, hold-for-alternates).
     private func characterButton(for key: String) -> UIButton {
         let title = (layer == .letters && shift.isShifted) ? key.uppercased() : key
         let button = keyButton(title: title)
-        button.addTarget(self, action: #selector(characterTapped(_:)), for: .touchUpInside)
-        button.addTarget(self, action: #selector(characterTouchDown(_:)), for: .touchDown)
-        button.addTarget(self, action: #selector(characterTouchEnded(_:)),
-                         for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit])
-        if KeyboardLayout.alternates[key] != nil {
-            let press = UILongPressGestureRecognizer(target: self, action: #selector(keyHeld(_:)))
-            press.minimumPressDuration = 0.4
-            button.addGestureRecognizer(press)
-        }
+        button.isUserInteractionEnabled = false
         characterButtons.append((button, key))
         return button
+    }
+
+    private func characterButton(named key: String) -> UIButton? {
+        characterButtons.first(where: { $0.key == key })?.button
+    }
+
+    /// Layout changes only mark the map dirty; the surface rebuilds zones
+    /// from live frames on the next touch (stacks settle after this fires).
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        touchSurface.invalidateZones()
+    }
+
+    /// Zone map from the laid-out key frames: character keys by name,
+    /// everything else (shift, backspace, bottom row) as passthrough zones
+    /// so the surface never steals their gutters.
+    private func buildZones() -> [KeyZone] {
+        guard let rows = rowsStack else { return [] }
+        var zones: [KeyZone] = []
+        let charSet = Set(characterButtons.map(\.button))
+        var functionIndex = 0
+        func walk(_ v: UIView) {
+            if let button = v as? UIButton {
+                let f = button.convert(button.bounds, to: touchSurface)
+                if let key = characterButtons.first(where: { $0.button == button })?.key {
+                    zones.append(KeyZone(id: key, frame: Rect(
+                        x: f.origin.x, y: f.origin.y, width: f.width, height: f.height)))
+                } else if !charSet.contains(button) {
+                    zones.append(KeyZone(id: "\(KeyTouchSurface.passthroughPrefix)\(functionIndex)",
+                                         frame: Rect(x: f.origin.x, y: f.origin.y,
+                                                     width: f.width, height: f.height)))
+                    functionIndex += 1
+                }
+                return
+            }
+            v.subviews.forEach(walk)
+        }
+        walk(rows)
+        return zones
     }
 
     /// Function keys that stock iOS draws as SF Symbols (globe, shift).
@@ -360,8 +431,8 @@ final class KeyboardViewController: UIInputViewController {
 
     // MARK: - Keys
 
-    @objc private func characterTapped(_ sender: UIButton) {
-        guard let title = sender.configuration?.title else { return }
+    private func commitCharacter(_ key: String) {
+        let title = (layer == .letters && shift.isShifted) ? key.uppercased() : key
         dismissAlternates()
         endSmartSpaceCycle()
         if emojiSearchActive {
@@ -453,15 +524,6 @@ final class KeyboardViewController: UIInputViewController {
         default:
             break
         }
-    }
-
-    @objc private func keyHeld(_ gesture: UILongPressGestureRecognizer) {
-        guard !emojiSearchActive,   // alternates insert into the document
-              gesture.state == .began,
-              let button = gesture.view as? UIButton,
-              let title = button.configuration?.title,
-              let options = KeyboardLayout.alternates[title.lowercased()] else { return }
-        showAlternates(options, above: button, shifted: layer == .letters && shift.isShifted)
     }
 
     private func showAlternates(_ options: [String], above button: UIButton, shifted: Bool) {
@@ -674,14 +736,6 @@ final class KeyboardViewController: UIInputViewController {
     private func dismissAllKeyPops() {
         keyPops.values.forEach { $0.removeFromSuperview() }
         keyPops = [:]
-    }
-
-    @objc private func characterTouchDown(_ sender: UIButton) {
-        showKeyPop(above: sender)
-    }
-
-    @objc private func characterTouchEnded(_ sender: UIButton) {
-        dismissKeyPop(for: sender)
     }
 
     // MARK: - Emoji panel (WORKPLAN 3.6)
