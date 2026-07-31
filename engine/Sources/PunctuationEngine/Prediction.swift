@@ -6,6 +6,7 @@ public enum PredictionRule: String, Sendable, CaseIterable {
     case terminalGuard
     case question
     case comma
+    case list
     case quote
     case exclamation
     case fallback
