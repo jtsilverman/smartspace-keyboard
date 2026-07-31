@@ -195,7 +195,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Updates key titles in place -- button identity survives, so a
     /// double-tap's second touch still lands on the same shift button.
     private func refreshShiftAppearance() {
-        shiftButton?.configuration?.title = shiftTitle()
+        shiftButton?.configuration?.image = UIImage(systemName: shiftSymbolName())
         guard layer == .letters else { return }
         for (button, key) in characterButtons {
             button.configuration?.title = shift.isShifted ? key.uppercased() : key
@@ -229,7 +229,7 @@ final class KeyboardViewController: UIInputViewController {
             if index == plane.count - 1 {
                 let leading: UIButton
                 if layer == .letters {
-                    leading = keyButton(title: shiftTitle())
+                    leading = keyButton(symbol: shiftSymbolName())
                     leading.accessibilityIdentifier = "shift"
                     leading.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
                     shiftButton = leading
@@ -262,7 +262,7 @@ final class KeyboardViewController: UIInputViewController {
 
         let globe: UIButton?
         if needsInputModeSwitchKey {
-            let key = keyButton(title: "🌐")
+            let key = keyButton(symbol: "globe")
             key.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
             globe = key
         } else {
@@ -309,6 +309,18 @@ final class KeyboardViewController: UIInputViewController {
         return button
     }
 
+    /// Function keys that stock iOS draws as SF Symbols (globe, shift).
+    private func keyButton(symbol: String) -> UIButton {
+        var config = UIButton.Configuration.gray()
+        config.image = UIImage(systemName: symbol)
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+        config.baseForegroundColor = .label
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0)
+        let button = UIButton(configuration: config)
+        button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+        return button
+    }
+
     private func keyButton(title: String) -> UIButton {
         var config = UIButton.Configuration.gray()
         config.title = title
@@ -327,11 +339,12 @@ final class KeyboardViewController: UIInputViewController {
         haptic.impactOccurred()
     }
 
-    private func shiftTitle() -> String {
+    /// Stock iOS shift glyphs: outline, filled while armed, caps-lock fill.
+    private func shiftSymbolName() -> String {
         switch shift.mode {
-        case .off: return "⇧"
-        case .oneShot: return "⬆"
-        case .capsLock: return "⇪"
+        case .off: return "shift"
+        case .oneShot: return "shift.fill"
+        case .capsLock: return "capslock.fill"
         }
     }
 
