@@ -45,6 +45,12 @@ private final class MemoryOutcomeStore: OutcomeLogStore {
                                         cycleTaps: 0, lengthBucket: .long))
     }
 
+    @Test func finishStampsTheSuppliedEpochDay() {
+        var t = OutcomeTracker()
+        t.smartInsert(rule: .question, guess: "?", wordCount: 2)
+        #expect(t.finish(epochDay: 20666)?.epochDay == 20666)
+    }
+
     @Test func abandonDropsTheActiveInteraction() {
         var t = OutcomeTracker()
         t.smartInsert(rule: .question, guess: "?", wordCount: 3)
