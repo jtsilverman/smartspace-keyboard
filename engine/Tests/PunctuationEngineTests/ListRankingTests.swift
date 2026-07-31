@@ -15,7 +15,7 @@ import Testing
     @Test func abbreviationOrdersRankCommaSecond() {
         #expect(engine.prediction(before: "see you at the appt").candidates.map(\.text)
                 == [".", ",", "?", "!", "\""])
-        #expect(engine.prediction(before: "meet dr.").candidates.map(\.text)
+        #expect(engine.prediction(before: "see you at 5 p.m").candidates.map(\.text)
                 == [".", ",", "?", "!", "\""])
     }
 

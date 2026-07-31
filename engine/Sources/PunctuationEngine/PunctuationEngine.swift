@@ -278,7 +278,7 @@ public struct PunctuationEngine: Sendable {
         // rules keep only their period-first ranking (v4 e2e invariant).
         if Self.dottedAbbreviations.contains(rawLastToken) {
             return Prediction(rule: .dottedAbbreviation,
-                              candidates: Self.ranked([".", "?", "!", ",", "\""]))
+                              candidates: Self.ranked([".", ",", "?", "!", "\""]))
         }
 
         let sentence = Self.currentSentence(in: context)
@@ -288,7 +288,7 @@ public struct PunctuationEngine: Sendable {
         }
         if let last = words.last, Self.abbreviations.contains(last) {
             return Prediction(rule: .abbreviation,
-                              candidates: Self.ranked([".", "?", "!", ",", "\""]))
+                              candidates: Self.ranked([".", ",", "?", "!", "\""]))
         }
 
         // A question can hide in the last comma-separated clause
@@ -332,10 +332,10 @@ public struct PunctuationEngine: Sendable {
         if let first = words.first, ["i", "we", "im", "my"].contains(first),
            words.contains("finally") || words.contains("just") {
             return Prediction(rule: .fallback,
-                              candidates: Self.ranked([".", "!", "?", ",", "\""]))
+                              candidates: Self.ranked([".", ",", "!", "?", "\""]))
         }
         return Prediction(rule: .fallback,
-                          candidates: Self.ranked([".", "?", "!", ",", "\""]))
+                          candidates: Self.ranked([".", ",", "?", "!", "\""]))
     }
 
     /// Returns candidates ranked best-first for the text before the cursor.
