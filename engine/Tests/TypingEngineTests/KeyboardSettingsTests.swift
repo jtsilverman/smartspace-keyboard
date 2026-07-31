@@ -19,7 +19,17 @@ private final class MemorySettingsStore: SettingsStore {
         #expect(settings.autoCapitalization)
         #expect(settings.smartSymbols)
         #expect(settings.haptics)
-        #expect(settings.enabledCandidates == [".", "?", "!"])
+        #expect(settings.enabledCandidates == [".", "?", "!", ",", "\""])
+    }
+
+    // Jake 2026-07-31: comma and quote join the defaults -- the engine's
+    // .comma/.quote rules were silently dead under the ". ? !" default.
+    @Test func quoteIsAvailableAndStorableAsACandidate() {
+        let store = MemorySettingsStore()
+        store.strings[KeyboardSettings.Key.candidates] = ".\""
+        let settings = KeyboardSettings(store: store)
+        #expect(settings.enabledCandidates == [".", "\""])
+        #expect(settings.filterCandidates(["\"", ",", "."]) == ["\"", "."])
     }
 
     @Test func storedToggleOffIsReadWithoutTouchingOtherKeys() {
@@ -42,7 +52,7 @@ private final class MemorySettingsStore: SettingsStore {
         let store = MemorySettingsStore()
         store.strings[KeyboardSettings.Key.candidates] = "xz9"
         let settings = KeyboardSettings(store: store)
-        #expect(settings.enabledCandidates == [".", "?", "!"])
+        #expect(settings.enabledCandidates == [".", "?", "!", ",", "\""])
     }
 
     @Test func unknownCharactersInCandidateStringAreDropped() {
