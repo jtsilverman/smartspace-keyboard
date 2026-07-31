@@ -34,3 +34,11 @@ The host app gets a settings screen whose toggles the keyboard actually obeys: f
 - [ ] OPEN (AC 4): XCUITest cannot tap SwiftUI Form toggles on the iOS 26.5 sim, so the tap->write step is verified manually (Jake, in the design session); the write->extension pipeline is live-verified via the launch-arg hook
 
 Skeleton scope creep, deliberate (Jake: "get the whole system ready"): 4.3 stats screen + app-group outcome-log migration and the 4.1 onboarding sheet ride this branch; split before PR if review wants it.
+
+## Jake's UX decisions (2026-07-30 morning, locked)
+
+1. Smart double-space OFF = STOCK double-space-period (not plain spaces). TODO next: pure StockDoubleSpace timing state in TypingEngine (reuse `SmartSpaceBar.doubleSpaceWindow`; period only after a word char; no cycling -- third space is plain), wire into the settings-off branch of `spaceTapped`, update `SettingsToggleTests.testSmartDoubleSpaceOffYieldsPlainSpaces` to expect "hi. ".
+2. Weekly stats: WORTH IT. TODO next: `OutcomeRecord` gains optional epochDay (encoded line grows 5 -> 6 parts; old 5-part lines still parse, count as pre-timestamp), VC passes `Int(Date().timeIntervalSince1970/86400)` at finish, StatsView adds a This Week section (records with epochDay >= today-6).
+3. Onboarding: stays behind the Setup guide button until enable-detection exists (session decision on Jake's "idk").
+4. Practice field: stays single-line; multiline deferred (would churn every UITest for 2 {RET} eval rows) (session decision on Jake's "idk").
+5. Visual design: standard/stock SwiftUI, nothing fancy. No styling work.
