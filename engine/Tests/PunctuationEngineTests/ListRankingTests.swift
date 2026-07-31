@@ -82,4 +82,20 @@ import Testing
         let p = engine.prediction(before: "we need chips")
         #expect(p.rule == .fallback)
     }
+
+    @Test func thousandsSeparatorIsNotAListBoundary() {
+        // Reviewer finding: digit-grouping commas are not list commas.
+        for text in ["it cost 3,000 dollars", "rent is 1,200 a month",
+                     "score was 100,000 points"] {
+            let p = engine.prediction(before: text)
+            #expect(p.rule == .fallback, "input: \(text)")
+            #expect(p.candidates.first?.text == ".", "input: \(text)")
+        }
+    }
+
+    @Test func realListCommaStillFiresNextToANumber() {
+        let p = engine.prediction(before: "we need 3,000 cups, plates")
+        #expect(p.rule == .list)
+        #expect(p.candidates.first?.text == ",")
+    }
 }
