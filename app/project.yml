@@ -4,6 +4,11 @@ options:
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
+settings:
+  base:
+    # Jake's free Personal Team (device installs; 7-day provisioning).
+    DEVELOPMENT_TEAM: 865ZN46D5H
+    CODE_SIGN_STYLE: Automatic
 packages:
   Engine:
     path: ../engine
