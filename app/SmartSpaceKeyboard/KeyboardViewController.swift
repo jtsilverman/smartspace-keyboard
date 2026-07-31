@@ -138,10 +138,15 @@ final class KeyboardViewController: UIInputViewController {
             self.keyTouchDown()
             if let button = self.characterButton(named: key) { self.showKeyPop(above: button) }
         }
-        touchSurface.onTouchMoved = { [weak self] key in
+        touchSurface.onTouchMoved = { [weak self] from, to in
             guard let self else { return }
-            self.dismissAllKeyPops()
-            if let button = self.characterButton(named: key) { self.showKeyPop(above: button) }
+            // Only this finger's pop moves; other fingers keep theirs.
+            if let old = self.characterButton(named: from) { self.dismissKeyPop(for: old) }
+            if let button = self.characterButton(named: to) { self.showKeyPop(above: button) }
+        }
+        touchSurface.onTouchExit = { [weak self] key in
+            guard let self else { return }
+            if let button = self.characterButton(named: key) { self.dismissKeyPop(for: button) }
         }
         touchSurface.onCommit = { [weak self] key in
             guard let self else { return }
@@ -153,7 +158,7 @@ final class KeyboardViewController: UIInputViewController {
             guard let self, !self.emojiSearchActive,
                   let options = KeyboardLayout.alternates[key],
                   let button = self.characterButton(named: key) else { return }
-            self.dismissAllKeyPops()
+            self.dismissKeyPop(for: button)
             self.showAlternates(options, above: button,
                                 shifted: self.layer == .letters && self.shift.isShifted)
         }
