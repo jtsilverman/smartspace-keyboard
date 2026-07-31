@@ -16,8 +16,27 @@ public struct LayoutCell: Equatable, Sendable {
 public enum StockLayoutMetrics {
     public static let rowPitch: Double = 54
     public static let keyAreaHeight: Double = 216
-    /// Fixed side inset (measured 4.67 at 402pt; stock keeps it absolute).
-    public static let sideInset: Double = 4.665
+    /// Side inset derived from the measured visible caps (screenshot pixel
+    /// scan 2026-07-31: first cap x 7.0, cap width 32.83, gap 6.67 at
+    /// 402pt), which are ground truth over the AX cell frames' rounding.
+    public static let sideInset: Double = 3.335
+
+    /// Visible key cap inside its touch cell, measured from the same scan:
+    /// cap top sits 1pt below the cell top, cap height 43 of the 54pt row
+    /// pitch (the cell hangs 10pt lower than the key you see), and 3.33pt
+    /// of gutter on each side (6.67pt between neighboring caps).
+    public static let capInsetTop: Double = 1
+    public static let capInsetBottom: Double = 10
+    public static let capInsetSide: Double = 3.335
+    /// Stock cap corner radius at this device class.
+    public static let capCornerRadius: Double = 5
+
+    public static func capFrame(in cell: Rect) -> Rect {
+        Rect(x: cell.x + capInsetSide,
+             y: cell.y + capInsetTop,
+             width: cell.width - 2 * capInsetSide,
+             height: cell.height - capInsetTop - capInsetBottom)
+    }
 
     /// Function-key constants measured at 402pt, scaled by width/402.
     private struct FunctionKeys {
