@@ -11,7 +11,7 @@ Double-space works for lists (Jake 2026-07-31): comma is always one cycle tap fr
 ## Acceptance criteria
 
 1. Every period-first candidate order ranks `,` second; the comma-first order already ranks `.` second. Question/exclamation/quote-first orders unchanged.
-2. New list rule (in-list signal): the sentence already contains a comma boundary AND the chunk after the last comma is short -> predict `, . ? ! "` under a new `PredictionRule` case. Fires from item 2 of a list onward; item 1 stays the hedge (period first, comma second via AC 1).
+2. New list rule (in-list signal): the sentence already contains a comma boundary AND the chunk after the last comma is short -> predict `, . ? ! "` under a new `PredictionRule` case. Fires from item 2 of a list onward; item 1 stays the hedge (period first, comma one cycle tap via AC 1). Close detection (Jake 2026-07-31): a post-comma chunk opening with "and"/"or" is the final item ("chips, watermelon, ice, and sprite") -> period-first again.
 3. Comprehensive list eval: blind-authored rows (authors never see engine source; grounded in real texting patterns) covering list boundaries item-1 and item-2+, plus statement/question look-alikes that must NOT fire the rule; dev/test split with frozen accuracy thresholds in a NEW corpus file (BlindCorpus stays frozen and untouched).
 4. Frozen blind-corpus regression: top-1 accuracy unchanged; the AC-1 rank change's top-2 delta measured and reported before merge.
 5. PersonalRanking untouched; it keeps layering on top of the new rule's order.
