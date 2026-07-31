@@ -35,3 +35,51 @@ import Testing
         #expect(texts == ["?", ".", "!", ",", "\""])
     }
 }
+
+// Spec comma-lists AC 2: from item 2 of a list onward the engine knows --
+// a sentence with a comma boundary and a short next chunk guesses comma
+// first, until an "and"/"or" chunk closes the list.
+@Suite struct ListRuleTests {
+    private let engine = PunctuationEngine()
+
+    @Test func secondListItemGuessesCommaFirst() {
+        let p = engine.prediction(before: "we need chips, watermelon")
+        #expect(p.rule == .list)
+        #expect(p.candidates.map(\.text) == [",", ".", "?", "!", "\""])
+    }
+
+    @Test func deepListItemStaysCommaFirst() {
+        let p = engine.prediction(before: "we need chips, watermelon, ice")
+        #expect(p.rule == .list)
+        #expect(p.candidates.first?.text == ",")
+    }
+
+    @Test func andChunkClosesTheList() {
+        // Jake's example: "i need chips, watermoelon, ice, and sprite."
+        let p = engine.prediction(before: "i need chips, watermelon, ice, and sprite")
+        #expect(p.rule != .list)
+        #expect(p.candidates.first?.text == ".")
+    }
+
+    @Test func orChunkClosesTheList() {
+        let p = engine.prediction(before: "pizza, thai, or sushi")
+        #expect(p.rule != .list)
+        #expect(p.candidates.first?.text == ".")
+    }
+
+    @Test func questionAfterCommaStillWinsOverList() {
+        let p = engine.prediction(before: "just got home babe, are you still awake")
+        #expect(p.rule == .question)
+    }
+
+    @Test func longChunkAfterCommaIsNotAListItem() {
+        let p = engine.prediction(before: "she brought snacks, we ended up staying for the whole game")
+        #expect(p.rule == .fallback)
+        #expect(p.candidates.first?.text == ".")
+    }
+
+    @Test func noCommaMeansNoListRule() {
+        let p = engine.prediction(before: "we need chips")
+        #expect(p.rule == .fallback)
+    }
+}
