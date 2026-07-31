@@ -218,10 +218,20 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     /// Typing trigger: refreshes mid-word completions from the live context.
+    /// Deferred off the tap's touch-event cycle (stock-parity AC 5): the
+    /// context read + spell-checker call + bar rebuild run after the runloop
+    /// drains the touch, so fast typing never waits on them. Coalesced --
+    /// only the newest pending refresh runs.
+    private var pendingCompletionRefresh = 0
     private func refreshTypingCompletions() {
         guard settings.autocorrect else { return }
-        autocorrect.typingUpdate(context: textDocumentProxy.documentContextBeforeInput ?? "")
-        refreshSuggestionBar()
+        pendingCompletionRefresh += 1
+        let ticket = pendingCompletionRefresh
+        DispatchQueue.main.async { [weak self] in
+            guard let self, ticket == self.pendingCompletionRefresh else { return }
+            self.autocorrect.typingUpdate(context: self.textDocumentProxy.documentContextBeforeInput ?? "")
+            self.refreshSuggestionBar()
+        }
     }
 
     /// Updates key titles in place -- button identity survives, so a
