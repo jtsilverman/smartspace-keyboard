@@ -45,6 +45,12 @@ private final class MemoryOutcomeStore: OutcomeLogStore {
                                         cycleTaps: 0, lengthBucket: .long))
     }
 
+    @Test func finishStampsTheSuppliedEpochDay() {
+        var t = OutcomeTracker()
+        t.smartInsert(rule: .question, guess: "?", wordCount: 2)
+        #expect(t.finish(epochDay: 20666)?.epochDay == 20666)
+    }
+
     @Test func abandonDropsTheActiveInteraction() {
         var t = OutcomeTracker()
         t.smartInsert(rule: .question, guess: "?", wordCount: 3)
@@ -70,6 +76,20 @@ private final class MemoryOutcomeStore: OutcomeLogStore {
                 #expect(OutcomeRecord(line: record.encodedLine) == record)
             }
         }
+    }
+
+    // Spec host-app-settings, locked decision 2 (weekly stats): a stamped
+    // record encodes 6 parts; a pre-timestamp 5-part line still decodes,
+    // with no epochDay.
+    @Test func epochDayRoundTripsAndLegacyLinesStayParsable() {
+        let stamped = OutcomeRecord(rule: .question, guess: "?", kept: ".",
+                                    cycleTaps: 2, lengthBucket: .short,
+                                    epochDay: 20666)
+        #expect(stamped.encodedLine == "question|?|.|2|short|20666")
+        #expect(OutcomeRecord(line: stamped.encodedLine) == stamped)
+        let legacy = OutcomeRecord(line: "question|?|.|2|short")
+        #expect(legacy != nil)
+        #expect(legacy?.epochDay == nil)
     }
 
     @Test func malformedLinesDecodeNil() {

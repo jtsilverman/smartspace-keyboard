@@ -20,17 +20,25 @@ final class SettingsToggleTests: XCTestCase {
         }
     }
 
-    func testSmartDoubleSpaceOffYieldsPlainSpaces() throws {
+    func testSmartDoubleSpaceOffYieldsStockPeriod() throws {
         let app = XCUIApplication()
         launchAllOff(app)
         let field = focusSmartSpaceKeyboard(app)
         // Auto-capitalization is also off: keys render lowercase.
         typeFirstLetter(app, field, "h", expecting: "h")
         tapKey(app, "i")
-        app.buttons["space"].tap()
-        app.buttons["space"].tap()
-        assertFieldValue(field, "hi  ",
-                         "double-space with the setting off must insert two plain spaces")
+        // Sequential .tap() calls can land outside the 0.3s window under
+        // simulator load (same flake as ScenarioEvalTests.doubleSpace):
+        // doubleTap, and retry once if two plain spaces landed.
+        app.buttons["space"].doubleTap()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        if let value = field.value as? String, value.hasSuffix("  ") {
+            app.buttons["⌫"].tap()
+            app.buttons["⌫"].tap()
+            app.buttons["space"].doubleTap()
+        }
+        assertFieldValue(field, "hi. ",
+                         "double-space with the setting off must fall back to the stock period shortcut")
     }
 
     func testAutocorrectOffLeavesTypoAndBarEmpty() throws {

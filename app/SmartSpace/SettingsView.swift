@@ -18,10 +18,10 @@ struct SettingsView: View {
     @AppStorage(KeyboardSettings.Key.haptics, store: UserDefaults(suiteName: appGroupID))
     private var haptics = true
     @AppStorage(KeyboardSettings.Key.candidates, store: UserDefaults(suiteName: appGroupID))
-    private var candidates = ".?!"
+    private var candidates = ".?!,\""
 
     /// Display order: defaults first, optional marks after.
-    private let candidateOrder: [Character] = [".", "?", "!", ",", ":", ";", "-"]
+    private let candidateOrder: [Character] = [".", "?", "!", ",", "\"", ":", ";", "-"]
 
     var body: some View {
         Form {

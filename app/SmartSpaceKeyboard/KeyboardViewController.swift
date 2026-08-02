@@ -12,6 +12,8 @@ final class KeyboardViewController: UIInputViewController {
     private var layer = KeyboardLayer.letters
     private let punctuation = PunctuationEngine()
     private var spaceBar = SmartSpaceBar()
+    /// Fallback when smart double-space is off: stock double-space-period.
+    private var stockSpaceBar = StockDoubleSpace()
     private var autocorrect = AutocorrectController(checker: SystemSpellChecker())
     private var cursorDrag = SpacebarCursorDrag()
     private let haptic = UIImpactFeedbackGenerator(style: .light)
@@ -86,7 +88,9 @@ final class KeyboardViewController: UIInputViewController {
     /// counts and marks only, never text).
     private func endSmartSpaceCycle() {
         spaceBar.nonSpaceKey()
-        guard let record = outcomeTracker.finish() else { return }
+        stockSpaceBar.nonSpaceKey()
+        let today = Int(Date().timeIntervalSince1970 / 86400)
+        guard let record = outcomeTracker.finish(epochDay: today) else { return }
         outcomeLog.append(record)
         personal.record(record)
         // .notice persists to the log store (.debug does not), marks only.
@@ -505,13 +509,28 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         dismissAlternates()
-        // Smart double-space off: every space is a plain space (spec
-        // host-app-settings AC 3; stock period-shortcut fallback is an open
-        // spec question).
+        // Smart double-space off: stock double-space-period (spec
+        // host-app-settings, locked decision 1). The word-char check looks
+        // past the space the first tap inserted.
+        // No endSmartSpaceCycle here: it would close the stock double-tap
+        // window on every space, and the smart machine is idle when the
+        // setting is off (settings only change across appearances, and
+        // disappearance finalizes any cycle).
         guard settings.smartDoubleSpace else {
-            endSmartSpaceCycle()
-            applyAutocorrectOnCommit()
-            textDocumentProxy.insertText(" ")
+            var context = textDocumentProxy.documentContextBeforeInput ?? ""
+            if context.hasSuffix(" ") { context.removeLast() }
+            let afterWordChar = context.last.map { $0.isLetter || $0.isNumber } == true
+            switch stockSpaceBar.spaceTapped(at: CACurrentMediaTime(), afterWordChar: afterWordChar) {
+            case .insertSpace:
+                applyAutocorrectOnCommit()
+                textDocumentProxy.insertText(" ")
+            case .insertPeriod:
+                // The word was committed by the first space; swap that space
+                // for ". " with no re-commit.
+                textDocumentProxy.deleteBackward()
+                textDocumentProxy.insertText(". ")
+                log.debug("stock double-space period")
+            }
             armAutoShiftIfSentenceStart()
             return
         }

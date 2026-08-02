@@ -30,32 +30,41 @@ public struct OutcomeTracker: Sendable {
         active = nil
     }
 
-    /// The cycle ended; returns the finished record and clears.
-    public mutating func finish() -> OutcomeRecord? {
+    /// The cycle ended; returns the finished record, stamped with the
+    /// caller's day (the keyboard passes today), and clears.
+    public mutating func finish(epochDay: Int? = nil) -> OutcomeRecord? {
         defer { active = nil }
         guard let active else { return nil }
         return OutcomeRecord(rule: active.rule, guess: active.guess,
                              kept: active.kept, cycleTaps: active.taps,
-                             lengthBucket: active.bucket)
+                             lengthBucket: active.bucket, epochDay: epochDay)
     }
 }
 
-/// Text-free persistence line: rule|guess|kept|taps|bucket. Marks never
-/// contain "|", so the separator is safe.
+/// Text-free persistence line: rule|guess|kept|taps|bucket[|epochDay].
+/// Marks never contain "|", so the separator is safe; 5-part lines predate
+/// the weekly stats window and carry no day.
 extension OutcomeRecord {
     public var encodedLine: String {
-        "\(rule.rawValue)|\(guess)|\(kept)|\(cycleTaps)|\(lengthBucket.rawValue)"
+        let base = "\(rule.rawValue)|\(guess)|\(kept)|\(cycleTaps)|\(lengthBucket.rawValue)"
+        guard let epochDay else { return base }
+        return base + "|\(epochDay)"
     }
 
     public init?(line: String) {
         let parts = line.split(separator: "|", omittingEmptySubsequences: false)
-        guard parts.count == 5,
+        guard parts.count == 5 || parts.count == 6,
               let rule = PredictionRule(rawValue: String(parts[0])),
               let taps = Int(parts[3]), taps >= 0,
               let bucket = LengthBucket(rawValue: String(parts[4])),
               !parts[1].isEmpty, !parts[2].isEmpty else { return nil }
+        var epochDay: Int?
+        if parts.count == 6 {
+            guard let day = Int(parts[5]), day >= 0 else { return nil }
+            epochDay = day
+        }
         self.init(rule: rule, guess: String(parts[1]), kept: String(parts[2]),
-                  cycleTaps: taps, lengthBucket: bucket)
+                  cycleTaps: taps, lengthBucket: bucket, epochDay: epochDay)
     }
 }
 
