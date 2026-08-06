@@ -72,7 +72,7 @@ targets:
   SmartSpaceTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [SmartSpaceTests, Shared]
+    sources: [SmartSpaceTests, Shared, SmartSpaceKeyboard/KeyTouchSurface.swift]
     dependencies:
       - package: Engine
         product: TypingEngine

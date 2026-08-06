@@ -17,10 +17,23 @@ final class PassthroughView: UIView {
     }
 }
 
+/// Key cap whose hit area can extend past the visible cap to its full
+/// touch cell: gutter touches routed to a function key by KeyTouchSurface
+/// must still count as "inside" or UIControl fires .touchUpOutside and the
+/// tap does nothing.
+final class KeyButton: UIButton {
+    /// Negative values grow the hit area beyond the visible cap.
+    var hitOutset = UIEdgeInsets.zero
+}
+
 final class KeyTouchSurface: UIView {
 
     /// Zones prefixed with this are function keys the surface never claims.
     static let passthroughPrefix = "__"
+
+    /// Resolves a function zone id to its live button, so gutter touches
+    /// around function keys reach them instead of dying.
+    var functionButtonProvider: ((String) -> UIView?)?
 
     /// Zones are rebuilt lazily on the first touch after a layout change:
     /// stack views finish arranging AFTER the controller's layout callback,
