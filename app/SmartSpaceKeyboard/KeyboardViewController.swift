@@ -681,6 +681,7 @@ final class KeyboardViewController: UIInputViewController {
                 log.debug("stock double-space period")
             }
             armAutoShiftIfSentenceStart()
+            returnToLettersAfterSpace()
             return
         }
         let decision = spaceBar.spaceTapped(at: CACurrentMediaTime()) {
@@ -739,6 +740,15 @@ final class KeyboardViewController: UIInputViewController {
                 refreshShiftAppearance()
             }
         }
+        returnToLettersAfterSpace()
+    }
+
+    /// Stock: a space typed on the 123 / #+= plane flips the keyboard back
+    /// to letters (cycle taps land after the first space already flipped).
+    private func returnToLettersAfterSpace() {
+        guard layer != .letters else { return }
+        layer.didTypeSpace()
+        rebuildRows()
     }
 
     @objc private func returnTapped() {
