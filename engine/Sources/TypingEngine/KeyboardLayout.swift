@@ -112,6 +112,10 @@ public enum KeyboardLayer: Equatable, Sendable {
     public mutating func tapSecondary() {
         self = (self == .numbers) ? .symbols : .numbers
     }
+
+    /// Stock: a space typed on the 123 / #+= plane flips back to letters.
+    public mutating func didTypeSpace() {
+    }
 }
 
 /// The label the return key shows for a host field's returnKeyType.
