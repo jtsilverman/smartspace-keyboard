@@ -74,6 +74,19 @@ import TypingEngine
     #expect(layer == .letters)
 }
 
+@Test func spaceOnNonLetterPlaneReturnsToLetters() {
+    // Stock: 123 -> type a number -> space flips back to ABC.
+    var fromNumbers = KeyboardLayer.numbers
+    fromNumbers.didTypeSpace()
+    #expect(fromNumbers == .letters)
+    var fromSymbols = KeyboardLayer.symbols
+    fromSymbols.didTypeSpace()
+    #expect(fromSymbols == .letters)
+    var onLetters = KeyboardLayer.letters
+    onLetters.didTypeSpace()
+    #expect(onLetters == .letters)
+}
+
 @Test func doubleTapWindowEdges() {
     // Exact-boundary equality is float noise; assert both sides of the edge.
     var inside = ShiftState()
