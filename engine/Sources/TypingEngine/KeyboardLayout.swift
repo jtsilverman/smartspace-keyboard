@@ -115,6 +115,7 @@ public enum KeyboardLayer: Equatable, Sendable {
 
     /// Stock: a space typed on the 123 / #+= plane flips back to letters.
     public mutating func didTypeSpace() {
+        self = .letters
     }
 }
 
