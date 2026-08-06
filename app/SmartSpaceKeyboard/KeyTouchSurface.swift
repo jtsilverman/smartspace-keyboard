@@ -7,13 +7,14 @@ import TypingEngine
 /// rolled fast typing never drops a character, and drives the key-pop
 /// bubble at touch-down. Function keys keep their UIButton behavior: the
 /// surface passes their zones through untouched.
-/// Container that never claims touches itself: interactive children (the
-/// function keys) win, everything else falls through to KeyTouchSurface
-/// beneath. Plain UIView.hitTest would return self and swallow the touch.
+/// Purely visual container: it and its children never claim touches, so
+/// everything falls through to KeyTouchSurface beneath, whose zone map is
+/// the single resolver (function-key touches come back to the buttons via
+/// its redirect). Sitting above the surface keeps the buttons in the AX
+/// tree; an interactive overlay on top of them culls them from it.
 final class PassthroughView: UIView {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        let hit = super.hitTest(point, with: event)
-        return hit === self ? nil : hit
+        nil
     }
 }
 
@@ -24,6 +25,10 @@ final class PassthroughView: UIView {
 final class KeyButton: UIButton {
     /// Negative values grow the hit area beyond the visible cap.
     var hitOutset = UIEdgeInsets.zero
+
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        bounds.inset(by: hitOutset).contains(point)
+    }
 }
 
 final class KeyTouchSurface: UIView {
@@ -78,12 +83,18 @@ final class KeyTouchSurface: UIView {
         return id
     }
 
-    /// Claim only touches that resolve to a character key; everything else
-    /// falls through to the buttons underneath.
+    /// Single resolver for the key area: every touch goes through the zone
+    /// map (nearest key wins, gutters included). Character keys the surface
+    /// tracks itself; function zones route to their live button so the
+    /// gutters around shift/delete/space/return are never dead.
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         freshenZones()
         guard self.point(inside: point, with: event),
-              characterKey(at: point) != nil else { return nil }
+              let id = zoneMap.key(at: Point(x: point.x, y: point.y))
+        else { return nil }
+        if id.hasPrefix(Self.passthroughPrefix) {
+            return functionButtonProvider?(id)
+        }
         return self
     }
 

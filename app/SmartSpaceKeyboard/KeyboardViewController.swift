@@ -127,12 +127,15 @@ final class KeyboardViewController: UIInputViewController {
         view.addSubview(rows)
         rowsStack = rows
 
-        // Below the rows: disabled character buttons let touches fall
-        // through the stack to the surface, while staying fully visible to
-        // accessibility (an overlay above them culls them from the AX tree).
+        // Below the rows (above would cull the buttons from the AX tree):
+        // the surface is still the single touch resolver, because the rows
+        // container claims nothing. Its zone map routes every touch to the
+        // nearest key -- character keys it tracks itself, function zones it
+        // hands to their button -- so no gutter anywhere is dead.
         touchSurface.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(touchSurface, belowSubview: rows)
         touchSurface.zoneProvider = { [weak self] in self?.buildZones() ?? [] }
+        touchSurface.functionButtonProvider = { [weak self] id in self?.planeButtons[id] }
         touchSurface.onTouchDown = { [weak self] key in
             guard let self else { return }
             self.keyTouchDown()
@@ -373,6 +376,17 @@ final class KeyboardViewController: UIInputViewController {
                 x: cell.origin.x, y: cell.origin.y,
                 width: cell.width, height: cell.height))
             button.frame = CGRect(x: cap.x, y: cap.y, width: cap.width, height: cap.height)
+            // Function keys accept the gutter touches the surface routes to
+            // them: hit area = full cell plus the zone-map tolerance, or
+            // UIControl sees the touch as "outside" and drops the tap.
+            if id.hasPrefix(KeyTouchSurface.passthroughPrefix), let key = button as? KeyButton {
+                let tol = KeyZoneMap.tolerance
+                key.hitOutset = UIEdgeInsets(
+                    top: -(StockLayoutMetrics.capInsetTop + tol),
+                    left: -(StockLayoutMetrics.capInsetSide + tol),
+                    bottom: -(StockLayoutMetrics.capInsetBottom + tol),
+                    right: -(StockLayoutMetrics.capInsetSide + tol))
+            }
             button.layer.shadowPath = UIBezierPath(
                 roundedRect: button.bounds,
                 cornerRadius: StockLayoutMetrics.capCornerRadius).cgPath
@@ -443,7 +457,7 @@ final class KeyboardViewController: UIInputViewController {
         config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
         config.baseForegroundColor = .label
         config.contentInsets = .zero
-        let button = UIButton(configuration: config)
+        let button = KeyButton(configuration: config)
         styleAsKeyCap(button)
         return button
     }
@@ -453,7 +467,7 @@ final class KeyboardViewController: UIInputViewController {
         config.title = title
         config.baseForegroundColor = .label
         config.contentInsets = .zero
-        let button = UIButton(configuration: config)
+        let button = KeyButton(configuration: config)
         // Stock letter caps are ~22pt regular; word keys (123, space,
         // return) sit smaller.
         let size: CGFloat = title.count == 1 ? 22 : 16
@@ -956,7 +970,7 @@ final class KeyboardViewController: UIInputViewController {
         var config = UIButton.Configuration.plain()
         config.title = title
         config.contentInsets = .zero
-        let button = UIButton(configuration: config)
+        let button = KeyButton(configuration: config)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.accessibilityIdentifier = identifier
         return button
@@ -966,7 +980,7 @@ final class KeyboardViewController: UIInputViewController {
         var config = UIButton.Configuration.plain()
         config.title = emoji
         config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)
-        let button = UIButton(configuration: config)
+        let button = KeyButton(configuration: config)
         button.titleLabel?.font = .systemFont(ofSize: 26)
         button.accessibilityIdentifier = "emoji-item-\(emoji)"
         button.addTarget(self, action: #selector(emojiItemTapped(_:)), for: .touchUpInside)
