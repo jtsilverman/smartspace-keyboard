@@ -1,5 +1,9 @@
 import UIKit
 import TypingEngine
+import os
+
+/// TEMP DEBUG (touch tracing for the device dead-zone hunt; remove).
+let touchLog = Logger(subsystem: "com.jtsilverman.smartspace.keyboard", category: "touchtrace")
 
 /// Stock-feel touch layer for the character keys (stock-parity AC 2): sits
 /// over the key rows, resolves every touch through KeyZoneMap (gutters and
@@ -64,9 +68,17 @@ final class KeyTouchSurface: UIView {
     /// The finger slid off the character keys; that touch types nothing.
     var onTouchExit: ((String) -> Void)?
     var onCancel: (() -> Void)?
-    var onHold: ((String) -> Void)?
+    /// Hold fired on a key. Returns true when the controller showed the
+    /// alternates overlay; the touch then enters slide-select.
+    var onHold: ((String) -> Bool)?
+    /// The finger slid while alternates are showing (point in surface coords).
+    var onAlternateMoved: ((CGPoint) -> Void)?
+    /// Release while alternates are showing: (base key, release point).
+    var onAlternateEnded: ((String, CGPoint) -> Void)?
 
-    private var tracked: [UITouch: String] = [:]
+    /// All per-touch decisions live in the tested tracker; this view only
+    /// forwards raw events and dispatches the resulting UI effects.
+    private var tracker = KeyTouchTracker()
     private var holdTimers: [UITouch: Timer] = [:]
 
     override init(frame: CGRect) {
@@ -89,25 +101,34 @@ final class KeyTouchSurface: UIView {
     /// gutters around shift/delete/space/return are never dead.
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         freshenZones()
-        guard self.point(inside: point, with: event),
-              let id = zoneMap.key(at: Point(x: point.x, y: point.y))
-        else { return nil }
+        let inside = self.point(inside: point, with: event)
+        let id = zoneMap.key(at: Point(x: point.x, y: point.y))
+        touchLog.notice("hitTest p=(\(point.x, format: .fixed(precision: 1), privacy: .public),\(point.y, format: .fixed(precision: 1), privacy: .public)) inside=\(inside, privacy: .public) id=\(id ?? "nil", privacy: .public) bounds=\(String(describing: self.bounds.size), privacy: .public)")
+        guard inside, let id else { return nil }
         if id.hasPrefix(Self.passthroughPrefix) {
-            return functionButtonProvider?(id)
+            let target = functionButtonProvider?(id)
+            touchLog.notice("redirect \(id, privacy: .public) -> \(target == nil ? "MISSING" : "button", privacy: .public)")
+            return target
         }
         return self
     }
 
+    /// Stock hold delay before the alternates overlay appears.
+    static let holdDelay: TimeInterval = 0.5
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            guard let key = characterKey(at: touch.location(in: self)) else { continue }
-            tracked[touch] = key
+            let loc = touch.location(in: self)
+            let event = tracker.began(touch.hash, key: characterKey(at: loc))
+            touchLog.notice("began p=(\(loc.x, format: .fixed(precision: 1), privacy: .public),\(loc.y, format: .fixed(precision: 1), privacy: .public)) -> \(String(describing: event), privacy: .public)")
+            guard case .keyDown(let key) = event else { continue }
             onTouchDown?(key)
-            let timer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: false) { [weak self] _ in
-                guard let self, let held = self.tracked[touch] else { return }
+            let timer = Timer.scheduledTimer(withTimeInterval: Self.holdDelay, repeats: false) { [weak self] _ in
+                guard let self else { return }
                 self.holdTimers[touch] = nil
-                self.tracked[touch] = nil
-                self.onHold?(held)
+                let shown = self.onHold?(key) ?? false
+                _ = self.tracker.holdFired(touch.hash, hasAlternates: shown)
+                touchLog.notice("HOLD key=\(key, privacy: .public) alternates=\(shown, privacy: .public)")
             }
             holdTimers[touch] = timer
         }
@@ -115,20 +136,22 @@ final class KeyTouchSurface: UIView {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            guard let current = tracked[touch] else { continue }
-            let key = characterKey(at: touch.location(in: self))
-            if key == current { continue }
-            holdTimers[touch]?.invalidate()
-            holdTimers[touch] = nil
-            if let key {
-                // Slid to a neighboring character key: stock retargets.
-                tracked[touch] = key
-                onTouchMoved?(current, key)
-            } else {
-                // Slid onto a function key or off the surface: stock
-                // cancels -- releasing there must not type the old key.
-                tracked[touch] = nil
-                onTouchExit?(current)
+            let loc = touch.location(in: self)
+            let event = tracker.moved(touch.hash, key: characterKey(at: loc), x: loc.x)
+            switch event {
+            case .retarget(let from, let to):
+                holdTimers[touch]?.invalidate()
+                holdTimers[touch] = nil
+                onTouchMoved?(from, to)
+            case .exitKey(let key):
+                touchLog.notice("EXIT \(key, privacy: .public) at p=(\(loc.x, format: .fixed(precision: 1), privacy: .public),\(loc.y, format: .fixed(precision: 1), privacy: .public))")
+                holdTimers[touch]?.invalidate()
+                holdTimers[touch] = nil
+                onTouchExit?(key)
+            case .moveAlternate:
+                onAlternateMoved?(loc)
+            default:
+                break
             }
         }
     }
@@ -137,8 +160,17 @@ final class KeyTouchSurface: UIView {
         for touch in touches {
             holdTimers[touch]?.invalidate()
             holdTimers[touch] = nil
-            guard let key = tracked.removeValue(forKey: touch) else { continue }
-            onCommit?(key)
+            let loc = touch.location(in: self)
+            let event = tracker.ended(touch.hash, x: loc.x)
+            touchLog.notice("ended -> \(String(describing: event), privacy: .public)")
+            switch event {
+            case .commit(let key):
+                onCommit?(key)
+            case .commitAlternate(let base, _):
+                onAlternateEnded?(base, loc)
+            default:
+                break
+            }
         }
     }
 
@@ -146,8 +178,9 @@ final class KeyTouchSurface: UIView {
         for touch in touches {
             holdTimers[touch]?.invalidate()
             holdTimers[touch] = nil
-            tracked[touch] = nil
+            _ = tracker.cancelled(touch.hash)
+            touchLog.notice("CANCELLED")
         }
-        if tracked.isEmpty { onCancel?() }
+        if tracker.isIdle { onCancel?() }
     }
 }
