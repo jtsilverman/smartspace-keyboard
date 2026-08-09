@@ -160,10 +160,17 @@ final class KeyboardViewController: UIInputViewController {
         touchSurface.onHold = { [weak self] key in
             guard let self, !self.emojiSearchActive,
                   let options = KeyboardLayout.alternates[key],
-                  let button = self.characterButton(named: key) else { return }
+                  let button = self.characterButton(named: key) else { return false }
             self.dismissKeyPop(for: button)
             self.showAlternates(options, above: button,
                                 shifted: self.layer == .letters && self.shift.isShifted)
+            return true
+        }
+        touchSurface.onAlternateMoved = { [weak self] point in
+            self?.highlightAlternate(atSurfacePoint: point)
+        }
+        touchSurface.onAlternateEnded = { [weak self] base, point in
+            self?.commitAlternate(base: base, atSurfacePoint: point)
         }
 
         emojiPanel.isHidden = true
@@ -617,9 +624,12 @@ final class KeyboardViewController: UIInputViewController {
         bar.layer.cornerRadius = 8
         bar.layer.borderWidth = 1
         bar.layer.borderColor = UIColor.separator.cgColor
+        // Slide-select (stock): the ongoing touch stays with the surface,
+        // moves highlight an option, release commits it. The buttons are
+        // passive visuals.
         for option in options {
             let alt = keyButton(title: shifted ? option.uppercased() : option)
-            alt.addTarget(self, action: #selector(alternateTapped(_:)), for: .touchUpInside)
+            alt.isUserInteractionEnabled = false
             bar.addArrangedSubview(alt)
         }
         view.addSubview(bar)
@@ -635,15 +645,41 @@ final class KeyboardViewController: UIInputViewController {
         alternatesView = bar
     }
 
-    @objc private func alternateTapped(_ sender: UIButton) {
-        if let title = sender.configuration?.title {
+    /// The alternate button under the finger's x, or nil for "base key".
+    private func alternateButton(atSurfacePoint point: CGPoint) -> UIButton? {
+        guard let bar = alternatesView as? UIStackView else { return nil }
+        let inBar = bar.convert(view.convert(point, from: touchSurface), from: view)
+        return bar.arrangedSubviews.compactMap { $0 as? UIButton }.first {
+            // Stock is forgiving on y: only x picks the option.
+            $0.frame.minX <= inBar.x && inBar.x < $0.frame.maxX
+        }
+    }
+
+    private func highlightAlternate(atSurfacePoint point: CGPoint) {
+        guard let bar = alternatesView as? UIStackView else { return }
+        let selected = alternateButton(atSurfacePoint: point)
+        for case let button as UIButton in bar.arrangedSubviews {
+            button.configuration?.background.backgroundColor =
+                button === selected ? .systemBlue : Self.capColor
+            button.configuration?.baseForegroundColor =
+                button === selected ? .white : .label
+        }
+    }
+
+    /// Release during slide-select: type the highlighted option, or the
+    /// held base key when the finger never reached the overlay (stock).
+    private func commitAlternate(base: String, atSurfacePoint point: CGPoint) {
+        let selected = alternateButton(atSurfacePoint: point)?.configuration?.title
+        dismissAlternates()
+        if let selected {
             endSmartSpaceCycle()
-            insertSmart(title)
+            insertSmart(selected)
             if layer == .letters { shift.didTypeLetter() }
             refreshTypingCompletions()
+            refreshShiftAppearance()
+        } else {
+            commitCharacter(base)
         }
-        dismissAlternates()
-        refreshShiftAppearance()
     }
 
     private func dismissAlternates() {
