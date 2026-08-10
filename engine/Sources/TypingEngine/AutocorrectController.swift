@@ -41,6 +41,12 @@ public struct AutocorrectController: Sendable {
     /// The bar shows at most the original/typed plus two follow slots.
     private static let maxAlternatives = 2
 
+    /// True when typing `char` ends the current word and must commit any
+    /// pending correction, like space and return do on their own paths.
+    public static func isCommitDelimiter(_ char: Character) -> Bool {
+        false
+    }
+
     private enum State: Sendable {
         case idle
         case correction(original: String, corrected: String, alternatives: [String])
