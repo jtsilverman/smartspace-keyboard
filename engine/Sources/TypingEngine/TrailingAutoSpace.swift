@@ -17,9 +17,14 @@ public struct TrailingAutoSpace {
         isArmed = false
     }
 
+    /// Marks that pull themselves onto the word before an auto-space.
+    private static let absorbing: Set<Character> = [".", ",", "!", "?", ":", ";"]
+
     /// Characters to delete before inserting `char`. 1 eats the armed
     /// auto-space. Every call consumes the arm.
     public mutating func deletions(forTyping char: Character, context: String) -> Int {
-        0
+        defer { isArmed = false }
+        guard isArmed, context.hasSuffix(" "), Self.absorbing.contains(char) else { return 0 }
+        return 1
     }
 }

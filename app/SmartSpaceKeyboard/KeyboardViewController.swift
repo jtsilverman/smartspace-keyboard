@@ -40,6 +40,7 @@ final class KeyboardViewController: UIInputViewController {
     private var rowsStack: UIView?
     private var backspaceTimer: Timer?
     private var backspaceRepeater = BackspaceRepeater()
+    private var trailingAutoSpace = TrailingAutoSpace()
     private var alternatesView: UIView?
     private var characterButtons: [(button: UIButton, key: String)] = []
     private var shiftButton: UIButton?
@@ -535,12 +536,19 @@ final class KeyboardViewController: UIInputViewController {
             refreshEmojiSearchStrip()
             return
         }
-        // Stock: sentence punctuation ends the word and commits any
-        // pending correction before the mark lands (matrix row "commit
-        // delimiters"). insertSmart reads the document after the rewrite.
-        if title.count == 1, let char = title.first,
-           AutocorrectController.isCommitDelimiter(char) {
-            applyAutocorrectOnCommit()
+        // Stock: an auto-inserted space yields to the sentence mark typed
+        // after it, and sentence punctuation ends the word and commits any
+        // pending correction before the mark lands (matrix rows "trailing
+        // space absorption", "commit delimiters"). insertSmart reads the
+        // document after these rewrites.
+        if title.count == 1, let char = title.first {
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            for _ in 0..<trailingAutoSpace.deletions(forTyping: char, context: context) {
+                textDocumentProxy.deleteBackward()
+            }
+            if AutocorrectController.isCommitDelimiter(char) {
+                applyAutocorrectOnCommit()
+            }
         }
         insertSmart(title)
         if layer == .letters, shift.mode == .oneShot {
@@ -598,6 +606,7 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         autocorrect.backspace()
+        trailingAutoSpace.disarm()
         textDocumentProxy.deleteBackward()
         refreshTypingCompletions()
         armAutoShiftIfSentenceStart()
@@ -608,6 +617,7 @@ final class KeyboardViewController: UIInputViewController {
         switch gesture.state {
         case .began:
             backspaceRepeater.reset()
+            trailingAutoSpace.disarm()
             scheduleBackspaceTimer(every: 0.1)
         case .ended, .cancelled, .failed:
             backspaceTimer?.invalidate()
@@ -733,8 +743,11 @@ final class KeyboardViewController: UIInputViewController {
             let afterWordChar = context.last.map { $0.isLetter || $0.isNumber } == true
             switch stockSpaceBar.spaceTapped(at: CACurrentMediaTime(), afterWordChar: afterWordChar) {
             case .insertSpace:
-                applyAutocorrectOnCommit()
+                // A space that auto-committed a correction is stock's
+                // absorbable auto-space; a plain typed space is not.
+                let replaced = applyAutocorrectOnCommit()
                 textDocumentProxy.insertText(" ")
+                if replaced { trailingAutoSpace.arm() } else { trailingAutoSpace.disarm() }
             case .insertPeriod:
                 // The word was committed by the first space; swap that space
                 // for ". " with no re-commit.
@@ -763,8 +776,9 @@ final class KeyboardViewController: UIInputViewController {
         }
         switch decision {
         case .insertSpace:
-            applyAutocorrectOnCommit()
+            let replaced = applyAutocorrectOnCommit()
             textDocumentProxy.insertText(" ")
+            if replaced { trailingAutoSpace.arm() } else { trailingAutoSpace.disarm() }
             armAutoShiftIfSentenceStart()
         case .insertMark(let mark):
             textDocumentProxy.deleteBackward()          // the first space
@@ -821,6 +835,7 @@ final class KeyboardViewController: UIInputViewController {
         dismissAlternates()
         endSmartSpaceCycle()
         applyAutocorrectOnCommit()
+        trailingAutoSpace.disarm()
         textDocumentProxy.insertText("\n")
         armAutoShiftIfSentenceStart()
     }
@@ -834,6 +849,7 @@ final class KeyboardViewController: UIInputViewController {
         case .began:
             dismissAlternates()
             endSmartSpaceCycle()
+            trailingAutoSpace.disarm()
             // Pending bar edits target the pre-move tail; drop them.
             autocorrect.invalidateBar()
             refreshSuggestionBar()
@@ -1110,22 +1126,25 @@ final class KeyboardViewController: UIInputViewController {
     /// Decides the correction for the word the space/return just committed
     /// and rewrites it in the document. Called BEFORE the separator is
     /// inserted so the word is still the exact document tail.
-    private func applyAutocorrectOnCommit() {
-        guard settings.autocorrect else { return }
+    /// Returns true when a correction was written into the document.
+    @discardableResult
+    private func applyAutocorrectOnCommit() -> Bool {
+        guard settings.autocorrect else { return false }
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
         let commit = autocorrect.wordCommitted(context: context)
         defer { refreshSuggestionBar() }
-        guard case .replace(let original, let corrected, _) = commit else { return }
+        guard case .replace(let original, let corrected, _) = commit else { return false }
         // Trailing punctuation ("teh)") detaches the word from the tail;
         // skip the edit rather than delete the wrong characters, and drop
         // the bar so it never advertises a correction that was not made.
         guard context.hasSuffix(original) else {
             autocorrect.backspace()
-            return
+            return false
         }
         for _ in 0..<original.count { textDocumentProxy.deleteBackward() }
         textDocumentProxy.insertText(corrected)
         log.debug("autocorrect applied (\(original.count) -> \(corrected.count) chars)")
+        return true
     }
 
     @objc private func suggestionTapped(_ sender: UIButton) {
@@ -1165,10 +1184,12 @@ final class KeyboardViewController: UIInputViewController {
             switch autocorrect.barTapped(slot: sender.tag) {
             case .acceptTyped:
                 textDocumentProxy.insertText(" ")
+                trailingAutoSpace.arm()
                 log.debug("completion: typed word accepted")
             case .complete(let from, let to):
                 for _ in 0..<from.count { textDocumentProxy.deleteBackward() }
                 textDocumentProxy.insertText(to + " ")
+                trailingAutoSpace.arm()
                 log.debug("completion applied")
             default:
                 break
