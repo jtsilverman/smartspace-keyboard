@@ -29,6 +29,9 @@ lacks).
 | Backspace hold exact timings | phase onset, word cadence | DEVICE-MEASURE: research confirms no published constants exist anywhere; measure on iPhone 16/17 hardware |
 | Trailing-space absorption | sentence mark eats the auto-inserted space ("hello " + "," -> "hello,") | PINNED TrailingAutoSpaceTests; exact stock character set device-verifiable |
 | Return key label per host field type | search/go/return | PINNED KeyboardLayoutTests |
+| Shift/123 slide-to-character (one-gesture capital or symbol) | release on origin = tap; on character = modified commit; on nothing = cancel | ENGINE PINNED FunctionKeySlideTests; surface wiring PENDING-XCODE (function keys are plain UIButtons today, the gesture dies on release) |
+| Host autocapitalization trait (.none/.words/.sentences/.allCharacters) | email/URL fields never auto-shift | PINNED AutocapTraitTests; proxy wiring compile-unverified |
+| Host autocorrection opt-out (.no) | password/code fields never correct | wired in applyAutocorrectOnCommit; sim-verify pending |
 
 ## 2. Autocorrect and autofinishing
 
@@ -69,6 +72,35 @@ lacks).
   non-deterministic here; deterministic guards are the defensible pin.
 - Backspace-after-commit: see VARIANT row above.
 
+## Device-measure checklist (Jake, iPhone 16/iOS 18 + iPhone 17/iOS 26.4+)
+
+Research confirms none of these constants are published anywhere; ours are
+guesses until measured. Screen-record at 60fps, count frames.
+
+1. Double-tap shift caps-lock window (ours: 0.35s, ShiftState.doubleTapWindow).
+2. Double-space period window (ours: StockDoubleSpace window constant).
+3. Backspace hold: char-repeat interval, word-phase onset (ours: 0.1s,
+   20 ticks), word-phase cadence (ours: 0.45s).
+4. Trailing-space absorption character set: type a prediction accept, then
+   each of . , ! ? : ; ' " ) -- record which eat the space (ours: . , ! ? : ;).
+5. Absorption after a plain typed space (ours: never absorbs) and whether
+   stock re-appends the space after the mark (ours: does not).
+6. '70s: confirm stock still curls the wrong way on iOS 26 before deciding
+   the decision row.
+7. 393pt stock AX dump (StockMetricsDumpTests on an iPhone 16-class sim,
+   needs Xcode) -- checks whether stock scales linearly from 402pt.
+
+## Xcode-machine checklist
+
+1. Build the keyboard target; the controller edits this session are
+   compile-unverified (BackspaceRepeater, TrailingAutoSpace, commit
+   delimiters, quoted slot, host traits).
+2. Run the sim suites; CompletionBarTests:19 asserts the quoted label.
+3. Wire FunctionKeySlide into KeyTouchSurface (claim __shift/__more
+   zones, arm-on-down, slide commit, restore) and re-run KeyboardHold,
+   FastTyping, SmokeTests.
+4. Run StockMetricsDumpTests at 393pt (device-measure item 7).
+
 ## Loop log
 
 - 2026-08-09 iteration 1: baseline 315 engine tests green. Matrix created.
@@ -84,3 +116,9 @@ lacks).
   green. Renderer had quoted every typed slot; now only correctable ones.
   Next: shift+slide-to-letter verify, sim suites on an Xcode machine,
   device-measure list for Jake.
+- 2026-08-09 iteration 3: two units. FunctionKeySlide engine machine
+  (b55c7b3/0636f89) -- surface wiring needs Xcode. Host traits: auto-shift
+  follows .none/.words/.sentences/.allCharacters, autocorrect honors the
+  host opt-out (baace8f/66f4dd6). Suite 351 green. Loop stopped: every
+  open row is blocked on Xcode, hardware measurement, or a Jake decision
+  (see checklists above). Restart with /loop on an Xcode machine.
