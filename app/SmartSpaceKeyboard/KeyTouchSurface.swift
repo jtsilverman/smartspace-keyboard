@@ -1,9 +1,6 @@
 import UIKit
 import TypingEngine
-import os
 
-/// TEMP DEBUG (touch tracing for the device dead-zone hunt; remove).
-let touchLog = Logger(subsystem: "com.jtsilverman.smartspace.keyboard", category: "touchtrace")
 
 /// Stock-feel touch layer for the character keys (stock-parity AC 2): sits
 /// over the key rows, resolves every touch through KeyZoneMap (gutters and
@@ -103,11 +100,9 @@ final class KeyTouchSurface: UIView {
         freshenZones()
         let inside = self.point(inside: point, with: event)
         let id = zoneMap.key(at: Point(x: point.x, y: point.y))
-        touchLog.notice("hitTest p=(\(point.x, format: .fixed(precision: 1), privacy: .public),\(point.y, format: .fixed(precision: 1), privacy: .public)) inside=\(inside, privacy: .public) id=\(id ?? "nil", privacy: .public) bounds=\(String(describing: self.bounds.size), privacy: .public)")
         guard inside, let id else { return nil }
         if id.hasPrefix(Self.passthroughPrefix) {
             let target = functionButtonProvider?(id)
-            touchLog.notice("redirect \(id, privacy: .public) -> \(target == nil ? "MISSING" : "button", privacy: .public)")
             return target
         }
         return self
@@ -120,7 +115,6 @@ final class KeyTouchSurface: UIView {
         for touch in touches {
             let loc = touch.location(in: self)
             let event = tracker.began(touch.hash, key: characterKey(at: loc))
-            touchLog.notice("began p=(\(loc.x, format: .fixed(precision: 1), privacy: .public),\(loc.y, format: .fixed(precision: 1), privacy: .public)) -> \(String(describing: event), privacy: .public)")
             guard case .keyDown(let key) = event else { continue }
             onTouchDown?(key)
             let timer = Timer.scheduledTimer(withTimeInterval: Self.holdDelay, repeats: false) { [weak self] _ in
@@ -128,7 +122,6 @@ final class KeyTouchSurface: UIView {
                 self.holdTimers[touch] = nil
                 let shown = self.onHold?(key) ?? false
                 _ = self.tracker.holdFired(touch.hash, hasAlternates: shown)
-                touchLog.notice("HOLD key=\(key, privacy: .public) alternates=\(shown, privacy: .public)")
             }
             holdTimers[touch] = timer
         }
@@ -144,7 +137,6 @@ final class KeyTouchSurface: UIView {
                 holdTimers[touch] = nil
                 onTouchMoved?(from, to)
             case .exitKey(let key):
-                touchLog.notice("EXIT \(key, privacy: .public) at p=(\(loc.x, format: .fixed(precision: 1), privacy: .public),\(loc.y, format: .fixed(precision: 1), privacy: .public))")
                 holdTimers[touch]?.invalidate()
                 holdTimers[touch] = nil
                 onTouchExit?(key)
@@ -162,7 +154,6 @@ final class KeyTouchSurface: UIView {
             holdTimers[touch] = nil
             let loc = touch.location(in: self)
             let event = tracker.ended(touch.hash, x: loc.x)
-            touchLog.notice("ended -> \(String(describing: event), privacy: .public)")
             switch event {
             case .commit(let key):
                 onCommit?(key)
@@ -179,7 +170,6 @@ final class KeyTouchSurface: UIView {
             holdTimers[touch]?.invalidate()
             holdTimers[touch] = nil
             _ = tracker.cancelled(touch.hash)
-            touchLog.notice("CANCELLED")
         }
         if tracker.isIdle { onCancel?() }
     }
