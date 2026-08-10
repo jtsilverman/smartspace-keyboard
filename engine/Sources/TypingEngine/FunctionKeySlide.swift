@@ -18,18 +18,23 @@ public struct FunctionKeySlide {
     public init() {}
 
     public mutating func began(_ token: Int, function id: String) -> Event {
-        .none
+        touches[token] = id
+        return .activate(id)
     }
 
     public mutating func moved(_ token: Int, key: String?) -> Event {
-        .none
+        guard touches[token] != nil else { return .none }
+        return .highlight(key)
     }
 
     public mutating func ended(_ token: Int, key: String?) -> Event {
-        .none
+        guard let origin = touches.removeValue(forKey: token) else { return .none }
+        guard let key else { return .cancel(origin) }
+        return key == origin ? .commitTap(origin) : .commitSlide(from: origin, to: key)
     }
 
     public mutating func cancelled(_ token: Int) -> Event {
-        .none
+        guard let origin = touches.removeValue(forKey: token) else { return .none }
+        return .cancel(origin)
     }
 }
