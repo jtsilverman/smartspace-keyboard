@@ -45,7 +45,10 @@ final class KeyTouchSurface: UIView {
     /// stack views finish arranging AFTER the controller's layout callback,
     /// so an eager map captures stale frames and touches hit wrong keys.
     var zoneProvider: (() -> [KeyZone])?
-    private var zoneMap = KeyZoneMap(keys: [])
+    /// Text before the cursor; feeds the letter-bigram prior that grows
+    /// hit targets toward likely next letters (stock behavior).
+    var contextProvider: (() -> String)?
+    private var zones: [KeyZone] = []
     private var zonesDirty = true
 
     func invalidateZones() {
@@ -54,8 +57,14 @@ final class KeyTouchSurface: UIView {
 
     private func freshenZones() {
         guard zonesDirty, let zoneProvider else { return }
-        zoneMap = KeyZoneMap(keys: zoneProvider())
+        zones = zoneProvider()
         zonesDirty = false
+    }
+
+    private func resolvedKey(at point: CGPoint) -> String? {
+        BiasedKeyResolver.key(at: Point(x: point.x, y: point.y),
+                              zones: zones,
+                              context: contextProvider?() ?? "")
     }
 
     var onTouchDown: ((String) -> Void)?
@@ -87,7 +96,7 @@ final class KeyTouchSurface: UIView {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     private func characterKey(at point: CGPoint) -> String? {
-        guard let id = zoneMap.key(at: Point(x: point.x, y: point.y)),
+        guard let id = resolvedKey(at: point),
               !id.hasPrefix(Self.passthroughPrefix) else { return nil }
         return id
     }
@@ -98,12 +107,10 @@ final class KeyTouchSurface: UIView {
     /// gutters around shift/delete/space/return are never dead.
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         freshenZones()
-        let inside = self.point(inside: point, with: event)
-        let id = zoneMap.key(at: Point(x: point.x, y: point.y))
-        guard inside, let id else { return nil }
+        guard self.point(inside: point, with: event),
+              let id = resolvedKey(at: point) else { return nil }
         if id.hasPrefix(Self.passthroughPrefix) {
-            let target = functionButtonProvider?(id)
-            return target
+            return functionButtonProvider?(id)
         }
         return self
     }
