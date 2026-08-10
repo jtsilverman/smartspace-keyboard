@@ -29,13 +29,13 @@ private func controller(
         var c = controller()
         let commit = c.wordCommitted(context: "hi teh")
         #expect(commit == .replace(original: "teh", corrected: "the",
-                                   alternatives: ["ten", "tech"]))
+                                   alternatives: ["tech", "ten"]))
     }
 
     @Test func barShowsOriginalThenAtMostTwoAlternatives() {
         var c = controller()
         _ = c.wordCommitted(context: "hi teh")
-        #expect(c.barContent == .correction(slots: ["teh", "ten", "tech"]))
+        #expect(c.barContent == .correction(slots: ["teh", "tech", "ten"]))
     }
 
     @Test func correctWordCommitKeepsAndClearsBar() {
@@ -89,15 +89,15 @@ private func controller(
         var c = controller()
         _ = c.wordCommitted(context: "hi teh")
         let action = c.barTapped(slot: 1)
-        #expect(action == .swap(from: "the", to: "ten"))
-        #expect(c.barContent == .correction(slots: ["teh", "the", "tech"]))
+        #expect(action == .swap(from: "the", to: "tech"))
+        #expect(c.barContent == .correction(slots: ["teh", "the", "ten"]))
     }
 
     @Test func undoAfterSwapDeletesTheSwappedWord() {
         var c = controller()
         _ = c.wordCommitted(context: "hi teh")
         _ = c.barTapped(slot: 1)
-        #expect(c.barTapped(slot: 0) == .undo(original: "teh", corrected: "ten"))
+        #expect(c.barTapped(slot: 0) == .undo(original: "teh", corrected: "tech"))
     }
 
     @Test func currentCorrectedTracksSwapsAndClears() {
@@ -106,7 +106,7 @@ private func controller(
         _ = c.wordCommitted(context: "hi teh")
         #expect(c.currentCorrected == "the")
         _ = c.barTapped(slot: 1)
-        #expect(c.currentCorrected == "ten")
+        #expect(c.currentCorrected == "tech")
         c.backspace()
         #expect(c.currentCorrected == nil)
     }
@@ -166,7 +166,7 @@ private func controller(
         // Not protected: only an undo tap protects.
         #expect(c.wordCommitted(context: "again teh")
                 == .replace(original: "teh", corrected: "the",
-                            alternatives: ["ten", "tech"]))
+                            alternatives: ["tech", "ten"]))
     }
 
     @Test func nextCommitRefillsBarForNewWord() {
