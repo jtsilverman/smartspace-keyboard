@@ -25,7 +25,7 @@ lacks).
 | Spacebar cursor drag | threshold steps, no double counting | PINNED SpacebarCursorDragTests |
 | Smart quotes, em dash, ellipsis, contraction apostrophes | open/close logic, digit guards | PINNED SmartSymbols/ContractionRule |
 | Auto-capitalization | enders, newline, quotes, abbreviations, emoji | PINNED CapitalizationTests |
-| Backspace hold: char phase then whole-word phase | chars repeat, sustained hold deletes word chunks | GAP -> this iteration (BackspaceRepeater) |
+| Backspace hold: char phase then whole-word phase | chars repeat, sustained hold deletes word chunks | PINNED BackspaceRepeaterTests (controller wiring compile-unverified: no Xcode on this machine) |
 | Backspace hold exact timings | phase onset, word cadence | RESEARCH (constants tunable) |
 | Trailing-space absorption | punctuation after accepted prediction pulls before the space | RESEARCH |
 | Return key label per host field type | search/go/return | PINNED KeyboardLayoutTests |
@@ -58,6 +58,8 @@ lacks).
 ## Loop log
 
 - 2026-08-09 iteration 1: baseline 315 engine tests green. Matrix created.
-  Deep-research fired (stock semantics, 7 axes). Started BackspaceRepeater
-  RED/GREEN. Found: held backspace bypasses word deletion (2 chars/tick),
-  KeyboardViewController.swift:604-609.
+  Deep-research fired (stock semantics, 7 axes). BackspaceRepeater RED
+  (0aa0ac0) then GREEN (9e02a51); suite 323 green. Controller now paces
+  0.1s chars / 0.45s word chunks; cadence constants await research.
+  Next: research lands -> trailing-space absorption, commit delimiters,
+  backspace-after-commit; 393pt geometry stays BLOCKED without Xcode.
