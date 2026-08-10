@@ -123,7 +123,13 @@ public struct AutocorrectController: Sendable {
             return
         }
         let completions = Array(checker.completions(for: partial).prefix(Self.maxAlternatives))
-        state = .typing(typed: partial, completions: completions, quoted: false)
+        let quoted: Bool
+        if case .correct = engine.decision(for: context, session: session) {
+            quoted = true
+        } else {
+            quoted = false
+        }
+        state = .typing(typed: partial, completions: completions, quoted: quoted)
     }
 
     /// The word actively being typed: the trailing run of letters and word
