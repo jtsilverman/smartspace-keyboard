@@ -535,6 +535,13 @@ final class KeyboardViewController: UIInputViewController {
             refreshEmojiSearchStrip()
             return
         }
+        // Stock: sentence punctuation ends the word and commits any
+        // pending correction before the mark lands (matrix row "commit
+        // delimiters"). insertSmart reads the document after the rewrite.
+        if title.count == 1, let char = title.first,
+           AutocorrectController.isCommitDelimiter(char) {
+            applyAutocorrectOnCommit()
+        }
         insertSmart(title)
         if layer == .letters, shift.mode == .oneShot {
             shift.didTypeLetter()
