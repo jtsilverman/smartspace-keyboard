@@ -39,7 +39,7 @@ final class KeyboardViewController: UIInputViewController {
     private let suggestionBar = UIStackView()
     private var rowsStack: UIView?
     private var backspaceTimer: Timer?
-    private var backspaceRepeats = 0
+    private var backspaceRepeater = BackspaceRepeater()
     private var alternatesView: UIView?
     private var characterButtons: [(button: UIButton, key: String)] = []
     private var shiftButton: UIButton?
@@ -600,14 +600,8 @@ final class KeyboardViewController: UIInputViewController {
         guard !emojiSearchActive else { return }    // repeats edit the document
         switch gesture.state {
         case .began:
-            backspaceRepeats = 0
-            backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                guard let self else { return }
-                backspaceRepeats += 1
-                textDocumentProxy.deleteBackward()
-                // accelerate after ~1.5s of holding
-                if backspaceRepeats > 15 { textDocumentProxy.deleteBackward() }
-            }
+            backspaceRepeater.reset()
+            scheduleBackspaceTimer(every: 0.1)
         case .ended, .cancelled, .failed:
             backspaceTimer?.invalidate()
             backspaceTimer = nil
@@ -616,6 +610,26 @@ final class KeyboardViewController: UIInputViewController {
             armAutoShiftIfSentenceStart()
         default:
             break
+        }
+    }
+
+    /// Word-phase deletes pace slower than the character repeat, like stock.
+    private static let wordDeleteInterval: TimeInterval = 0.45
+
+    private func scheduleBackspaceTimer(every interval: TimeInterval) {
+        backspaceTimer?.invalidate()
+        backspaceTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            switch backspaceRepeater.tick(before: context) {
+            case .characters(let n):
+                for _ in 0..<n { textDocumentProxy.deleteBackward() }
+            case .word(let n):
+                for _ in 0..<n { textDocumentProxy.deleteBackward() }
+                if interval != Self.wordDeleteInterval {
+                    scheduleBackspaceTimer(every: Self.wordDeleteInterval)
+                }
+            }
         }
     }
 
