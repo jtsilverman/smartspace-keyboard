@@ -39,6 +39,18 @@ private let zones = [
     #expect(hit == "__space")
 }
 
+@Test func rareLetterStillBeatsAFartherFunctionZone() {
+    // 1.3pt from the z cell, 6pt from the shift cell: nearest wins even
+    // though z is a rare word-start letter. The prior must never hand a
+    // letter-adjacent tap to a function key.
+    let row3 = [
+        KeyZone(id: "__shift", frame: Rect(x: 0, y: 0, width: 51, height: 54)),
+        KeyZone(id: "z", frame: Rect(x: 58.67, y: 0, width: 39.5, height: 54)),
+    ]
+    let hit = BiasedKeyResolver.key(at: Point(x: 57.4, y: 27), zones: row3, context: "")
+    #expect(hit == "z")
+}
+
 @Test func farOutsideEveryZoneIsNil() {
     let hit = BiasedKeyResolver.key(at: Point(x: 300, y: 300), zones: zones, context: "th")
     #expect(hit == nil)

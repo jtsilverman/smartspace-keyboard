@@ -136,6 +136,11 @@ final class KeyboardViewController: UIInputViewController {
         view.insertSubview(touchSurface, belowSubview: rows)
         touchSurface.zoneProvider = { [weak self] in self?.buildZones() ?? [] }
         touchSurface.functionButtonProvider = { [weak self] id in self?.planeButtons[id] }
+        // The bigram prior only applies on the letters plane: number and
+        // symbol ids are non-letters and fall back to geometry anyway.
+        touchSurface.contextProvider = { [weak self] in
+            self?.textDocumentProxy.documentContextBeforeInput ?? ""
+        }
         touchSurface.onTouchDown = { [weak self] key in
             guard let self else { return }
             self.keyTouchDown()
