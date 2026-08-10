@@ -46,6 +46,12 @@ public enum ShiftMode: Equatable, Sendable {
     case off, oneShot, capsLock
 }
 
+/// The host field's autocapitalization trait, mirrored from UIKit so the
+/// engine stays UIKit-free.
+public enum AutocapTrait: Equatable, Sendable {
+    case none, words, sentences, allCharacters
+}
+
 /// Shift state machine: tap arms one-shot, double-tap within the window locks
 /// caps, tap while locked releases. Auto-shift arms one-shot at sentence
 /// starts via the shared CapitalizationRule.
@@ -81,9 +87,9 @@ public struct ShiftState: Sendable {
         if mode == .oneShot { mode = .off }
     }
 
-    /// Arms one-shot at a sentence start; never touches caps lock or an
-    /// already-armed one-shot.
-    public mutating func armAutoShift(for context: String) {
+    /// Arms one-shot where the host field's trait says so; never touches
+    /// caps lock or an already-armed one-shot.
+    public mutating func armAutoShift(for context: String, trait: AutocapTrait = .sentences) {
         guard mode == .off, CapitalizationRule.shouldCapitalize(before: context) else { return }
         mode = .oneShot
     }
