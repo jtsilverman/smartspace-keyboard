@@ -26,8 +26,8 @@ lacks).
 | Smart quotes, em dash, ellipsis, contraction apostrophes | open/close logic, digit guards | PINNED SmartSymbols/ContractionRule |
 | Auto-capitalization | enders, newline, quotes, abbreviations, emoji | PINNED CapitalizationTests |
 | Backspace hold: char phase then whole-word phase | chars repeat, sustained hold deletes word chunks | PINNED BackspaceRepeaterTests (controller wiring compile-unverified: no Xcode on this machine) |
-| Backspace hold exact timings | phase onset, word cadence | RESEARCH (constants tunable) |
-| Trailing-space absorption | punctuation after accepted prediction pulls before the space | RESEARCH |
+| Backspace hold exact timings | phase onset, word cadence | DEVICE-MEASURE: research confirms no published constants exist anywhere; measure on iPhone 16/17 hardware |
+| Trailing-space absorption | sentence mark eats the auto-inserted space ("hello " + "," -> "hello,") | PINNED TrailingAutoSpaceTests; exact stock character set device-verifiable |
 | Return key label per host field type | search/go/return | PINNED KeyboardLayoutTests |
 
 ## 2. Autocorrect and autofinishing
@@ -40,8 +40,9 @@ lacks).
 | Contractions (im, dont), homograph guard (well, ill, its) | ambiguous real words never transformed | PINNED ContractionRuleTests |
 | Digits, URLs, handles, hashtags never corrected | | PINNED WordBoundaryTests |
 | Guess re-rank: edit distance then frequency | | PINNED CorrectionRerankTests |
-| Commit delimiters beyond space (period, comma, return) | which delimiters commit | RESEARCH |
-| Backspace immediately after a commit | stock revert affordance semantics | RESEARCH |
+| Commit delimiters beyond space (period, comma, return) | . , ! ? : ; commit; apostrophe/hyphen never | PINNED CommitDelimiterTests |
+| Literal typed word in quotes when a commit would correct it | clean/protected/lexicon words unquoted | PINNED QuotedLiteralSlotTests (CompletionBarTests:19 sim-verify pending) |
+| Backspace immediately after a commit | stock primary UX is underline + tap-to-revert (iOS 17+); stock's own re-correction protection is reported broken | VARIANT: our bar undo + session protect is the deterministic equivalent; underline UI is a Jake call |
 | QuickType bar never empty (three predictions at rest) | spec lists as open tell | GAP (spec non-goal boundary; Jake call) |
 | Completions: typed + two, verbatim accept | | PINNED completion tests |
 
@@ -53,7 +54,20 @@ lacks).
 | Visible caps, white fill, 5pt radius, shadow | pixel-scan verified | PINNED (sim, 2026-07-31) |
 | 393pt (iPhone 16 class) geometry | assumed proportional, never measured | BLOCKED: no Xcode on this machine; needs AX dump on a 393pt sim |
 | Key preview bubbles, alternates popup | down/up lifecycle | PINNED (sim suites) |
-| iOS 26 Liquid Glass metric deltas vs iOS 18 | | RESEARCH |
+| iOS 26 Liquid Glass metric deltas vs iOS 18 | research: visual chrome only; no documented behavior deltas | RESOLVED: no behavior rows to add. iOS 26.0-26.3 ships a keystroke-drop bug (Apple-acknowledged, patched 26.4); parity targets 26.4 semantics, never emulate the bug |
+
+## Decisions for Jake
+
+- `'70s` elision: stock inserts an opening curly quote before digits (its
+  documented smart-quote failure). Ours flips to an apostrophe
+  (digitFlipsOpenSingleQuoteToApostrophe), the typographically correct
+  form. Exact parity means copying stock's bug. Current pick: keep ours.
+  Flag if wrong.
+- Contraction bias: stock corrects "well" -> "we'll" aggressively and
+  inconsistently (multiyear complaint threads). Our homograph guard never
+  transforms ambiguous real words. Research verdict: stock is
+  non-deterministic here; deterministic guards are the defensible pin.
+- Backspace-after-commit: see VARIANT row above.
 
 ## Loop log
 
@@ -63,3 +77,10 @@ lacks).
   0.1s chars / 0.45s word chunks; cadence constants await research.
   Next: research lands -> trailing-space absorption, commit delimiters,
   backspace-after-commit; 393pt geometry stays BLOCKED without Xcode.
+- 2026-08-09 iteration 2: research landed (5 axes, adversarially verified;
+  synthesis at tasks/wrxortam3.output). Three units RED/GREEN: commit
+  delimiters (bad121d/f95eaea), trailing auto-space absorption
+  (2cc8004/9fded75), quoted-literal slot (11b94b5/b430ff6). Suite 337
+  green. Renderer had quoted every typed slot; now only correctable ones.
+  Next: shift+slide-to-letter verify, sim suites on an Xcode machine,
+  device-measure list for Jake.
