@@ -90,8 +90,19 @@ public struct ShiftState: Sendable {
     /// Arms one-shot where the host field's trait says so; never touches
     /// caps lock or an already-armed one-shot.
     public mutating func armAutoShift(for context: String, trait: AutocapTrait = .sentences) {
-        guard mode == .off, CapitalizationRule.shouldCapitalize(before: context) else { return }
-        mode = .oneShot
+        guard mode == .off else { return }
+        let arms: Bool
+        switch trait {
+        case .none:
+            arms = false
+        case .sentences:
+            arms = CapitalizationRule.shouldCapitalize(before: context)
+        case .words:
+            arms = context.last.map(\.isWhitespace) ?? true
+        case .allCharacters:
+            arms = true
+        }
+        if arms { mode = .oneShot }
     }
 
     /// Arms one-shot unconditionally (except caps lock): for sites that KNOW

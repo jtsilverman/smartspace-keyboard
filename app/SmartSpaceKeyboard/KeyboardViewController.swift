@@ -1131,7 +1131,8 @@ final class KeyboardViewController: UIInputViewController {
     /// Returns true when a correction was written into the document.
     @discardableResult
     private func applyAutocorrectOnCommit() -> Bool {
-        guard settings.autocorrect else { return false }
+        // Stock honors the host field's opt-out (password, code fields).
+        guard settings.autocorrect, textDocumentProxy.autocorrectionType != .no else { return false }
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
         let commit = autocorrect.wordCommitted(context: context)
         defer { refreshSuggestionBar() }
@@ -1222,8 +1223,20 @@ final class KeyboardViewController: UIInputViewController {
         guard settings.autoCapitalization else { return }
         let before = textDocumentProxy.documentContextBeforeInput ?? ""
         let wasShifted = shift.isShifted
-        shift.armAutoShift(for: before)
+        shift.armAutoShift(for: before, trait: hostAutocapTrait)
         if shift.isShifted != wasShifted { refreshShiftAppearance() }
+    }
+
+    /// The host field's trait, mirrored into the engine's UIKit-free enum.
+    /// Stock never auto-shifts in a field that asks for .none.
+    private var hostAutocapTrait: AutocapTrait {
+        switch textDocumentProxy.autocapitalizationType ?? .sentences {
+        case .none: return .none
+        case .words: return .words
+        case .allCharacters: return .allCharacters
+        case .sentences: return .sentences
+        @unknown default: return .sentences
+        }
     }
 
     // MARK: - App-group probe (WORKPLAN 3.1)
