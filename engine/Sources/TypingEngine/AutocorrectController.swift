@@ -43,9 +43,12 @@ public struct AutocorrectController: Sendable {
 
     /// True when typing `char` ends the current word and must commit any
     /// pending correction, like space and return do on their own paths.
+    /// Apostrophe and hyphen stay word characters ("don't", "well-known").
     public static func isCommitDelimiter(_ char: Character) -> Bool {
-        false
+        commitDelimiters.contains(char)
     }
+
+    private static let commitDelimiters: Set<Character> = [".", ",", "!", "?", ":", ";"]
 
     private enum State: Sendable {
         case idle
