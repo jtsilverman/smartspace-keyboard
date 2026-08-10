@@ -19,8 +19,9 @@ public struct AutocorrectController: Sendable {
         /// undo), then alternatives (tap to swap).
         case correction(slots: [String])
         /// Mid-word: slot 0 = the word as typed (tap to keep + protect),
-        /// then dictionary completions (tap to finish the word).
-        case completions(typed: String, completions: [String])
+        /// then dictionary completions (tap to finish the word). `quoted`
+        /// renders slot 0 in quotation marks -- stock's would-correct tell.
+        case completions(typed: String, completions: [String], quoted: Bool)
     }
 
     /// What a suggestion-bar tap means for the document.
@@ -53,7 +54,7 @@ public struct AutocorrectController: Sendable {
     private enum State: Sendable {
         case idle
         case correction(original: String, corrected: String, alternatives: [String])
-        case typing(typed: String, completions: [String])
+        case typing(typed: String, completions: [String], quoted: Bool)
     }
 
     private let checker: any SpellChecking
@@ -79,8 +80,8 @@ public struct AutocorrectController: Sendable {
             return .empty
         case .correction(let original, _, let alternatives):
             return .correction(slots: [original] + alternatives)
-        case .typing(let typed, let completions):
-            return .completions(typed: typed, completions: completions)
+        case .typing(let typed, let completions, let quoted):
+            return .completions(typed: typed, completions: completions, quoted: quoted)
         }
     }
 
@@ -122,7 +123,7 @@ public struct AutocorrectController: Sendable {
             return
         }
         let completions = Array(checker.completions(for: partial).prefix(Self.maxAlternatives))
-        state = .typing(typed: partial, completions: completions)
+        state = .typing(typed: partial, completions: completions, quoted: false)
     }
 
     /// The word actively being typed: the trailing run of letters and word
@@ -156,7 +157,7 @@ public struct AutocorrectController: Sendable {
             state = .correction(original: original, corrected: chosen,
                                 alternatives: alternatives)
             return .swap(from: corrected, to: chosen)
-        case .typing(let typed, let completions):
+        case .typing(let typed, let completions, _):
             guard slot >= 0, slot <= completions.count else { return .none }
             state = .idle
             if slot == 0 {
