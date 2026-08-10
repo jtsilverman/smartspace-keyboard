@@ -225,9 +225,11 @@ final class KeyboardViewController: UIInputViewController {
                 suggestionBar.addArrangedSubview(
                     barSlot(title: word, tag: index, identifier: "suggestion-\(index)"))
             }
-        case .completions(let typed, let completions):
+        case .completions(let typed, let completions, let quoted):
+            // Stock quotes the literal only when a commit would correct it.
             suggestionBar.addArrangedSubview(barSlot(
-                title: "\u{201C}\(typed)\u{201D}", tag: 0, identifier: "completion-typed"))
+                title: quoted ? "\u{201C}\(typed)\u{201D}" : typed,
+                tag: 0, identifier: "completion-typed"))
             for (index, word) in completions.enumerated() {
                 suggestionBar.addArrangedSubview(barSlot(
                     title: word, tag: index + 1, identifier: "completion-\(index + 1)"))
@@ -1175,7 +1177,7 @@ final class KeyboardViewController: UIInputViewController {
             default:
                 break
             }
-        case .completions(let typed, _):
+        case .completions(let typed, _, _):
             // Same guard class: the partial must still be the tail.
             guard context.hasSuffix(typed) else {
                 autocorrect.invalidateBar()
