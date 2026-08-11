@@ -47,7 +47,7 @@ lacks).
 | Literal typed word in quotes when a commit would correct it | clean/protected/lexicon words unquoted | PINNED QuotedLiteralSlotTests (CompletionBarTests:19 sim-verify pending) |
 | Backspace immediately after a commit | stock primary UX is underline + tap-to-revert (iOS 17+); stock's own re-correction protection is reported broken | VARIANT: our bar undo + session protect is the deterministic equivalent; underline UI is a Jake call |
 | QuickType bar never empty (three predictions at rest) | I/The/I'm trio, bigram chaining, fallback trio | PINNED NextWordPredictorTests (non-goal lifted by Jake's 2026-08-10 goal); controller wiring compile-unverified |
-| Mid-word bar shows the pending correction as the highlighted middle slot | stock: "literal" / correction pill / alternative | GAP (next loop unit) |
+| Mid-word bar shows the pending correction as the highlighted middle slot | "literal" / correction pill / alternative; tap applies | PINNED MidWordCorrectionSlotTests; pill values in KeyThemeTests; renderer compile-unverified |
 | Return disabled while the field is empty | grey + inert until first text | wired (controller); sim-verify pending |
 | Space-drag trackpad mode blanks the legends | stock wipes every legend during the drag | wired (controller); sim-verify pending |
 | Completions: typed + two, verbatim accept | | PINNED completion tests |
@@ -144,3 +144,9 @@ guesses until measured. Screen-record at 60fps, count frames.
   blanking (247c2bd). Suite 375 green. Next: mid-word correction slot
   with the stock highlight pill, edge-balloon skew, alternates neck,
   Liquid Glass theme fork.
+- 2026-08-10 iteration 5: mid-word correction slot (d360d2f/1abf378 +
+  pill renderer 21f925b) -- BarContent.completions now carries
+  correction: String?, the correction leads the follow slots and draws
+  the pill. Edge-balloon skew (e73cf29/afd7526/5fe2437) -- overhang
+  redistribution replaces the clamp. Suite 383 green. Next: alternates
+  neck, Liquid Glass theme fork, bar tap flash.

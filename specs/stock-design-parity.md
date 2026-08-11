@@ -53,14 +53,12 @@ All controller edits are compile-unverified until Xcode (2026-08-11).
 
 ## Known simplifications (each is a Jake-visible delta candidate)
 
-- Edge balloons clamp to the screen instead of skewing the bubble the
-  way stock does on q/p.
+- ~~Edge balloons clamp~~ Fixed: overhang redistribution skews the
+  bubble like stock (CalloutGeometry.overhangs).
 - The alternates callout has no neck curve over the origin key; the
   preview balloon has the full neck.
-- Stock dims the whole key area to 0.5 and blanks legends during the
-  space-bar cursor drag; ours keeps the keys as-is.
-- Return-while-empty: stock greys the blue return until the field has
-  text (enablesReturnKeyAutomatically); not modeled.
+- ~~Space-drag keys unchanged~~ Fixed: legends blank during cursor mode.
+- ~~Return-while-empty not modeled~~ Fixed: grey + inert until text.
 - iOS 26 Liquid Glass deltas not applied: radius 9, no shadow, row
   height 56, glassier dark fills. Needs an availability fork on the
   Xcode machine; iPhone 17 shows iOS 26 chrome.
