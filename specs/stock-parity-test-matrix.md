@@ -55,7 +55,8 @@ lacks).
 |---|---|---|
 | 402pt (iPhone 17 class) full geometry | AX-measured 2026-07-31 table | PINNED StockLayoutMetricsTests |
 | Visible caps, white fill, 5pt radius, shadow | pixel-scan verified | PINNED (sim, 2026-07-31) |
-| 393pt (iPhone 16 class) geometry | assumed proportional, never measured | BLOCKED: no Xcode on this machine; needs AX dump on a 393pt sim |
+| 393pt (iPhone 16 class) geometry | research 2026-08-10: 393 and 402 share one device bucket (54pt rows, 216pt area); widths scale linearly, which is what StockLayoutMetrics does | BLOCKED for the confirming AX dump (needs Xcode); model already correct, medium confidence |
+| Key cap colors, typography, callouts, press feedback | KeyboardKit 9.9.1 values, high confidence | PINNED KeyThemeTests + CalloutGeometryTests (engine); controller wiring compile-unverified; see specs/stock-design-parity.md |
 | Key preview bubbles, alternates popup | down/up lifecycle | PINNED (sim suites) |
 | iOS 26 Liquid Glass metric deltas vs iOS 18 | research: visual chrome only; no documented behavior deltas | RESOLVED: no behavior rows to add. iOS 26.0-26.3 ships a keystroke-drop bug (Apple-acknowledged, patched 26.4); parity targets 26.4 semantics, never emulate the bug |
 
@@ -92,14 +93,21 @@ guesses until measured. Screen-record at 60fps, count frames.
 
 ## Xcode-machine checklist
 
-1. Build the keyboard target; the controller edits this session are
-   compile-unverified (BackspaceRepeater, TrailingAutoSpace, commit
-   delimiters, quoted slot, host traits).
-2. Run the sim suites; CompletionBarTests:19 asserts the quoted label.
+1. Build the keyboard target; the controller edits from 2026-08-09 and
+   2026-08-10 are compile-unverified (BackspaceRepeater, TrailingAutoSpace,
+   commit delimiters, quoted slot, host traits, role colors, KeyPopView,
+   callout restyle, bar restyle).
+2. Run the sim suites; CompletionBarTests:19 asserts the quoted label;
+   the backspace key is now the delete.left symbol with accessibility
+   label "⌫" (UI suites address it by that label).
 3. Wire FunctionKeySlide into KeyTouchSurface (claim __shift/__more
    zones, arm-on-down, slide commit, restore) and re-run KeyboardHold,
    FastTyping, SmokeTests.
 4. Run StockMetricsDumpTests at 393pt (device-measure item 7).
+5. Screenshot-diff light and dark mode against stock: role colors,
+   balloon shape, callout, bar hairlines (specs/stock-design-parity.md).
+6. Liquid Glass fork for iOS 26 (radius 9, no shadow, 56pt rows,
+   glassy fills) once the base design verifies on iOS 18.
 
 ## Loop log
 
