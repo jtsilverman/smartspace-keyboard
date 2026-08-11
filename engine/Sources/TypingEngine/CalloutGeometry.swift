@@ -10,6 +10,17 @@ public enum CalloutGeometry {
         keyWidth + 2 * overhangPerSide
     }
 
+    /// Points the balloon keeps clear of the screen edges.
+    public static let screenMargin: Double = 2
+
+    /// Overhang split for a key near a screen edge: the 26pt total holds
+    /// while the clipped side hands its excess to the other (stock skews
+    /// the bubble; it never clamps it off-center).
+    public static func overhangs(keyMinX: Double, keyWidth: Double, screenWidth: Double)
+        -> (left: Double, right: Double) {
+        (left: overhangPerSide, right: overhangPerSide)
+    }
+
     public static let bubbleHeight: Double = 55
     public static let neckHeight: Double = 15
     public static let bubbleCornerRadius: Double = 10
