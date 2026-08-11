@@ -673,7 +673,10 @@ final class KeyboardViewController: UIInputViewController {
 
     /// UX.md: every key press gets a haptic tick. Extensions without Full
     /// Access may silently no-op; accepted (device verification owed).
+    /// The stock click plays through the system service and honors the
+    /// user's Keyboard Clicks setting on its own.
     @objc private func keyTouchDown() {
+        UIDevice.current.playInputClick()
         guard settings.haptics else { return }
         haptic.impactOccurred()
     }

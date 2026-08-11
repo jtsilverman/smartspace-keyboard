@@ -32,7 +32,11 @@ final class KeyButton: UIButton {
     }
 }
 
-final class KeyTouchSurface: UIView {
+final class KeyTouchSurface: UIView, UIInputViewAudioFeedback {
+
+    /// System keyboard clicks follow the user's Keyboard Clicks setting;
+    /// a conforming visible view is all the extension needs.
+    var enableInputClicksWhenVisible: Bool { true }
 
     /// Zones prefixed with this are function keys the surface never claims.
     static let passthroughPrefix = "__"
