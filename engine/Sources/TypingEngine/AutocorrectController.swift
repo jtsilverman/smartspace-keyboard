@@ -56,7 +56,7 @@ public struct AutocorrectController: Sendable {
     private enum State: Sendable {
         case idle
         case correction(original: String, corrected: String, alternatives: [String])
-        case typing(typed: String, completions: [String], quoted: Bool)
+        case typing(typed: String, correction: String?, completions: [String])
     }
 
     private let checker: any SpellChecking
@@ -82,8 +82,11 @@ public struct AutocorrectController: Sendable {
             return .empty
         case .correction(let original, _, let alternatives):
             return .correction(slots: [original] + alternatives)
-        case .typing(let typed, let completions, _):
-            return .completions(typed: typed, completions: completions, correction: nil)
+        case .typing(let typed, let correction, let completions):
+            return .completions(typed: typed,
+                                completions: Self.follows(correction: correction,
+                                                          completions: completions),
+                                correction: correction)
         }
     }
 
@@ -125,13 +128,19 @@ public struct AutocorrectController: Sendable {
             return
         }
         let completions = Array(checker.completions(for: partial).prefix(Self.maxAlternatives))
-        let quoted: Bool
-        if case .correct = engine.decision(for: context, session: session) {
-            quoted = true
-        } else {
-            quoted = false
+        var correction: String?
+        if case .correct(let to, _) = engine.decision(for: context, session: session) {
+            correction = to
         }
-        state = .typing(typed: partial, completions: completions, quoted: quoted)
+        state = .typing(typed: partial, correction: correction, completions: completions)
+    }
+
+    /// The follow slots after the typed word: a pending correction leads
+    /// (stock pills it), then completions, never more than two total.
+    private static func follows(correction: String?, completions: [String]) -> [String] {
+        guard let correction else { return completions }
+        return [correction] + completions.filter { $0 != correction }
+            .prefix(maxAlternatives - 1)
     }
 
     /// The word actively being typed: the trailing run of letters and word
@@ -165,14 +174,15 @@ public struct AutocorrectController: Sendable {
             state = .correction(original: original, corrected: chosen,
                                 alternatives: alternatives)
             return .swap(from: corrected, to: chosen)
-        case .typing(let typed, let completions, _):
-            guard slot >= 0, slot <= completions.count else { return .none }
+        case .typing(let typed, let correction, let completions):
+            let follows = Self.follows(correction: correction, completions: completions)
+            guard slot >= 0, slot <= follows.count else { return .none }
             state = .idle
             if slot == 0 {
                 session.protect(typed)
                 return .acceptTyped(word: typed)
             }
-            return .complete(from: typed, to: completions[slot - 1])
+            return .complete(from: typed, to: follows[slot - 1])
         }
     }
 
