@@ -19,7 +19,17 @@ public enum KeyRole: Equatable, Sendable {
 /// the levels. Dark caps are translucent whites over the system blur, so
 /// the extension's background must stay clear.
 public enum StockKeyTheme {
-    public static func fill(role: KeyRole, dark: Bool, pressed: Bool) -> RGBA {
+    /// iOS 26 Liquid Glass chrome (KeyboardKit 9.9 liquid values,
+    /// medium-high confidence): harder rounding, no drop shadow,
+    /// glassier fills.
+    public static func capCornerRadius(liquidGlass: Bool) -> Double {
+        StockLayoutMetrics.capCornerRadius
+    }
+
+    public static func hasShadow(liquidGlass: Bool) -> Bool { true }
+
+    public static func fill(role: KeyRole, dark: Bool, pressed: Bool,
+                            liquidGlass: Bool = false) -> RGBA {
         let letterLevel = (role == .letter || role == .space) != pressed
         if dark {
             return RGBA(red: 1, green: 1, blue: 1, alpha: letterLevel ? 0.30 : 0.10)

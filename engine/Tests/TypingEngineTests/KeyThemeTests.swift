@@ -76,6 +76,29 @@ private let greyCap = RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 2
             == RGBA(red: 71.0 / 255, green: 71.0 / 255, blue: 71.0 / 255))
 }
 
+// iOS 26 Liquid Glass (KeyboardKit 9.9 liquid values, medium-high
+// confidence): 9pt corners, no drop shadow, dark fills at 0.55 of the
+// iOS 18 alpha, pressed = idle at 0.6 alpha with no level swap.
+
+@Test func liquidGlassRoundsHarderAndDropsTheShadow() {
+    #expect(StockKeyTheme.capCornerRadius(liquidGlass: false) == 5)
+    #expect(StockKeyTheme.capCornerRadius(liquidGlass: true) == 9)
+    #expect(StockKeyTheme.hasShadow(liquidGlass: false))
+    #expect(!StockKeyTheme.hasShadow(liquidGlass: true))
+}
+
+@Test func liquidGlassFillsGoGlassy() {
+    #expect(StockKeyTheme.fill(role: .letter, dark: true, pressed: false, liquidGlass: true)
+            == RGBA(red: 1, green: 1, blue: 1, alpha: 0.30 * 0.55))
+    #expect(StockKeyTheme.fill(role: .function, dark: true, pressed: false, liquidGlass: true)
+            == RGBA(red: 1, green: 1, blue: 1, alpha: 0.10 * 0.55))
+    #expect(StockKeyTheme.fill(role: .letter, dark: false, pressed: false, liquidGlass: true)
+            == RGBA(red: 1, green: 1, blue: 1, alpha: 0.95))
+    // Pressed keeps the idle color at 0.6 alpha; no grey/white swap.
+    #expect(StockKeyTheme.fill(role: .letter, dark: false, pressed: true, liquidGlass: true)
+            == RGBA(red: 1, green: 1, blue: 1, alpha: 0.95 * 0.6))
+}
+
 @Test func candidatePillMatchesStock() {
     // KeyboardKit: white @0.5, corner 4, on the autocorrect candidate.
     // Dark value is a medium-confidence approximation of stock's grey.
