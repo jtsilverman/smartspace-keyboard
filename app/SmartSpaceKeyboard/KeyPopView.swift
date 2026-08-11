@@ -67,7 +67,8 @@ enum CalloutPath {
     static func outline(width: CGFloat, capLeft: CGFloat, capRight: CGFloat,
                         capHeight: CGFloat) -> UIBezierPath {
         let r = CalloutGeometry.bubbleCornerRadius
-        let capR = StockLayoutMetrics.capCornerRadius
+        let capR = StockKeyTheme.capCornerRadius(
+            liquidGlass: KeyboardViewController.liquidGlass)
         let curve = CalloutGeometry.neckCurveWidth
         let bubbleH = CalloutGeometry.bubbleHeight
         let neckMid = bubbleH + CalloutGeometry.neckHeight / 2

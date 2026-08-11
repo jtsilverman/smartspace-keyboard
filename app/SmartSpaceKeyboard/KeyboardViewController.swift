@@ -266,13 +266,20 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    /// QuickType slot, stock-style: flat text on the bar, no key-cap chrome.
+    /// QuickType slot, stock-style: flat text on the bar, no key-cap
+    /// chrome; a tap flashes the stock grey pill.
     private func barSlot(title: String, tag: Int, identifier: String) -> UIButton {
         var config = UIButton.Configuration.plain()
         config.title = title
         config.baseForegroundColor = .label
         config.contentInsets = .zero
+        config.cornerStyle = .fixed
+        config.background.cornerRadius = StockKeyTheme.candidatePillCornerRadius
         let slot = UIButton(configuration: config)
+        slot.configurationUpdateHandler = { b in
+            b.configuration?.background.backgroundColor =
+                b.isHighlighted ? .systemGray4 : .clear
+        }
         // Stock candidates are body-size 17pt regular.
         slot.titleLabel?.font = .systemFont(ofSize: 17)
         slot.titleLabel?.adjustsFontSizeToFitWidth = true
@@ -282,13 +289,16 @@ final class KeyboardViewController: UIInputViewController {
         return slot
     }
 
-    /// Stock's soft pill behind the candidate a commit would apply.
+    /// Stock's soft pill behind the candidate a commit would apply; the
+    /// tap flash wins while highlighted.
     private func applyCandidatePill(_ slot: UIButton) {
-        slot.configuration?.cornerStyle = .fixed
-        slot.configuration?.background.cornerRadius = StockKeyTheme.candidatePillCornerRadius
-        slot.configuration?.background.backgroundColor = UIColor { traits in
-            Self.uiColor(StockKeyTheme.candidatePillFill(
-                dark: traits.userInterfaceStyle == .dark))
+        slot.configurationUpdateHandler = { b in
+            b.configuration?.background.backgroundColor = b.isHighlighted
+                ? .systemGray4
+                : UIColor { traits in
+                    Self.uiColor(StockKeyTheme.candidatePillFill(
+                        dark: traits.userInterfaceStyle == .dark))
+                }
         }
     }
 
@@ -496,7 +506,8 @@ final class KeyboardViewController: UIInputViewController {
             }
             button.layer.shadowPath = UIBezierPath(
                 roundedRect: button.bounds,
-                cornerRadius: StockLayoutMetrics.capCornerRadius).cgPath
+                cornerRadius: StockKeyTheme.capCornerRadius(
+                    liquidGlass: Self.liquidGlass)).cgPath
         }
         touchSurface.invalidateZones()
     }
@@ -535,6 +546,12 @@ final class KeyboardViewController: UIInputViewController {
         UIColor(red: rgba.red, green: rgba.green, blue: rgba.blue, alpha: rgba.alpha)
     }
 
+    /// iOS 26 renders the Liquid Glass chrome; the theme forks on it.
+    static let liquidGlass: Bool = {
+        if #available(iOS 26.0, *) { return true }
+        return false
+    }()
+
     /// Role fill straight from the engine theme (KeyboardKit-verified
     /// stock values). Dynamic per trait collection; the dark fills are
     /// translucent whites over the system keyboard blur, so nothing may
@@ -543,7 +560,8 @@ final class KeyboardViewController: UIInputViewController {
         UIColor { traits in
             uiColor(StockKeyTheme.fill(role: role,
                                        dark: traits.userInterfaceStyle == .dark,
-                                       pressed: pressed))
+                                       pressed: pressed,
+                                       liquidGlass: liquidGlass))
         }
     }
 
@@ -555,7 +573,8 @@ final class KeyboardViewController: UIInputViewController {
         // configuration's default .dynamic corner style overrides
         // layer.cornerRadius and rounded our caps into pills.
         button.configuration?.cornerStyle = .fixed
-        button.configuration?.background.cornerRadius = StockLayoutMetrics.capCornerRadius
+        button.configuration?.background.cornerRadius =
+            StockKeyTheme.capCornerRadius(liquidGlass: Self.liquidGlass)
         button.configuration?.background.backgroundColor = Self.capFill(role: .letter)
         applyCapShadow(button)
         button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
@@ -564,6 +583,10 @@ final class KeyboardViewController: UIInputViewController {
     /// CGColor cannot be a dynamic color; traitCollectionDidChange
     /// re-applies the shadows on a scheme flip.
     private func applyCapShadow(_ button: UIButton) {
+        guard StockKeyTheme.hasShadow(liquidGlass: Self.liquidGlass) else {
+            button.layer.shadowOpacity = 0
+            return
+        }
         let dark = traitCollection.userInterfaceStyle == .dark
         button.layer.shadowColor = Self.uiColor(StockKeyTheme.shadowColor(dark: dark)).cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: StockKeyTheme.shadowOffsetY)
