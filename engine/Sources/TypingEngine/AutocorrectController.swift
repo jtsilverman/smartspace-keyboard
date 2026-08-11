@@ -19,9 +19,11 @@ public struct AutocorrectController: Sendable {
         /// undo), then alternatives (tap to swap).
         case correction(slots: [String])
         /// Mid-word: slot 0 = the word as typed (tap to keep + protect),
-        /// then dictionary completions (tap to finish the word). `quoted`
-        /// renders slot 0 in quotation marks -- stock's would-correct tell.
-        case completions(typed: String, completions: [String], quoted: Bool)
+        /// then follow slots (tap to finish the word). When `correction`
+        /// is set, a commit would correct: slot 0 renders in quotation
+        /// marks (stock's tell), completions[0] IS the correction and
+        /// draws the stock highlight pill.
+        case completions(typed: String, completions: [String], correction: String?)
     }
 
     /// What a suggestion-bar tap means for the document.
@@ -80,8 +82,8 @@ public struct AutocorrectController: Sendable {
             return .empty
         case .correction(let original, _, let alternatives):
             return .correction(slots: [original] + alternatives)
-        case .typing(let typed, let completions, let quoted):
-            return .completions(typed: typed, completions: completions, quoted: quoted)
+        case .typing(let typed, let completions, _):
+            return .completions(typed: typed, completions: completions, correction: nil)
         }
     }
 
