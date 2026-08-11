@@ -28,6 +28,28 @@ import TypingEngine
     #expect(CalloutGeometry.minimumDwell == 0.05)
 }
 
+// Stock skews edge balloons: q and p keep the full 26pt total overhang
+// but give the off-screen side to the other. 2pt stays clear of the
+// screen edge.
+
+@Test func centeredKeyKeepsSymmetricOverhang() {
+    let o = CalloutGeometry.overhangs(keyMinX: 180, keyWidth: 33, screenWidth: 402)
+    #expect(o.left == 13)
+    #expect(o.right == 13)
+}
+
+@Test func leftEdgeKeyGivesItsOverhangToTheRight() {
+    let o = CalloutGeometry.overhangs(keyMinX: 4, keyWidth: 33, screenWidth: 402)
+    #expect(o.left == 2)
+    #expect(o.right == 24)
+}
+
+@Test func rightEdgeKeyGivesItsOverhangToTheLeft() {
+    let o = CalloutGeometry.overhangs(keyMinX: 365, keyWidth: 33, screenWidth: 402)
+    #expect(o.left == 24)
+    #expect(o.right == 2)
+}
+
 @Test func alternatesMetricsMatchStock() {
     #expect(CalloutGeometry.alternateItemMaxSize == 50)
     #expect(CalloutGeometry.alternateFontSize == 20)
