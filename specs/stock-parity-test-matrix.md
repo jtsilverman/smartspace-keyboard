@@ -60,7 +60,9 @@ lacks).
 | Visible caps, white fill, 5pt radius, shadow | pixel-scan verified | PINNED (sim, 2026-07-31) |
 | 393pt (iPhone 16 class) geometry | research 2026-08-10: 393 and 402 share one device bucket (54pt rows, 216pt area); widths scale linearly, which is what StockLayoutMetrics does | BLOCKED for the confirming AX dump (needs Xcode); model already correct, medium confidence |
 | Key cap colors, typography, callouts, press feedback | KeyboardKit 9.9.1 values, high confidence | PINNED KeyThemeTests + CalloutGeometryTests (engine); controller wiring compile-unverified; see specs/stock-design-parity.md |
-| Key preview bubbles, alternates popup | down/up lifecycle | PINNED (sim suites) |
+| Key preview bubbles, alternates popup | down/up lifecycle | PINNED (sim suites); balloon/callout visuals rebuilt 2026-08-10, sim re-verify pending |
+| Key click sound | system click on every press, follows Keyboard Clicks setting | wired (playInputClick); device-verify pending |
+| Emoji panel design parity | stock emoji keyboard layout, search, skin tones | GAP (large; needs Xcode-day visual iteration) |
 | iOS 26 Liquid Glass metric deltas vs iOS 18 | research: visual chrome only; no documented behavior deltas | RESOLVED: no behavior rows to add. iOS 26.0-26.3 ships a keystroke-drop bug (Apple-acknowledged, patched 26.4); parity targets 26.4 semantics, never emulate the bug |
 
 ## Decisions for Jake
@@ -150,3 +152,13 @@ guesses until measured. Screen-record at 60fps, count frames.
   the pill. Edge-balloon skew (e73cf29/afd7526/5fe2437) -- overhang
   redistribution replaces the clamp. Suite 383 green. Next: alternates
   neck, Liquid Glass theme fork, bar tap flash.
+- 2026-08-10 iteration 6: alternates callout neck + center-flip
+  (69f3ce6/5b586b3/f439d47, shared CalloutPath); Liquid Glass theme
+  fork (c167a97/0160136/8bdc553) -- iOS 26 gets 9pt corners, no shadow,
+  glassy fills; bar tap flash. Suite 386 green. Liquid ROW HEIGHT
+  (54 vs 56) left on the device-measure list; geometry stays measured.
+  Key click wired (playInputClick + UIInputViewAudioFeedback on the
+  surface; sound non-goal lifted -- variant clicks for delete/modifier
+  stay unreachable from an extension). Remaining without Xcode: emoji
+  panel design parity is the one known open front; everything else
+  needs Xcode, hardware, or a Jake decision.
