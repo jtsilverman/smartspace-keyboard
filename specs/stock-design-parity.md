@@ -36,11 +36,33 @@ device check.
 
 ## Units
 
-- [ ] A: engine StockKeyTheme: KeyRole, RGBA fills (light/dark x
-      rest/pressed), legend fonts per role, shadow spec. Exact values from
-      the research reports.
-- [ ] B: QuickType bar flat restyle (controller).
-- [ ] C: key-preview balloon: engine path data + controller shape layer.
-- [ ] D: alternates callout restyled to the balloon language.
-- [ ] E: press feedback: function-key fill swap.
-- [ ] F: return-key action tint.
+- [x] A: engine StockKeyTheme + KeyLegend (KeyTheme.swift, TDD): role
+      fills light/dark x rest/pressed, active shift, blue return, balloon
+      fill, 1pt shadow, 26/23/16pt legends. Values: KeyboardKit 9.9.1
+      (research 2026-08-10, high confidence).
+- [x] B: QuickType bar flat restyle: 17pt candidates, 1x30pt hairlines.
+- [x] C: key-preview balloon: CalloutGeometry (engine, TDD) + KeyPopView
+      (neck path, 34pt light label, 0.05s dwell).
+- [x] D: alternates callout: cap-colored bubble fused to the key, flat
+      20pt items, blue pill selection.
+- [x] E: press feedback: function caps swap levels via
+      configurationUpdateHandler; letters keep the balloon only (stock).
+- [x] F: return-key action tint incl. pressed states.
+
+All controller edits are compile-unverified until Xcode (2026-08-11).
+
+## Known simplifications (each is a Jake-visible delta candidate)
+
+- Edge balloons clamp to the screen instead of skewing the bubble the
+  way stock does on q/p.
+- The alternates callout has no neck curve over the origin key; the
+  preview balloon has the full neck.
+- Stock dims the whole key area to 0.5 and blanks legends during the
+  space-bar cursor drag; ours keeps the keys as-is.
+- Return-while-empty: stock greys the blue return until the field has
+  text (enablesReturnKeyAutomatically); not modeled.
+- iOS 26 Liquid Glass deltas not applied: radius 9, no shadow, row
+  height 56, glassier dark fills. Needs an availability fork on the
+  Xcode machine; iPhone 17 shows iOS 26 chrome.
+- QuickType bar height: ours 44pt (own AX measurement "~44"), one web
+  source says 45. Device-measure item.
