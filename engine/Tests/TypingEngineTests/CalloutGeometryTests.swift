@@ -55,3 +55,10 @@ import TypingEngine
     #expect(CalloutGeometry.alternateFontSize == 20)
     #expect(CalloutGeometry.selectedCornerRadius == 10)
 }
+
+@Test func alternatesGrowTowardTheScreenCenter() {
+    // Stock: a right-half key extends its callout leading (leftward),
+    // items reversed so the nearest option sits over the key.
+    #expect(CalloutGeometry.alternatesGrowLeading(keyMinX: 300, screenWidth: 402))
+    #expect(!CalloutGeometry.alternatesGrowLeading(keyMinX: 50, screenWidth: 402))
+}

@@ -35,6 +35,12 @@ public enum CalloutGeometry {
     /// Seconds the balloon stays visible after a fast tap.
     public static let minimumDwell: Double = 0.05
 
+    /// True when the key sits in the right half: the callout extends
+    /// leading (toward the screen center) with the item order reversed.
+    public static func alternatesGrowLeading(keyMinX: Double, screenWidth: Double) -> Bool {
+        false
+    }
+
     public static let alternateItemMaxSize: Double = 50
     public static let alternateFontSize: Double = 20
     public static let selectedCornerRadius: Double = 10
