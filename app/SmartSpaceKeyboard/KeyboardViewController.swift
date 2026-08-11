@@ -250,14 +250,17 @@ final class KeyboardViewController: UIInputViewController {
                     barSlot(title: word, tag: index, identifier: "suggestion-\(index)"))
             }
             addBarSeparators()
-        case .completions(let typed, let completions, let quoted):
-            // Stock quotes the literal only when a commit would correct it.
+        case .completions(let typed, let completions, let correction):
+            // Stock quotes the literal only when a commit would correct it,
+            // and pills the correction slot (completions[0] by contract).
             suggestionBar.addArrangedSubview(barSlot(
-                title: quoted ? "\u{201C}\(typed)\u{201D}" : typed,
+                title: correction != nil ? "\u{201C}\(typed)\u{201D}" : typed,
                 tag: 0, identifier: "completion-typed"))
             for (index, word) in completions.enumerated() {
-                suggestionBar.addArrangedSubview(barSlot(
-                    title: word, tag: index + 1, identifier: "completion-\(index + 1)"))
+                let slot = barSlot(title: word, tag: index + 1,
+                                   identifier: "completion-\(index + 1)")
+                if index == 0, correction != nil { applyCandidatePill(slot) }
+                suggestionBar.addArrangedSubview(slot)
             }
             addBarSeparators()
         }
@@ -277,6 +280,16 @@ final class KeyboardViewController: UIInputViewController {
         slot.accessibilityIdentifier = identifier
         slot.addTarget(self, action: #selector(suggestionTapped(_:)), for: .touchUpInside)
         return slot
+    }
+
+    /// Stock's soft pill behind the candidate a commit would apply.
+    private func applyCandidatePill(_ slot: UIButton) {
+        slot.configuration?.cornerStyle = .fixed
+        slot.configuration?.background.cornerRadius = StockKeyTheme.candidatePillCornerRadius
+        slot.configuration?.background.backgroundColor = UIColor { traits in
+            Self.uiColor(StockKeyTheme.candidatePillFill(
+                dark: traits.userInterfaceStyle == .dark))
+        }
     }
 
     /// Stock draws a hairline between candidate slots. Non-arranged
