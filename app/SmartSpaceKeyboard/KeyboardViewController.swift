@@ -1072,12 +1072,8 @@ final class KeyboardViewController: UIInputViewController {
         dismissKeyPop(for: button)
         guard let title = button.configuration?.title else { return }
         let capFrame = view.convert(button.frame, from: button.superview ?? view)
-        let pop = KeyPopView(title: title, capFrame: capFrame)
-        // Edge keys: keep the balloon on screen (stock skews the bubble;
-        // the clamp is the simpler stand-in, noted in the spec).
-        var frame = pop.frame
-        frame.origin.x = max(2, min(frame.origin.x, view.bounds.width - frame.width - 2))
-        pop.frame = frame
+        let pop = KeyPopView(title: title, capFrame: capFrame,
+                             screenWidth: view.bounds.width)
         view.addSubview(pop)
         keyPops[button] = pop
     }
