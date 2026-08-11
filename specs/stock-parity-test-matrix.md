@@ -162,3 +162,8 @@ guesses until measured. Screen-record at 60fps, count frames.
   stay unreachable from an extension). Remaining without Xcode: emoji
   panel design parity is the one known open front; everything else
   needs Xcode, hardware, or a Jake decision.
+- 2026-08-10 loop stopped after iteration 6. The emoji panel rebuild is
+  deliberately parked for the Xcode day: it is pure visual UI, the
+  compile-unverified pile is already large, and Xcode arrives
+  2026-08-11. Every other open row needs Xcode, hardware, or a Jake
+  decision. Restart with /loop once the keyboard target builds.
