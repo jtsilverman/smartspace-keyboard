@@ -48,6 +48,13 @@ public enum StockKeyTheme {
              : RGBA(red: 1, green: 1, blue: 1)
     }
 
+    /// Callout fill: the balloon covers keys, so it is opaque -- white in
+    /// light, the flat dark letter cap in dark.
+    public static func balloonFill(dark: Bool) -> RGBA {
+        dark ? RGBA(red: 107.0 / 255, green: 107.0 / 255, blue: 107.0 / 255)
+             : RGBA(red: 1, green: 1, blue: 1)
+    }
+
     /// The hard 1pt drop under every cap; blur 0.
     public static let shadowOffsetY: Double = 1
     public static func shadowColor(dark: Bool) -> RGBA {

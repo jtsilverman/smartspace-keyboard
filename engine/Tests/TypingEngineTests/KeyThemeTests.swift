@@ -76,6 +76,14 @@ private let greyCap = RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 2
             == RGBA(red: 71.0 / 255, green: 71.0 / 255, blue: 71.0 / 255))
 }
 
+@Test func balloonFillIsTheFlatCapColor() {
+    // The balloon covers keys, so it must be opaque: white in light,
+    // KeyboardKit's flat dark letter cap #6B6B6B in dark.
+    #expect(StockKeyTheme.balloonFill(dark: false) == RGBA(red: 1, green: 1, blue: 1))
+    #expect(StockKeyTheme.balloonFill(dark: true)
+            == RGBA(red: 107.0 / 255, green: 107.0 / 255, blue: 107.0 / 255))
+}
+
 @Test func capShadowIsAHardOnePointDrop() {
     #expect(StockKeyTheme.shadowOffsetY == 1)
     #expect(StockKeyTheme.shadowColor(dark: false) == RGBA(red: 0, green: 0, blue: 0, alpha: 0.30))
