@@ -5,7 +5,11 @@ public enum KeyRole: Equatable, Sendable {
 
     /// Classifies a layout cell id ("q", "__shift", "__space", ...).
     public static func role(forCellID id: String) -> KeyRole {
-        .letter
+        switch id {
+        case "__space": return .space
+        case "__return": return .returnKey
+        default: return id.hasPrefix("__") ? .function : .letter
+        }
     }
 }
 
