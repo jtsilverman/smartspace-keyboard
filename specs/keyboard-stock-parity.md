@@ -19,7 +19,9 @@ The keyboard types, looks, and feels indistinguishable from the stock Apple iPho
 
 ## Non-goals
 
-- Word-prediction/QuickType parity beyond the existing completion bar (separate spec if the current bar's suggestions are the gap).
+- ~~Word-prediction/QuickType parity beyond the existing completion bar~~
+  Lifted 2026-08-10: Jake's goal is full indistinguishability; the at-rest
+  prediction bar is built (NextWordPredictor, stock-parity-test-matrix).
 - The Full Access / in-keyboard-settings fork (open decision, separate spec).
 - Landscape and iPad layouts (portrait iPhone first; others follow the same metrics table later).
 - Sound effects (keyboard clicks are a system service tied to Full Access; revisit with the fork).

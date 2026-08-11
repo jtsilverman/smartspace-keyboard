@@ -76,11 +76,15 @@ final class KeyboardViewController: UIInputViewController {
             shift.armAutoShift(for: textDocumentProxy.documentContextBeforeInput ?? "")
         }
         rebuildRows()
+        refreshSuggestionBar()      // predictions from the first frame
     }
 
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         applyKeyboardAppearance()
+        // Cursor moves change the prediction context; a live correction
+        // or completion bar re-renders unchanged (barContent is state).
+        refreshSuggestionBar()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -229,7 +233,15 @@ final class KeyboardViewController: UIInputViewController {
         suggestionBar.subviews.forEach { $0.removeFromSuperview() }
         switch autocorrect.barContent {
         case .empty:
-            break
+            // Stock's bar is never empty: at-rest predictions fill it.
+            guard settings.autocorrect, !emojiSearchActive else { break }
+            let words = NextWordPredictor.predictions(
+                after: textDocumentProxy.documentContextBeforeInput ?? "")
+            for (index, word) in words.enumerated() {
+                suggestionBar.addArrangedSubview(
+                    barSlot(title: word, tag: index, identifier: "prediction-\(index)"))
+            }
+            addBarSeparators()
         case .correction(let slots):
             for (index, word) in slots.enumerated() {
                 suggestionBar.addArrangedSubview(
@@ -1291,7 +1303,12 @@ final class KeyboardViewController: UIInputViewController {
         defer { refreshSuggestionBar() }
         switch autocorrect.barContent {
         case .empty:
-            break
+            // Prediction slot: insert the word plus the stock auto-space;
+            // the refreshed bar then shows the chained predictions.
+            guard let word = sender.configuration?.title else { break }
+            textDocumentProxy.insertText(word + " ")
+            trailingAutoSpace.arm()
+            armAutoShiftIfSentenceStart()
         case .correction:
             // The correction must still be the document tail ("word" + the
             // separator that committed it). If the user typed on or moved
