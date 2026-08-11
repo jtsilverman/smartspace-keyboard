@@ -20,35 +20,60 @@ public enum KeyRole: Equatable, Sendable {
 /// the extension's background must stay clear.
 public enum StockKeyTheme {
     public static func fill(role: KeyRole, dark: Bool, pressed: Bool) -> RGBA {
-        RGBA(red: 1, green: 1, blue: 1)
+        let letterLevel = (role == .letter || role == .space) != pressed
+        if dark {
+            return RGBA(red: 1, green: 1, blue: 1, alpha: letterLevel ? 0.30 : 0.10)
+        }
+        if letterLevel {
+            return RGBA(red: 1, green: 1, blue: 1, alpha: pressed ? 1 : 0.95)
+        }
+        // #ABB1BA, the stock function-key grey.
+        return RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 255,
+                    alpha: pressed ? 1 : 0.95)
     }
 
     /// Active shift (one-shot or caps lock): opaque white cap, black glyph.
-    public static let shiftActiveFill = RGBA(red: 0, green: 0, blue: 0)
+    public static let shiftActiveFill = RGBA(red: 1, green: 1, blue: 1)
 
     /// Action return types (Search, Go, Send...) tint system blue.
     public static func returnActionFill(dark: Bool) -> RGBA {
-        RGBA(red: 1, green: 1, blue: 1)
+        dark ? RGBA(red: 10.0 / 255, green: 132.0 / 255, blue: 1)
+             : RGBA(red: 0, green: 122.0 / 255, blue: 1)
     }
 
+    /// Pressed action return: white/black legend in light, flat function
+    /// grey in dark (the blue never dims, it swaps).
     public static func returnActionPressedFill(dark: Bool) -> RGBA {
-        RGBA(red: 1, green: 1, blue: 1)
+        dark ? RGBA(red: 71.0 / 255, green: 71.0 / 255, blue: 71.0 / 255)
+             : RGBA(red: 1, green: 1, blue: 1)
     }
 
     /// The hard 1pt drop under every cap; blur 0.
-    public static let shadowOffsetY: Double = 0
+    public static let shadowOffsetY: Double = 1
     public static func shadowColor(dark: Bool) -> RGBA {
-        RGBA(red: 0, green: 0, blue: 0)
+        RGBA(red: 0, green: 0, blue: 0, alpha: dark ? 0.70 : 0.30)
     }
 }
 
 /// Legend typography per key label, stock sizes.
 public enum KeyLegend {
-    public static let iconPointSize: Double = 0
+    public static let iconPointSize: Double = 20
 
-    public static func pointSize(for title: String) -> Double { 0 }
+    public static func pointSize(for title: String) -> Double {
+        switch title {
+        case "ABC": return 15
+        case "123": return 16
+        case "#+=": return 14
+        default:
+            guard title.count == 1 else { return 16 }
+            return usesLightWeight(title) ? 26 : 23
+        }
+    }
 
-    public static func usesLightWeight(_ title: String) -> Bool { false }
+    /// Only lowercase letter legends render in the light weight.
+    public static func usesLightWeight(_ title: String) -> Bool {
+        title.count == 1 && title != title.uppercased()
+    }
 }
 
 /// A color as plain numbers (0...1), UIKit-free. The controller maps
