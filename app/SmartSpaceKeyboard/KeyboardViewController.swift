@@ -216,7 +216,9 @@ final class KeyboardViewController: UIInputViewController {
     /// finish the word). This function never changes state -- only the
     /// three typing trigger points call typingUpdate.
     private func refreshSuggestionBar() {
-        suggestionBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        // subviews, not arrangedSubviews: the hairline separators are plain
+        // subviews and would leak across refreshes.
+        suggestionBar.subviews.forEach { $0.removeFromSuperview() }
         switch autocorrect.barContent {
         case .empty:
             break
@@ -225,6 +227,7 @@ final class KeyboardViewController: UIInputViewController {
                 suggestionBar.addArrangedSubview(
                     barSlot(title: word, tag: index, identifier: "suggestion-\(index)"))
             }
+            addBarSeparators()
         case .completions(let typed, let completions, let quoted):
             // Stock quotes the literal only when a commit would correct it.
             suggestionBar.addArrangedSubview(barSlot(
@@ -234,15 +237,43 @@ final class KeyboardViewController: UIInputViewController {
                 suggestionBar.addArrangedSubview(barSlot(
                     title: word, tag: index + 1, identifier: "completion-\(index + 1)"))
             }
+            addBarSeparators()
         }
     }
 
+    /// QuickType slot, stock-style: flat text on the bar, no key-cap chrome.
     private func barSlot(title: String, tag: Int, identifier: String) -> UIButton {
-        let slot = keyButton(title: title)
+        var config = UIButton.Configuration.plain()
+        config.title = title
+        config.baseForegroundColor = .label
+        config.contentInsets = .zero
+        let slot = UIButton(configuration: config)
+        slot.titleLabel?.font = .systemFont(ofSize: 16)
+        slot.titleLabel?.adjustsFontSizeToFitWidth = true
         slot.tag = tag
         slot.accessibilityIdentifier = identifier
         slot.addTarget(self, action: #selector(suggestionTapped(_:)), for: .touchUpInside)
         return slot
+    }
+
+    /// Stock draws a hairline between candidate slots. Non-arranged
+    /// subviews, so fillEqually still sizes the slots evenly.
+    private func addBarSeparators() {
+        let slots = suggestionBar.arrangedSubviews
+        guard slots.count > 1 else { return }
+        for slot in slots.dropLast() {
+            let line = UIView()
+            line.backgroundColor = .separator
+            line.translatesAutoresizingMaskIntoConstraints = false
+            suggestionBar.addSubview(line)
+            NSLayoutConstraint.activate([
+                line.widthAnchor.constraint(equalToConstant: 0.5),
+                line.centerXAnchor.constraint(equalTo: slot.trailingAnchor,
+                                              constant: suggestionBar.spacing / 2),
+                line.topAnchor.constraint(equalTo: suggestionBar.topAnchor, constant: 10),
+                line.bottomAnchor.constraint(equalTo: suggestionBar.bottomAnchor, constant: -10),
+            ])
+        }
     }
 
     /// Typing trigger: refreshes mid-word completions from the live context.
@@ -1107,7 +1138,8 @@ final class KeyboardViewController: UIInputViewController {
     /// Query strip in the suggestion-bar area: query label, up to 5 results,
     /// cancel. Letter taps feed the query while this is up.
     private func refreshEmojiSearchStrip() {
-        suggestionBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        // subviews: leftover candidate separators must go too.
+        suggestionBar.subviews.forEach { $0.removeFromSuperview() }
         let label = UILabel()
         label.text = "🔍 " + emojiQuery
         label.font = .systemFont(ofSize: 16)
