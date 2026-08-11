@@ -46,7 +46,10 @@ lacks).
 | Commit delimiters beyond space (period, comma, return) | . , ! ? : ; commit; apostrophe/hyphen never | PINNED CommitDelimiterTests |
 | Literal typed word in quotes when a commit would correct it | clean/protected/lexicon words unquoted | PINNED QuotedLiteralSlotTests (CompletionBarTests:19 sim-verify pending) |
 | Backspace immediately after a commit | stock primary UX is underline + tap-to-revert (iOS 17+); stock's own re-correction protection is reported broken | VARIANT: our bar undo + session protect is the deterministic equivalent; underline UI is a Jake call |
-| QuickType bar never empty (three predictions at rest) | spec lists as open tell | GAP (spec non-goal boundary; Jake call) |
+| QuickType bar never empty (three predictions at rest) | I/The/I'm trio, bigram chaining, fallback trio | PINNED NextWordPredictorTests (non-goal lifted by Jake's 2026-08-10 goal); controller wiring compile-unverified |
+| Mid-word bar shows the pending correction as the highlighted middle slot | stock: "literal" / correction pill / alternative | GAP (next loop unit) |
+| Return disabled while the field is empty | grey + inert until first text | wired (controller); sim-verify pending |
+| Space-drag trackpad mode blanks the legends | stock wipes every legend during the drag | wired (controller); sim-verify pending |
 | Completions: typed + two, verbatim accept | | PINNED completion tests |
 
 ## 3. Layout and design
@@ -130,3 +133,14 @@ guesses until measured. Screen-record at 60fps, count frames.
   host opt-out (baace8f/66f4dd6). Suite 351 green. Loop stopped: every
   open row is blocked on Xcode, hardware measurement, or a Jake decision
   (see checklists above). Restart with /loop on an Xcode machine.
+- 2026-08-10 design session (Jake: simulation got us nowhere, make it
+  look stock): three web-research agents mined KeyboardKit 9.9.1.
+  StockKeyTheme/KeyLegend/CalloutGeometry engine tables (TDD), role
+  colors, balloon preview (KeyPopView), callout restyle, flat QuickType
+  bar; specs/stock-design-parity.md units A-F. Suite 368 green.
+- 2026-08-10 iteration 4 (loop restarted, Jake lifts the prediction
+  non-goal): NextWordPredictor RED/GREEN (3efae96/28266f8), bar wiring
+  (df1ceb3); return-disabled-while-empty (e637021); space-drag legend
+  blanking (247c2bd). Suite 375 green. Next: mid-word correction slot
+  with the stock highlight pill, edge-balloon skew, alternates neck,
+  Liquid Glass theme fork.
