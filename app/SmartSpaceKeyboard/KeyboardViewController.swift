@@ -1026,6 +1026,7 @@ final class KeyboardViewController: UIInputViewController {
             // Pending bar edits target the pre-move tail; drop them.
             autocorrect.invalidateBar()
             refreshSuggestionBar()
+            blankKeyLegendsForCursorDrag()
             cursorDrag.began(at: gesture.location(in: view).x)
         case .changed:
             let delta = cursorDrag.moved(to: gesture.location(in: view).x)
@@ -1034,8 +1035,18 @@ final class KeyboardViewController: UIInputViewController {
             }
         case .ended, .cancelled, .failed:
             armAutoShiftIfSentenceStart()
+            rebuildRows()   // restore the blanked legends
         default:
             break
+        }
+    }
+
+    /// Stock trackpad mode: every key legend blanks while the cursor
+    /// drags; the caps stay. rebuildRows restores them on release.
+    private func blankKeyLegendsForCursorDrag() {
+        for (_, button) in planeButtons {
+            button.configuration?.title = nil
+            button.configuration?.image = nil
         }
     }
 
