@@ -159,7 +159,15 @@ final class KeyboardViewController: UIInputViewController {
         }
         touchSurface.onCommit = { [weak self] key in
             guard let self else { return }
-            if let button = self.characterButton(named: key) { self.dismissKeyPop(for: button) }
+            // Stock keeps the balloon up >= 0.05s so a fast tap shows it.
+            // Detach the pop from the map first: a re-touch within the
+            // dwell shows a fresh pop that this removal must not kill.
+            if let button = self.characterButton(named: key),
+               let pop = self.keyPops.removeValue(forKey: button) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + CalloutGeometry.minimumDwell) {
+                    pop.removeFromSuperview()
+                }
+            }
             self.commitCharacter(key)
         }
         touchSurface.onCancel = { [weak self] in self?.dismissAllKeyPops() }
@@ -248,7 +256,8 @@ final class KeyboardViewController: UIInputViewController {
         config.baseForegroundColor = .label
         config.contentInsets = .zero
         let slot = UIButton(configuration: config)
-        slot.titleLabel?.font = .systemFont(ofSize: 16)
+        // Stock candidates are body-size 17pt regular.
+        slot.titleLabel?.font = .systemFont(ofSize: 17)
         slot.titleLabel?.adjustsFontSizeToFitWidth = true
         slot.tag = tag
         slot.accessibilityIdentifier = identifier
@@ -262,16 +271,17 @@ final class KeyboardViewController: UIInputViewController {
         let slots = suggestionBar.arrangedSubviews
         guard slots.count > 1 else { return }
         for slot in slots.dropLast() {
+            // Stock hairline: 1pt wide, 30pt tall, half-faded secondary.
             let line = UIView()
-            line.backgroundColor = .separator
+            line.backgroundColor = .secondaryLabel.withAlphaComponent(0.5)
             line.translatesAutoresizingMaskIntoConstraints = false
             suggestionBar.addSubview(line)
             NSLayoutConstraint.activate([
-                line.widthAnchor.constraint(equalToConstant: 0.5),
+                line.widthAnchor.constraint(equalToConstant: 1),
                 line.centerXAnchor.constraint(equalTo: slot.trailingAnchor,
                                               constant: suggestionBar.spacing / 2),
-                line.topAnchor.constraint(equalTo: suggestionBar.topAnchor, constant: 10),
-                line.bottomAnchor.constraint(equalTo: suggestionBar.bottomAnchor, constant: -10),
+                line.heightAnchor.constraint(equalToConstant: 30),
+                line.centerYAnchor.constraint(equalTo: suggestionBar.centerYAnchor),
             ])
         }
     }
@@ -295,11 +305,30 @@ final class KeyboardViewController: UIInputViewController {
 
     /// Updates key titles in place -- button identity survives, so a
     /// double-tap's second touch still lands on the same shift button.
+    /// Stock: an active shift cap goes opaque white with a black glyph
+    /// (both schemes); letter legends re-case and re-size (26pt light
+    /// lowercase, 23pt regular uppercase).
     private func refreshShiftAppearance() {
-        shiftButton?.configuration?.image = UIImage(systemName: shiftSymbolName())
+        if let shiftButton {
+            shiftButton.configuration?.image = UIImage(systemName: shiftSymbolName())
+            let active = shift.isShifted
+            shiftButton.configurationUpdateHandler = { b in
+                if active {
+                    b.configuration?.background.backgroundColor =
+                        Self.uiColor(StockKeyTheme.shiftActiveFill)
+                    b.configuration?.baseForegroundColor = .black
+                } else {
+                    b.configuration?.background.backgroundColor =
+                        Self.capFill(role: .function, pressed: b.isHighlighted)
+                    b.configuration?.baseForegroundColor = .label
+                }
+            }
+        }
         guard layer == .letters else { return }
         for (button, key) in characterButtons {
-            button.configuration?.title = shift.isShifted ? key.uppercased() : key
+            let title = shift.isShifted ? key.uppercased() : key
+            button.configuration?.title = title
+            button.titleLabel?.font = Self.legendFont(for: title)
         }
     }
 
@@ -335,7 +364,9 @@ final class KeyboardViewController: UIInputViewController {
         }
         planeButtons["__shift"] = leading
 
-        let backspace = keyButton(title: "⌫")
+        // Stock draws backspace as the delete.left symbol, not a text glyph.
+        let backspace = keyButton(symbol: "delete.left")
+        backspace.accessibilityLabel = "⌫"   // UI suites address it by this
         let press = UILongPressGestureRecognizer(target: self, action: #selector(backspaceHeld(_:)))
         press.minimumPressDuration = 0.4
         backspace.addGestureRecognizer(press)
@@ -383,7 +414,10 @@ final class KeyboardViewController: UIInputViewController {
 
         for (id, button) in planeButtons where id.hasPrefix("__") {
             rows.addSubview(button)
+            applyRole(KeyRole.role(forCellID: id), to: button)
         }
+        styleReturnKey(returnKey, actionTitle: returnTitle)
+        refreshShiftAppearance()
         layoutPlane()
     }
 
@@ -470,37 +504,90 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    /// Function keys that stock iOS draws as SF Symbols (globe, shift).
-    /// Stock cap fill: white in light mode, mid-grey in dark. Measured off
-    /// the stock keyboard (screenshot scan 2026-07-31) -- our old
-    /// `.gray()` configuration read as grey-on-grey and made the keys look
-    /// smaller than stock even at matching size.
-    private static let capColor = UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(white: 0.42, alpha: 1)
-            : .white
+    static func uiColor(_ rgba: RGBA) -> UIColor {
+        UIColor(red: rgba.red, green: rgba.green, blue: rgba.blue, alpha: rgba.alpha)
+    }
+
+    /// Role fill straight from the engine theme (KeyboardKit-verified
+    /// stock values). Dynamic per trait collection; the dark fills are
+    /// translucent whites over the system keyboard blur, so nothing may
+    /// paint an opaque background behind the keys.
+    private static func capFill(role: KeyRole, pressed: Bool = false) -> UIColor {
+        UIColor { traits in
+            uiColor(StockKeyTheme.fill(role: role,
+                                       dark: traits.userInterfaceStyle == .dark,
+                                       pressed: pressed))
+        }
     }
 
     /// Shared cap chrome: fill, stock corner radius, and the 1pt bottom
-    /// shadow stock draws under every key.
+    /// shadow stock draws under every key. Role fills are applied after
+    /// rebuildRows knows each button's cell id.
     private func styleAsKeyCap(_ button: UIButton) {
         // The radius must live on the configuration's background: a
         // configuration's default .dynamic corner style overrides
         // layer.cornerRadius and rounded our caps into pills.
         button.configuration?.cornerStyle = .fixed
         button.configuration?.background.cornerRadius = StockLayoutMetrics.capCornerRadius
-        button.configuration?.background.backgroundColor = Self.capColor
-        button.layer.shadowColor = UIColor.black.withAlphaComponent(0.28).cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 1)
+        button.configuration?.background.backgroundColor = Self.capFill(role: .letter)
+        applyCapShadow(button)
+        button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+    }
+
+    /// CGColor cannot be a dynamic color; traitCollectionDidChange
+    /// re-applies the shadows on a scheme flip.
+    private func applyCapShadow(_ button: UIButton) {
+        let dark = traitCollection.userInterfaceStyle == .dark
+        button.layer.shadowColor = Self.uiColor(StockKeyTheme.shadowColor(dark: dark)).cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: StockKeyTheme.shadowOffsetY)
         button.layer.shadowRadius = 0
         button.layer.shadowOpacity = 1
-        button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle
+        else { return }
+        for (_, button) in planeButtons { applyCapShadow(button) }
+    }
+
+    /// Stock press feedback: a pressed function key swaps to the letter
+    /// fill (letters hide behind the preview balloon instead of dimming).
+    private func applyRole(_ role: KeyRole, to button: UIButton) {
+        button.configurationUpdateHandler = { b in
+            b.configuration?.background.backgroundColor =
+                Self.capFill(role: role, pressed: b.isHighlighted)
+        }
+    }
+
+    /// Stock tints action return types (Search, Go, Send) system blue
+    /// with a white legend; a plain return stays a grey function key.
+    private func styleReturnKey(_ button: UIButton, actionTitle: String) {
+        guard actionTitle != "return" else { return }
+        button.configurationUpdateHandler = { b in
+            let dark = b.traitCollection.userInterfaceStyle == .dark
+            if b.isHighlighted {
+                b.configuration?.background.backgroundColor =
+                    Self.uiColor(StockKeyTheme.returnActionPressedFill(dark: dark))
+                b.configuration?.baseForegroundColor = dark ? .white : .black
+            } else {
+                b.configuration?.background.backgroundColor =
+                    Self.uiColor(StockKeyTheme.returnActionFill(dark: dark))
+                b.configuration?.baseForegroundColor = .white
+            }
+        }
+    }
+
+    private static func legendFont(for title: String) -> UIFont {
+        .systemFont(ofSize: KeyLegend.pointSize(for: title),
+                    weight: KeyLegend.usesLightWeight(title) ? .light : .regular)
     }
 
     private func keyButton(symbol: String) -> UIButton {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: symbol)
-        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(
+            pointSize: KeyLegend.iconPointSize, weight: .regular)
         config.baseForegroundColor = .label
         config.contentInsets = .zero
         let button = KeyButton(configuration: config)
@@ -514,10 +601,7 @@ final class KeyboardViewController: UIInputViewController {
         config.baseForegroundColor = .label
         config.contentInsets = .zero
         let button = KeyButton(configuration: config)
-        // Stock letter caps are ~22pt regular; word keys (123, space,
-        // return) sit smaller.
-        let size: CGFloat = title.count == 1 ? 22 : 16
-        button.titleLabel?.font = .systemFont(ofSize: size, weight: .regular)
+        button.titleLabel?.font = Self.legendFont(for: title)
         button.titleLabel?.adjustsFontSizeToFitWidth = true
         styleAsKeyCap(button)
         return button
@@ -683,22 +767,29 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
+    /// Stock action callout: an opaque cap-colored bubble fused to the
+    /// held key, flat items, blue pill on the selected one.
     private func showAlternates(_ options: [String], above button: UIButton, shifted: Bool) {
         dismissAlternates()
         let bar = UIStackView()
         bar.axis = .horizontal
-        bar.spacing = 2
+        bar.spacing = 0
         bar.translatesAutoresizingMaskIntoConstraints = false
-        bar.backgroundColor = .systemBackground
-        bar.layer.cornerRadius = 8
-        bar.layer.borderWidth = 1
-        bar.layer.borderColor = UIColor.separator.cgColor
+        bar.backgroundColor = Self.calloutFill
+        bar.layer.cornerRadius = CalloutGeometry.bubbleCornerRadius
+        bar.layer.shadowColor = UIColor.black.cgColor
+        bar.layer.shadowOpacity = 0.1
+        bar.layer.shadowRadius = 5
+        bar.layer.shadowOffset = .zero
+        bar.isLayoutMarginsRelativeArrangement = true
+        bar.layoutMargins = UIEdgeInsets(top: 6, left: 6, bottom: 6, right: 6)
         // Slide-select (stock): the ongoing touch stays with the surface,
         // moves highlight an option, release commits it. The buttons are
         // passive visuals.
+        let itemWidth = min(button.bounds.width, CalloutGeometry.alternateItemMaxSize)
         for option in options {
-            let alt = keyButton(title: shifted ? option.uppercased() : option)
-            alt.isUserInteractionEnabled = false
+            let alt = alternateItem(title: shifted ? option.uppercased() : option)
+            alt.widthAnchor.constraint(equalToConstant: itemWidth).isActive = true
             bar.addArrangedSubview(alt)
         }
         view.addSubview(bar)
@@ -708,10 +799,30 @@ final class KeyboardViewController: UIInputViewController {
             center,
             bar.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 4),
             bar.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -4),
-            bar.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -4),
-            bar.heightAnchor.constraint(equalToConstant: 44),
+            bar.bottomAnchor.constraint(equalTo: button.topAnchor),
+            bar.heightAnchor.constraint(equalToConstant: CalloutGeometry.bubbleHeight),
         ])
         alternatesView = bar
+    }
+
+    /// Callout fill resolved per scheme; opaque, it covers the keys.
+    private static let calloutFill = UIColor { traits in
+        uiColor(StockKeyTheme.balloonFill(dark: traits.userInterfaceStyle == .dark))
+    }
+
+    /// Passive flat item inside the callout; selection paints the pill.
+    private func alternateItem(title: String) -> UIButton {
+        var config = UIButton.Configuration.plain()
+        config.title = title
+        config.baseForegroundColor = .label
+        config.contentInsets = .zero
+        config.cornerStyle = .fixed
+        config.background.cornerRadius = CalloutGeometry.selectedCornerRadius
+        config.background.backgroundColor = .clear
+        let alt = UIButton(configuration: config)
+        alt.titleLabel?.font = .systemFont(ofSize: CalloutGeometry.alternateFontSize)
+        alt.isUserInteractionEnabled = false
+        return alt
     }
 
     /// The alternate button under the finger's x, or nil for "base key".
@@ -729,7 +840,7 @@ final class KeyboardViewController: UIInputViewController {
         let selected = alternateButton(atSurfacePoint: point)
         for case let button as UIButton in bar.arrangedSubviews {
             button.configuration?.background.backgroundColor =
-                button === selected ? .systemBlue : Self.capColor
+                button === selected ? .systemBlue : .clear
             button.configuration?.baseForegroundColor =
                 button === selected ? .white : .label
         }
@@ -901,33 +1012,20 @@ final class KeyboardViewController: UIInputViewController {
 
     // MARK: - Key-pop (WORKPLAN 3.5)
 
-    /// Magnified preview above a touched character key, stock-style.
-    /// Keyed per button: two-finger typing keeps each finger's pop
-    /// independent (releasing one never removes the other's).
+    /// Stock balloon above a touched character key. Keyed per button:
+    /// two-finger typing keeps each finger's pop independent (releasing
+    /// one never removes the other's).
     private func showKeyPop(above button: UIButton) {
         dismissKeyPop(for: button)
         guard let title = button.configuration?.title else { return }
-        let pop = UILabel()
-        pop.text = title
-        pop.font = .systemFont(ofSize: 32)
-        pop.textAlignment = .center
-        pop.backgroundColor = .systemBackground
-        pop.layer.cornerRadius = 8
-        pop.clipsToBounds = true
-        pop.layer.borderWidth = 1
-        pop.layer.borderColor = UIColor.separator.cgColor
-        pop.translatesAutoresizingMaskIntoConstraints = false
+        let capFrame = view.convert(button.frame, from: button.superview ?? view)
+        let pop = KeyPopView(title: title, capFrame: capFrame)
+        // Edge keys: keep the balloon on screen (stock skews the bubble;
+        // the clamp is the simpler stand-in, noted in the spec).
+        var frame = pop.frame
+        frame.origin.x = max(2, min(frame.origin.x, view.bounds.width - frame.width - 2))
+        pop.frame = frame
         view.addSubview(pop)
-        let center = pop.centerXAnchor.constraint(equalTo: button.centerXAnchor)
-        center.priority = .defaultHigh  // yields at screen edges
-        NSLayoutConstraint.activate([
-            center,
-            pop.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 2),
-            pop.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -2),
-            pop.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -2),
-            pop.widthAnchor.constraint(equalTo: button.widthAnchor, multiplier: 1.4),
-            pop.heightAnchor.constraint(equalToConstant: 50),
-        ])
         keyPops[button] = pop
     }
 
@@ -1060,6 +1158,10 @@ final class KeyboardViewController: UIInputViewController {
         bottom.addArrangedSubview(abc)
         bottom.addArrangedSubview(space)
         bottom.addArrangedSubview(returnKey)
+        // Stock emoji plane colors its bottom row by role too.
+        applyRole(.function, to: abc)
+        applyRole(.space, to: space)
+        applyRole(.returnKey, to: returnKey)
         abc.widthAnchor.constraint(equalTo: bottom.widthAnchor, multiplier: 0.15).isActive = true
         returnKey.widthAnchor.constraint(equalTo: bottom.widthAnchor, multiplier: 0.22).isActive = true
 
