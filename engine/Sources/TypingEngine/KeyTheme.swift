@@ -49,9 +49,10 @@ public enum StockKeyTheme {
     }
 
     /// The soft pill behind the bar candidate a commit would apply.
-    public static let candidatePillCornerRadius: Double = 0
+    /// Dark value approximates stock's grey (medium confidence).
+    public static let candidatePillCornerRadius: Double = 4
     public static func candidatePillFill(dark: Bool) -> RGBA {
-        RGBA(red: 0, green: 0, blue: 0)
+        RGBA(red: 1, green: 1, blue: 1, alpha: dark ? 0.2 : 0.5)
     }
 
     /// Callout fill: the balloon covers keys, so it is opaque -- white in
