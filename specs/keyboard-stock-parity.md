@@ -24,7 +24,10 @@ The keyboard types, looks, and feels indistinguishable from the stock Apple iPho
   prediction bar is built (NextWordPredictor, stock-parity-test-matrix).
 - The Full Access / in-keyboard-settings fork (open decision, separate spec).
 - Landscape and iPad layouts (portrait iPhone first; others follow the same metrics table later).
-- Sound effects (keyboard clicks are a system service tied to Full Access; revisit with the fork).
+- ~~Sound effects~~ Lifted 2026-08-10: playInputClick + a conforming
+  input view need no Full Access; wired, honors the system Keyboard
+  Clicks setting. Stock's distinct modifier/delete click variants are
+  not reachable from an extension (system service limitation).
 
 ## Measured visible key caps (pixel scan of stock, 402pt @3x, 2026-07-31)
 
