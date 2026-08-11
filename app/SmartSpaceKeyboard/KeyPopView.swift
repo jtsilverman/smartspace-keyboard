@@ -24,9 +24,10 @@ final class KeyPopView: UIView {
                                  width: width, height: height))
         isUserInteractionEnabled = false
 
-        shape.path = Self.balloonPath(width: width, capHeight: capFrame.height,
-                                      capLeft: over.left,
-                                      capRight: width - over.right).cgPath
+        shape.path = CalloutPath.outline(width: width,
+                                         capLeft: over.left,
+                                         capRight: width - over.right,
+                                         capHeight: capFrame.height).cgPath
         layer.addSublayer(shape)
 
         label.text = title
@@ -56,13 +57,18 @@ final class KeyPopView: UIView {
         label.textColor = dark ? .white : .black
     }
 
-    /// Clockwise outline: bubble with 10pt top corners, concave neck on
-    /// both sides, cap slice with the stock 5pt bottom corners. capLeft
-    /// and capRight place the cap slice under a skewed bubble.
-    private static func balloonPath(width: CGFloat, capHeight: CGFloat,
-                                    capLeft: CGFloat, capRight: CGFloat) -> UIBezierPath {
+}
+
+/// Shared outline for the preview balloon and the action callout: bubble
+/// with 10pt top corners, concave necks, cap slice with the stock 5pt
+/// bottom corners. When the bubble extends past the cap, the bottom edge
+/// runs flat and the neck drops beside the cap.
+enum CalloutPath {
+    static func outline(width: CGFloat, capLeft: CGFloat, capRight: CGFloat,
+                        capHeight: CGFloat) -> UIBezierPath {
         let r = CalloutGeometry.bubbleCornerRadius
         let capR = StockLayoutMetrics.capCornerRadius
+        let curve = CalloutGeometry.neckCurveWidth
         let bubbleH = CalloutGeometry.bubbleHeight
         let neckMid = bubbleH + CalloutGeometry.neckHeight / 2
         let neckBottom = bubbleH + CalloutGeometry.neckHeight
@@ -75,10 +81,21 @@ final class KeyPopView: UIView {
         p.addLine(to: CGPoint(x: width - r, y: 0))
         p.addArc(withCenter: CGPoint(x: width - r, y: r), radius: r,
                  startAngle: 3 * .pi / 2, endAngle: 0, clockwise: true)
-        p.addLine(to: CGPoint(x: width, y: bubbleH))
-        p.addCurve(to: CGPoint(x: capRight, y: neckBottom),
-                   controlPoint1: CGPoint(x: width, y: neckMid),
-                   controlPoint2: CGPoint(x: capRight, y: neckMid))
+        if width - capRight - curve > r {
+            // Rounded bottom corner, flat run, then the neck by the cap.
+            p.addLine(to: CGPoint(x: width, y: bubbleH - r))
+            p.addArc(withCenter: CGPoint(x: width - r, y: bubbleH - r), radius: r,
+                     startAngle: 0, endAngle: .pi / 2, clockwise: true)
+            p.addLine(to: CGPoint(x: capRight + curve, y: bubbleH))
+            p.addCurve(to: CGPoint(x: capRight, y: neckBottom),
+                       controlPoint1: CGPoint(x: capRight + curve, y: neckMid),
+                       controlPoint2: CGPoint(x: capRight, y: neckMid))
+        } else {
+            p.addLine(to: CGPoint(x: width, y: bubbleH))
+            p.addCurve(to: CGPoint(x: capRight, y: neckBottom),
+                       controlPoint1: CGPoint(x: width, y: neckMid),
+                       controlPoint2: CGPoint(x: capRight, y: neckMid))
+        }
         p.addLine(to: CGPoint(x: capRight, y: capBottom - capR))
         p.addArc(withCenter: CGPoint(x: capRight - capR, y: capBottom - capR), radius: capR,
                  startAngle: 0, endAngle: .pi / 2, clockwise: true)
@@ -86,9 +103,18 @@ final class KeyPopView: UIView {
         p.addArc(withCenter: CGPoint(x: capLeft + capR, y: capBottom - capR), radius: capR,
                  startAngle: .pi / 2, endAngle: .pi, clockwise: true)
         p.addLine(to: CGPoint(x: capLeft, y: neckBottom))
-        p.addCurve(to: CGPoint(x: 0, y: bubbleH),
-                   controlPoint1: CGPoint(x: capLeft, y: neckMid),
-                   controlPoint2: CGPoint(x: 0, y: neckMid))
+        if capLeft - curve > r {
+            p.addCurve(to: CGPoint(x: capLeft - curve, y: bubbleH),
+                       controlPoint1: CGPoint(x: capLeft, y: neckMid),
+                       controlPoint2: CGPoint(x: capLeft - curve, y: neckMid))
+            p.addLine(to: CGPoint(x: r, y: bubbleH))
+            p.addArc(withCenter: CGPoint(x: r, y: bubbleH - r), radius: r,
+                     startAngle: .pi / 2, endAngle: .pi, clockwise: true)
+        } else {
+            p.addCurve(to: CGPoint(x: 0, y: bubbleH),
+                       controlPoint1: CGPoint(x: capLeft, y: neckMid),
+                       controlPoint2: CGPoint(x: 0, y: neckMid))
+        }
         p.close()
         return p
     }

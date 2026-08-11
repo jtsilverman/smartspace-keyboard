@@ -808,78 +808,32 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    /// Stock action callout: an opaque cap-colored bubble fused to the
-    /// held key, flat items, blue pill on the selected one.
+    /// Stock action callout: a cap-colored bubble with the neck fused to
+    /// the held key, extending toward the screen center. Slide-select:
+    /// the ongoing touch stays with the surface, moves highlight an
+    /// option, release commits it. The items are passive visuals.
     private func showAlternates(_ options: [String], above button: UIButton, shifted: Bool) {
         dismissAlternates()
-        let bar = UIStackView()
-        bar.axis = .horizontal
-        bar.spacing = 0
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        bar.backgroundColor = Self.calloutFill
-        bar.layer.cornerRadius = CalloutGeometry.bubbleCornerRadius
-        bar.layer.shadowColor = UIColor.black.cgColor
-        bar.layer.shadowOpacity = 0.1
-        bar.layer.shadowRadius = 5
-        bar.layer.shadowOffset = .zero
-        bar.isLayoutMarginsRelativeArrangement = true
-        bar.layoutMargins = UIEdgeInsets(top: 6, left: 6, bottom: 6, right: 6)
-        // Slide-select (stock): the ongoing touch stays with the surface,
-        // moves highlight an option, release commits it. The buttons are
-        // passive visuals.
-        let itemWidth = min(button.bounds.width, CalloutGeometry.alternateItemMaxSize)
-        for option in options {
-            let alt = alternateItem(title: shifted ? option.uppercased() : option)
-            alt.widthAnchor.constraint(equalToConstant: itemWidth).isActive = true
-            bar.addArrangedSubview(alt)
-        }
-        view.addSubview(bar)
-        let center = bar.centerXAnchor.constraint(equalTo: button.centerXAnchor)
-        center.priority = .defaultHigh  // yields at screen edges
-        NSLayoutConstraint.activate([
-            center,
-            bar.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 4),
-            bar.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -4),
-            bar.bottomAnchor.constraint(equalTo: button.topAnchor),
-            bar.heightAnchor.constraint(equalToConstant: CalloutGeometry.bubbleHeight),
-        ])
-        alternatesView = bar
-    }
-
-    /// Callout fill resolved per scheme; opaque, it covers the keys.
-    private static let calloutFill = UIColor { traits in
-        uiColor(StockKeyTheme.balloonFill(dark: traits.userInterfaceStyle == .dark))
-    }
-
-    /// Passive flat item inside the callout; selection paints the pill.
-    private func alternateItem(title: String) -> UIButton {
-        var config = UIButton.Configuration.plain()
-        config.title = title
-        config.baseForegroundColor = .label
-        config.contentInsets = .zero
-        config.cornerStyle = .fixed
-        config.background.cornerRadius = CalloutGeometry.selectedCornerRadius
-        config.background.backgroundColor = .clear
-        let alt = UIButton(configuration: config)
-        alt.titleLabel?.font = .systemFont(ofSize: CalloutGeometry.alternateFontSize)
-        alt.isUserInteractionEnabled = false
-        return alt
+        let capFrame = view.convert(button.frame, from: button.superview ?? view)
+        let display = options.map { shifted ? $0.uppercased() : $0 }
+        let callout = AlternatesCalloutView(options: display, capFrame: capFrame,
+                                            screenWidth: view.bounds.width)
+        view.addSubview(callout)
+        alternatesView = callout
     }
 
     /// The alternate button under the finger's x, or nil for "base key".
     private func alternateButton(atSurfacePoint point: CGPoint) -> UIButton? {
-        guard let bar = alternatesView as? UIStackView else { return nil }
-        let inBar = bar.convert(view.convert(point, from: touchSurface), from: view)
-        return bar.arrangedSubviews.compactMap { $0 as? UIButton }.first {
-            // Stock is forgiving on y: only x picks the option.
-            $0.frame.minX <= inBar.x && inBar.x < $0.frame.maxX
-        }
+        guard let callout = alternatesView as? AlternatesCalloutView else { return nil }
+        // Stock is forgiving on y: only x picks the option.
+        let x = callout.convert(view.convert(point, from: touchSurface), from: view).x
+        return callout.item(atX: x)
     }
 
     private func highlightAlternate(atSurfacePoint point: CGPoint) {
-        guard let bar = alternatesView as? UIStackView else { return }
+        guard let callout = alternatesView as? AlternatesCalloutView else { return }
         let selected = alternateButton(atSurfacePoint: point)
-        for case let button as UIButton in bar.arrangedSubviews {
+        for button in callout.itemButtons {
             button.configuration?.background.backgroundColor =
                 button === selected ? .systemBlue : .clear
             button.configuration?.baseForegroundColor =
