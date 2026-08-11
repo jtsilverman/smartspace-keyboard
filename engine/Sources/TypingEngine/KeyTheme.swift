@@ -23,13 +23,21 @@ public enum StockKeyTheme {
     /// medium-high confidence): harder rounding, no drop shadow,
     /// glassier fills.
     public static func capCornerRadius(liquidGlass: Bool) -> Double {
-        StockLayoutMetrics.capCornerRadius
+        liquidGlass ? 9 : StockLayoutMetrics.capCornerRadius
     }
 
-    public static func hasShadow(liquidGlass: Bool) -> Bool { true }
+    public static func hasShadow(liquidGlass: Bool) -> Bool { !liquidGlass }
 
     public static func fill(role: KeyRole, dark: Bool, pressed: Bool,
                             liquidGlass: Bool = false) -> RGBA {
+        if liquidGlass {
+            // Pressed keeps the idle color at 0.6 alpha; dark idles run
+            // at 0.55 of the iOS 18 alpha. No level swap.
+            let idle = fill(role: role, dark: dark, pressed: false)
+            let scale = (dark ? 0.55 : 1) * (pressed ? 0.6 : 1)
+            return RGBA(red: idle.red, green: idle.green, blue: idle.blue,
+                        alpha: idle.alpha * scale)
+        }
         let letterLevel = (role == .letter || role == .space) != pressed
         if dark {
             return RGBA(red: 1, green: 1, blue: 1, alpha: letterLevel ? 0.30 : 0.10)
