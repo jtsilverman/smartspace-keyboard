@@ -21,13 +21,13 @@ private func quotingController() -> AutocorrectController {
 @Test func correctablePartialQuotesTheTypedSlot() {
     var c = quotingController()
     c.typingUpdate(context: "so teh")
-    #expect(c.barContent == .completions(typed: "teh", completions: [], quoted: true))
+    #expect(c.barContent == .completions(typed: "teh", completions: ["the"], correction: "the"))
 }
 
 @Test func cleanPartialStaysUnquoted() {
     var c = quotingController()
     c.typingUpdate(context: "so the")
-    #expect(c.barContent == .completions(typed: "the", completions: [], quoted: false))
+    #expect(c.barContent == .completions(typed: "the", completions: [], correction: nil))
 }
 
 @Test func protectedWordStaysUnquoted() {
@@ -35,7 +35,7 @@ private func quotingController() -> AutocorrectController {
     c.typingUpdate(context: "so teh")
     _ = c.barTapped(slot: 0)    // accept typed -> session protect
     c.typingUpdate(context: "later teh")
-    #expect(c.barContent == .completions(typed: "teh", completions: [], quoted: false))
+    #expect(c.barContent == .completions(typed: "teh", completions: [], correction: nil))
 }
 
 @Test func lexiconWordStaysUnquoted() {
@@ -45,5 +45,5 @@ private func quotingController() -> AutocorrectController {
     }
     var c = AutocorrectController(checker: Checker(), lexicon: ["teh"])
     c.typingUpdate(context: "so teh")
-    #expect(c.barContent == .completions(typed: "teh", completions: [], quoted: false))
+    #expect(c.barContent == .completions(typed: "teh", completions: [], correction: nil))
 }

@@ -48,6 +48,12 @@ public enum StockKeyTheme {
              : RGBA(red: 1, green: 1, blue: 1)
     }
 
+    /// The soft pill behind the bar candidate a commit would apply.
+    public static let candidatePillCornerRadius: Double = 0
+    public static func candidatePillFill(dark: Bool) -> RGBA {
+        RGBA(red: 0, green: 0, blue: 0)
+    }
+
     /// Callout fill: the balloon covers keys, so it is opaque -- white in
     /// light, the flat dark letter cap in dark.
     public static func balloonFill(dark: Bool) -> RGBA {

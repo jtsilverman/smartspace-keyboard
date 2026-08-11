@@ -76,6 +76,14 @@ private let greyCap = RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 2
             == RGBA(red: 71.0 / 255, green: 71.0 / 255, blue: 71.0 / 255))
 }
 
+@Test func candidatePillMatchesStock() {
+    // KeyboardKit: white @0.5, corner 4, on the autocorrect candidate.
+    // Dark value is a medium-confidence approximation of stock's grey.
+    #expect(StockKeyTheme.candidatePillCornerRadius == 4)
+    #expect(StockKeyTheme.candidatePillFill(dark: false) == RGBA(red: 1, green: 1, blue: 1, alpha: 0.5))
+    #expect(StockKeyTheme.candidatePillFill(dark: true) == RGBA(red: 1, green: 1, blue: 1, alpha: 0.2))
+}
+
 @Test func balloonFillIsTheFlatCapColor() {
     // The balloon covers keys, so it must be opaque: white in light,
     // KeyboardKit's flat dark letter cap #6B6B6B in dark.
