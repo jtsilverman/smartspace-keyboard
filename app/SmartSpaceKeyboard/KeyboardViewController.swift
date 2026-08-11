@@ -85,6 +85,8 @@ final class KeyboardViewController: UIInputViewController {
         // Cursor moves change the prediction context; a live correction
         // or completion bar re-renders unchanged (barContent is state).
         refreshSuggestionBar()
+        // The empty-field state gates the action return key's color.
+        planeButtons["__return"]?.setNeedsUpdateConfiguration()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -574,11 +576,16 @@ final class KeyboardViewController: UIInputViewController {
 
     /// Stock tints action return types (Search, Go, Send) system blue
     /// with a white legend; a plain return stays a grey function key.
+    /// With enablesReturnKeyAutomatically the key greys out and goes
+    /// inert while the field is empty, flipping blue on the first text.
     private func styleReturnKey(_ button: UIButton, actionTitle: String) {
         guard actionTitle != "return" else { return }
-        button.configurationUpdateHandler = { b in
+        button.configurationUpdateHandler = { [weak self] b in
             let dark = b.traitCollection.userInterfaceStyle == .dark
-            if b.isHighlighted {
+            if self?.returnKeyDisabled == true {
+                b.configuration?.background.backgroundColor = Self.capFill(role: .returnKey)
+                b.configuration?.baseForegroundColor = .tertiaryLabel
+            } else if b.isHighlighted {
                 b.configuration?.background.backgroundColor =
                     Self.uiColor(StockKeyTheme.returnActionPressedFill(dark: dark))
                 b.configuration?.baseForegroundColor = dark ? .white : .black
@@ -588,6 +595,15 @@ final class KeyboardViewController: UIInputViewController {
                 b.configuration?.baseForegroundColor = .white
             }
         }
+    }
+
+    private var returnKeyDisabled: Bool {
+        textDocumentProxy.enablesReturnKeyAutomatically == true && !hostHasText
+    }
+
+    private var hostHasText: Bool {
+        !(textDocumentProxy.documentContextBeforeInput ?? "").isEmpty
+            || !(textDocumentProxy.documentContextAfterInput ?? "").isEmpty
     }
 
     private static func legendFont(for title: String) -> UIFont {
@@ -988,6 +1004,7 @@ final class KeyboardViewController: UIInputViewController {
             exitEmojiPanel()
             return
         }
+        guard !returnKeyDisabled else { return }    // stock: the key is inert
         dismissAlternates()
         endSmartSpaceCycle()
         applyAutocorrectOnCommit()
