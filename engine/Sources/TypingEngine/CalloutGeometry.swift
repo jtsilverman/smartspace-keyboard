@@ -18,7 +18,12 @@ public enum CalloutGeometry {
     /// the bubble; it never clamps it off-center).
     public static func overhangs(keyMinX: Double, keyWidth: Double, screenWidth: Double)
         -> (left: Double, right: Double) {
-        (left: overhangPerSide, right: overhangPerSide)
+        let total = 2 * overhangPerSide
+        let maxLeft = max(0, keyMinX - screenMargin)
+        let maxRight = max(0, screenWidth - screenMargin - keyMinX - keyWidth)
+        let left = min(maxLeft, total - min(overhangPerSide, maxRight))
+        let right = min(maxRight, total - left)
+        return (left: left, right: right)
     }
 
     public static let bubbleHeight: Double = 55
