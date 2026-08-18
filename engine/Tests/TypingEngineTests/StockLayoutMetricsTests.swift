@@ -94,3 +94,58 @@ private func near(_ a: Double, _ b: Double, tol: Double = 0.5) -> Bool {
     let w = cell("w", cells)!
     #expect(near(w.frame.x - q.frame.x, (375.0 - 6.67) / 10, tol: 0.1))
 }
+
+// Large-device class (pixel scan 2026-08-18, iOS 26.3.1): stock steps its
+// row pitch from 54 to 56 and its cap height from 43 to 45 somewhere between
+// 402pt and 420pt. Measured 54/43 at 390, 393 and 402pt; 56/45 at 420, 430
+// and 440pt. The insets hold, so the cap follows the pitch.
+
+@Test func rowPitchStepsWithTheDeviceClass() {
+    #expect(StockLayoutMetrics.rowPitch(width: 390) == 54)
+    #expect(StockLayoutMetrics.rowPitch(width: 402) == 54)
+    #expect(StockLayoutMetrics.rowPitch(width: 420) == 56)
+    #expect(StockLayoutMetrics.rowPitch(width: 430) == 56)
+    #expect(StockLayoutMetrics.rowPitch(width: 440) == 56)
+}
+
+@Test func keyAreaHeightIsFourRowsOfTheClassPitch() {
+    #expect(StockLayoutMetrics.keyAreaHeight(width: 402) == 216)
+    #expect(StockLayoutMetrics.keyAreaHeight(width: 440) == 224)
+}
+
+@Test func largeClassRowsSitAtTheMeasuredPitch() {
+    for width in [420.0, 430.0, 440.0] {
+        let cells = StockLayoutMetrics.cells(width: width, plane: KeyboardLayout.letterRows)
+        #expect(cell("q", cells)!.frame.y == 0)
+        #expect(cell("a", cells)!.frame.y == 56)
+        #expect(cell("z", cells)!.frame.y == 112)
+        #expect(cell("__space", cells)!.frame.y == 168)
+        #expect(cell("q", cells)!.frame.height == 56)
+    }
+}
+
+@Test func largeClassCapIsFortyFiveTall() {
+    for width in [420.0, 430.0, 440.0] {
+        let cells = StockLayoutMetrics.cells(width: width, plane: KeyboardLayout.letterRows)
+        let cap = StockLayoutMetrics.capFrame(in: cell("q", cells)!.frame)
+        #expect(near(cap.y, 1) && near(cap.height, 45))
+    }
+}
+
+// Measured stock cap origins on the large class: the first cap starts 6.67pt
+// from the edge on every width, and the row-1 caps step by (width - 13.34)/10.
+@Test func largeClassCapColumnsMatchTheMeasuredScan() {
+    let measured: [Double: (first: Double, last: Double, capWidth: Double)] = [
+        420: (6.67, 378.33, 35.33),
+        430: (6.67, 387.33, 36.33),
+        440: (6.67, 396.33, 37.33),
+    ]
+    for (width, want) in measured {
+        let cells = StockLayoutMetrics.cells(width: width, plane: KeyboardLayout.letterRows)
+        let q = StockLayoutMetrics.capFrame(in: cell("q", cells)!.frame)
+        let p = StockLayoutMetrics.capFrame(in: cell("p", cells)!.frame)
+        #expect(near(q.x, want.first, tol: 1))
+        #expect(near(p.x, want.last, tol: 1))
+        #expect(near(q.width, want.capWidth, tol: 1))
+    }
+}
