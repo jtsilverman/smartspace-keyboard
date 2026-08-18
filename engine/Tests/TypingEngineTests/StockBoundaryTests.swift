@@ -4,16 +4,25 @@ import TypingEngine
 
 // Where stock hands a tap from one letter to the next, probed on the real
 // stock keyboard by tap-bisection (iPhone 17, iOS 26.3.1, 2026-08-18,
-// eval/parity + BoundaryProbeTests). Apple biases these boundaries with its
-// own language model, so they never sit exactly on the cell edges; the gap
-// below is what a fixed-area keyboard can reach.
+// eval/parity + BoundaryProbeTests). The first run of this measurement was
+// void: the probe counted characters against an empty field, whose .value
+// is its placeholder, and scored real keystrokes as "typed nothing". These
+// are the re-measured values, taken with the field seeded so it is never
+// empty.
+//
+// Stock steps by exactly 39.50pt across all 23 boundaries, with no
+// variation by letter pair, so stock's hit map is pure uniform geometry
+// under this context (the seed puts an "h" before every probe). Stock's
+// key elements report cell edges 39.333/39.667pt apart starting at
+// x=4.667, so every boundary below sits a uniform 3.8pt LEFT of the cell
+// edge it divides: stock's hit map is its visual grid, shifted left.
 private let measuredStock: [(String, String, Double)] = [
-    ("q", "w", 42.39), ("w", "e", 83.43), ("e", "r", 119.23), ("r", "t", 161.19),
-    ("t", "y", 197.92), ("y", "u", 246.06), ("u", "i", 272.60), ("i", "o", 325.98),
+    ("q", "w", 40.23), ("w", "e", 79.73), ("e", "r", 119.23), ("r", "t", 158.73),
+    ("t", "y", 198.23), ("y", "u", 237.73), ("u", "i", 277.23), ("i", "o", 316.73),
     ("o", "p", 356.23),
-    ("a", "s", 59.89), ("s", "d", 94.76), ("d", "f", 147.84), ("f", "g", 178.39),
-    ("g", "h", 217.89), ("h", "j", 252.46), ("j", "k", 304.92), ("k", "l", 336.39),
-    ("z", "x", 99.39), ("x", "c", 138.89), ("c", "v", 180.86), ("v", "b", 217.89),
+    ("a", "s", 59.89), ("s", "d", 99.39), ("d", "f", 138.89), ("f", "g", 178.39),
+    ("g", "h", 217.89), ("h", "j", 257.39), ("j", "k", 296.89), ("k", "l", 336.39),
+    ("z", "x", 99.39), ("x", "c", 138.89), ("c", "v", 178.39), ("v", "b", 217.89),
     ("b", "n", 257.39), ("n", "m", 296.89),
 ]
 

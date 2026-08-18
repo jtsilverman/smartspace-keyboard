@@ -15,15 +15,17 @@ public enum BiasedKeyResolver {
     /// Tempering exponent on the prior: full geometry, tempered language.
     static let priorWeight: Double = 0.35
 
-    /// The prior is OFF. Boundaries probed on the stock keyboard (iPhone 17,
-    /// 2026-08-18) sit a mean 3.56pt from pure geometry, and Apple's own
-    /// model moves them. Scoring ours against those measurements: pure
-    /// geometry lands 3.56pt mean / 7.76pt worst, the shipped prior 5.25 /
-    /// 13.42, the best fitted prior 3.50 / 8.80. Our bigram table pulls
-    /// against Apple's, so biasing doubles the worst-case miss and costs
-    /// Jake the fixed key areas his muscle memory depends on. The scoring
-    /// stays here for the day a model trained on his own typing replaces
-    /// the table (Jake, 2026-08-18).
+    /// The prior is OFF. Boundaries re-probed on the stock keyboard
+    /// (iPhone 17, 2026-08-18, StockBoundaryTests) step by exactly 39.50pt
+    /// across all 23 letter pairs, with no variation by pair: stock's hit
+    /// map is uniform geometry, not a language model, under a fixed
+    /// preceding letter. Scoring ours against those measurements: pure
+    /// geometry lands 2.78pt mean / 2.98pt worst, the shipped prior 5.16 /
+    /// 12.63. Our bigram table pulls against stock's uniform grid, so
+    /// biasing quadruples the worst-case miss and costs Jake the fixed key
+    /// areas his muscle memory depends on. The scoring stays here for the
+    /// day a model trained on his own typing replaces the table (Jake,
+    /// 2026-08-18).
     public static let priorIsEnabled = false
     public static func key(at point: Point, zones: [KeyZone], context: String) -> String? {
         guard priorIsEnabled else { return KeyZoneMap(keys: zones).key(at: point) }
