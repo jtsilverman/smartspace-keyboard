@@ -14,7 +14,27 @@ public enum BiasedKeyResolver {
     static let sigma: Double = 6
     /// Tempering exponent on the prior: full geometry, tempered language.
     static let priorWeight: Double = 0.35
+
+    /// The prior is OFF. Boundaries probed on the stock keyboard (iPhone 17,
+    /// 2026-08-18) sit a mean 3.56pt from pure geometry, and Apple's own
+    /// model moves them. Scoring ours against those measurements: pure
+    /// geometry lands 3.56pt mean / 7.76pt worst, the shipped prior 5.25 /
+    /// 13.42, the best fitted prior 3.50 / 8.80. Our bigram table pulls
+    /// against Apple's, so biasing doubles the worst-case miss and costs
+    /// Jake the fixed key areas his muscle memory depends on. The scoring
+    /// stays here for the day a model trained on his own typing replaces
+    /// the table (Jake, 2026-08-18).
+    public static let priorIsEnabled = false
     public static func key(at point: Point, zones: [KeyZone], context: String) -> String? {
+        guard priorIsEnabled else { return KeyZoneMap(keys: zones).key(at: point) }
+        return key(at: point, zones: zones, context: context,
+                   sigma: sigma, priorWeight: priorWeight)
+    }
+
+    /// The knobs are parameters so a fit can search them without touching
+    /// shared state (Swift 6 forbids mutable statics).
+    public static func key(at point: Point, zones: [KeyZone], context: String,
+                           sigma: Double, priorWeight: Double) -> String? {
         // Geometry decides first. Function zones and non-letter keys keep
         // that verdict: the prior only arbitrates among letters, so it can
         // never hand a letter-adjacent tap to a function key or vice versa.

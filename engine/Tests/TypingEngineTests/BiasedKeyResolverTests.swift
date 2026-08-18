@@ -20,10 +20,20 @@ private let zones = [
     #expect(hit == "w")
 }
 
-@Test func cellEdgeFollowsThePrior() {
-    // 1.5pt inside the w cell at the w/e boundary. After "th", English
-    // overwhelmingly continues with "e"; stock resolves this tap to e.
+@Test func cellEdgeStaysGeometricWhileThePriorIsOff() {
+    // 1.5pt inside the w cell at the w/e boundary, after "th". With the
+    // prior enabled this tap resolved to "e"; the prior is off because it
+    // moved boundaries away from stock's, so geometry holds the tap.
+    #expect(!BiasedKeyResolver.priorIsEnabled)
     let hit = BiasedKeyResolver.key(at: Point(x: 80.9, y: 27), zones: zones, context: "th")
+    #expect(hit == "w")
+}
+
+@Test func theScoringStillFollowsThePriorWhenItIsAskedFor() {
+    // The scoring survives for a future personal model: called directly it
+    // still grows the likely letter's hit region.
+    let hit = BiasedKeyResolver.key(at: Point(x: 80.9, y: 27), zones: zones, context: "th",
+                                    sigma: 6, priorWeight: 0.35)
     #expect(hit == "e")
 }
 
