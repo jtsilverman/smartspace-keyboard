@@ -55,12 +55,26 @@ All controller edits are compile-unverified until Xcode (2026-08-11).
 
 - ~~Edge balloons clamp~~ Fixed: overhang redistribution skews the
   bubble like stock (CalloutGeometry.overhangs).
-- The alternates callout has no neck curve over the origin key; the
-  preview balloon has the full neck.
+- ~~Alternates callout neckless~~ Fixed: CalloutPath serves both
+  callouts; the bubble grows toward the screen center, items flip.
 - ~~Space-drag keys unchanged~~ Fixed: legends blank during cursor mode.
 - ~~Return-while-empty not modeled~~ Fixed: grey + inert until text.
-- iOS 26 Liquid Glass deltas not applied: radius 9, no shadow, row
-  height 56, glassier dark fills. Needs an availability fork on the
-  Xcode machine; iPhone 17 shows iOS 26 chrome.
+- ~~Liquid Glass not applied~~ Fixed for chrome: radius 9, no shadow,
+  glassy fills fork on iOS 26 (StockKeyTheme liquidGlass). Row height
+  56 vs our measured 54 stays a device-measure question; geometry
+  unchanged until measured.
 - QuickType bar height: ours 44pt (own AX measurement "~44"), one web
   source says 45. Device-measure item.
+
+- Gutters between the caps take no tap in the simulator. A synthesized tap
+  6pt wide between every pair of caps never reaches the keyboard's view at
+  all, while the same tap on stock always lands (measured 2026-08-18,
+  EdgeSweepTests). Giving any view under the point a visible background
+  makes every gutter live, so the cause is that KeyTouchSurface is fully
+  transparent. Painting the backdrop ourselves would cover the system
+  keyboard material, which is the Liquid Glass surface above. Open: does a
+  real finger on the device hit the gutter? Jake's device check decides
+  whether this is a product bug or a simulator-only artifact.
+- Stock's hit map sits a uniform 3.8pt left of the cell edges its own key
+  elements report; ours sits on its cell edges. Closing that costs a
+  3pt leftward shift of every letter zone (StockBoundaryTests).
