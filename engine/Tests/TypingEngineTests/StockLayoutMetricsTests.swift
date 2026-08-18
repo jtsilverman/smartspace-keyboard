@@ -51,13 +51,49 @@ private func near(_ a: Double, _ b: Double, tol: Double = 0.5) -> Bool {
 
 // The visible cap inside a cell: measured 32.83pt wide, 43pt tall, with
 // the cell hanging 10pt below it (stock-parity, pixel scan 2026-07-31).
+// Re-measured 2026-08-18 by pixel scan on nine iPhone 16/17 simulators: the
+// first cap starts 6.67pt from the edge on every width, caps are 33.33pt wide
+// at 402pt, and 6pt of ground separates neighbouring caps. The 6.67pt gap
+// this test carried came from the AX cell frames, which round.
 @Test func capFrameMatchesMeasuredStockCap() {
     let cells = StockLayoutMetrics.cells(width: 402, plane: KeyboardLayout.letterRows)
     let cap = StockLayoutMetrics.capFrame(in: cell("q", cells)!.frame)
-    #expect(near(cap.x, 6.67) && near(cap.width, 32.86))
+    #expect(near(cap.x, 6.67) && near(cap.width, 33.33, tol: 0.2))
     #expect(near(cap.y, 1) && near(cap.height, 43))
     let capW = StockLayoutMetrics.capFrame(in: cell("w", cells)!.frame)
-    #expect(near(capW.x - (cap.x + cap.width), 6.67))   // stock gap
+    #expect(near(capW.x - (cap.x + cap.width), 6, tol: 0.2))   // stock gap
+}
+
+// The measured cap columns: first cap at 6.67pt, last cap at width - 6.67 -
+// capWidth, on every device class (pixel scan 2026-08-18).
+@Test func capColumnsMatchTheMeasuredScanOnEveryWidth() {
+    let measured: [Double: (last: Double, capWidth: Double)] = [
+        402: (362.00, 33.33), 420: (378.33, 35.33),
+        430: (387.33, 36.33), 440: (396.33, 37.33),
+    ]
+    for (width, want) in measured {
+        let cells = StockLayoutMetrics.cells(width: width, plane: KeyboardLayout.letterRows)
+        let q = StockLayoutMetrics.capFrame(in: cell("q", cells)!.frame)
+        let p = StockLayoutMetrics.capFrame(in: cell("p", cells)!.frame)
+        #expect(near(q.x, 6.67, tol: 0.4))
+        #expect(near(p.x, want.last, tol: 0.4))
+        #expect(near(q.width, want.capWidth, tol: 0.4))
+    }
+}
+
+// Function caps, measured at 402pt: shift and delete 45.3pt wide, the layer
+// and emoji keys 43.3pt, space 191.3pt starting at 105.33, return 93pt.
+@Test func functionCapsMatchTheMeasuredScanAt402() {
+    let cells = StockLayoutMetrics.cells(width: 402, plane: KeyboardLayout.letterRows)
+    func cap(_ id: String) -> Rect {
+        StockLayoutMetrics.capFrame(in: cell(id, cells)!.frame)
+    }
+    #expect(near(cap("__shift").x, 6.67, tol: 0.4) && near(cap("__shift").width, 45.33, tol: 0.4))
+    #expect(near(cap("__delete").x, 350.0, tol: 0.4) && near(cap("__delete").width, 45.67, tol: 0.4))
+    #expect(near(cap("__layer").x, 6.67, tol: 0.4) && near(cap("__layer").width, 43.33, tol: 0.4))
+    #expect(near(cap("__emoji").x, 56.0, tol: 0.4) && near(cap("__emoji").width, 43.33, tol: 0.4))
+    #expect(near(cap("__space").x, 105.33, tol: 0.4) && near(cap("__space").width, 191.33, tol: 0.4))
+    #expect(near(cap("__return").x, 302.67, tol: 0.4) && near(cap("__return").width, 93.0, tol: 0.4))
 }
 
 @Test func cellsAbutWithNoDeadGutters() {
