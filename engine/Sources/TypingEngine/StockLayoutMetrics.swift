@@ -28,9 +28,10 @@ public enum StockLayoutMetrics {
         4 * rowPitch(width: width)
     }
     /// Side inset derived from the measured visible caps (screenshot pixel
-    /// scan 2026-07-31: first cap x 7.0, cap width 32.83, gap 6.67 at
-    /// 402pt), which are ground truth over the AX cell frames' rounding.
-    public static let sideInset: Double = 3.335
+    /// scan 2026-08-18 across nine iPhone 16/17 simulators: first cap x
+    /// 6.67, 6pt of ground between caps, cap width 33.33 at 402pt), which
+    /// are ground truth over the AX cell frames' rounding.
+    public static let sideInset: Double = 3.67
 
     /// Visible key cap inside its touch cell, measured from the same scan:
     /// cap top sits 1pt below the cell top and the cell hangs 10pt lower
@@ -38,7 +39,7 @@ public enum StockLayoutMetrics {
     /// in a 56pt row. 3.33pt of gutter on each side (6.67pt between caps).
     public static let capInsetTop: Double = 1
     public static let capInsetBottom: Double = 10
-    public static let capInsetSide: Double = 3.335
+    public static let capInsetSide: Double = 3
     /// Stock cap corner radius at this device class.
     public static let capCornerRadius: Double = 5
 
@@ -62,12 +63,12 @@ public enum StockLayoutMetrics {
         init(width: Double) {
             let k = width / 402
             shiftWidth = 51.33 * k
-            deleteX = width - 54 * k
+            deleteX = width - 55 * k
             layerWidth = 49.33 * k
-            emojiX = 54 * k
+            emojiX = 53 * k
             emojiWidth = 49.33 * k
-            spaceX = 103.33 * k
-            returnX = width - 101.33 * k
+            spaceX = 102.33 * k
+            returnX = width - 102.33 * k
             returnWidth = 99 * k
         }
     }
