@@ -14,17 +14,28 @@ public struct LayoutCell: Equatable, Sendable {
 }
 
 public enum StockLayoutMetrics {
-    public static let rowPitch: Double = 54
-    public static let keyAreaHeight: Double = 216
+    /// Stock steps its vertical metrics by device class instead of scaling
+    /// them with width: 54pt rows with 43pt caps at 390, 393 and 402pt, then
+    /// 56pt rows with 45pt caps at 420, 430 and 440pt (pixel scan
+    /// 2026-08-18, nine iPhone 16/17 simulators on iOS 26.3.1).
+    public static let largeClassMinWidth: Double = 420
+
+    public static func rowPitch(width: Double) -> Double {
+        width >= largeClassMinWidth ? 56 : 54
+    }
+
+    public static func keyAreaHeight(width: Double) -> Double {
+        4 * rowPitch(width: width)
+    }
     /// Side inset derived from the measured visible caps (screenshot pixel
     /// scan 2026-07-31: first cap x 7.0, cap width 32.83, gap 6.67 at
     /// 402pt), which are ground truth over the AX cell frames' rounding.
     public static let sideInset: Double = 3.335
 
     /// Visible key cap inside its touch cell, measured from the same scan:
-    /// cap top sits 1pt below the cell top, cap height 43 of the 54pt row
-    /// pitch (the cell hangs 10pt lower than the key you see), and 3.33pt
-    /// of gutter on each side (6.67pt between neighboring caps).
+    /// cap top sits 1pt below the cell top and the cell hangs 10pt lower
+    /// than the key you see, so the cap is 43pt tall in a 54pt row and 45pt
+    /// in a 56pt row. 3.33pt of gutter on each side (6.67pt between caps).
     public static let capInsetTop: Double = 1
     public static let capInsetBottom: Double = 10
     public static let capInsetSide: Double = 3.335
@@ -68,6 +79,7 @@ public enum StockLayoutMetrics {
         let pitch = (width - 2 * sideInset) / 10
         let fn = FunctionKeys(width: width)
         var out: [LayoutCell] = []
+        let rowPitch = self.rowPitch(width: width)
 
         func row(_ keys: [String], y: Double, x0: Double, pitch: Double) {
             for (i, key) in keys.enumerated() {

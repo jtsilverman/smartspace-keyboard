@@ -36,7 +36,25 @@ final class KeyboardViewController: UIInputViewController {
     private var settings = KeyboardSettings(store: AppGroupSettingsStore())
     private var lastPrediction: Prediction?
     private var lastContextWordCount = 0
+    /// The band above the keys measured 60.3pt against stock's 50.3pt with a
+    /// 44pt bar, and the system's own chrome above the bar accounts for the
+    /// remaining 16.3pt, so stock's candidate row is 34pt (pixel scan
+    /// 2026-08-18). The key grid then hangs below the input view by the
+    /// height of the system's globe and dictation bar, which measures 68pt
+    /// on the small class and 70pt on the large one, which puts the grid's
+    /// overhang at 7pt and 5pt (measured against stock's key rows).
+    private static let barHeight: Double = 34
+
+    private static func rowsBottomOverhang(width: Double) -> Double {
+        width >= StockLayoutMetrics.largeClassMinWidth ? 5 : 7
+    }
+
     private let suggestionBar = UIStackView()
+    /// Vertical metrics step by device class, so both the key area and the
+    /// input view's own height follow the current width.
+    private var rowsHeight: NSLayoutConstraint?
+    private var inputHeight: NSLayoutConstraint?
+    private var rowsBottom: NSLayoutConstraint?
     private var rowsStack: UIView?
     private var backspaceTimer: Timer?
     private var backspaceRepeater = BackspaceRepeater()
@@ -66,6 +84,55 @@ final class KeyboardViewController: UIInputViewController {
             }
         }
     }
+
+    /// The grid overhangs the input view so the rows land where stock lands
+    /// them against the system's globe and dictation bar.
+    private func rowsBottomConstraint(for rows: UIView) -> NSLayoutConstraint {
+        let c = rows.bottomAnchor.constraint(
+            equalTo: view.bottomAnchor,
+            constant: CGFloat(Self.rowsBottomOverhang(width: layoutWidth)))
+        rowsBottom = c
+        return c
+    }
+
+    /// The key area is four rows of the class pitch.
+    private func rowsHeightConstraint(for rows: UIView) -> NSLayoutConstraint {
+        let c = rows.heightAnchor.constraint(
+            equalToConstant: StockLayoutMetrics.keyAreaHeight(width: layoutWidth))
+        rowsHeight = c
+        return c
+    }
+
+    /// Without an explicit height the system pads the input view, and the
+    /// grey band above the candidate bar measured 60.3pt against stock's
+    /// 50.3pt (pixel scan 2026-08-18). Asking for exactly bar + key area,
+    /// less the bottom overhang, holds the band at stock's.
+    private func inputHeightConstraint() -> NSLayoutConstraint {
+        let c = view.heightAnchor.constraint(
+            equalToConstant: Self.barHeight + StockLayoutMetrics.keyAreaHeight(width: layoutWidth)
+                - Self.rowsBottomOverhang(width: layoutWidth))
+        c.priority = .required - 1      // the system owns the final say
+        inputHeight = c
+        return c
+    }
+
+    private var layoutWidth: Double {
+        let width = view.bounds.width
+        return width > 0 ? Double(width) : Double(UIScreen.main.bounds.width)
+    }
+
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        let keyArea = StockLayoutMetrics.keyAreaHeight(width: layoutWidth)
+        if rowsHeight?.constant != CGFloat(keyArea) {
+            let overhang = Self.rowsBottomOverhang(width: layoutWidth)
+            rowsHeight?.constant = CGFloat(keyArea)
+            rowsBottom?.constant = CGFloat(overhang)
+            inputHeight?.constant = CGFloat(Self.barHeight + keyArea - overhang)
+            rebuildRows()
+        }
+    }
+
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -201,7 +268,7 @@ final class KeyboardViewController: UIInputViewController {
             suggestionBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
             suggestionBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
             suggestionBar.topAnchor.constraint(equalTo: view.topAnchor),
-            suggestionBar.heightAnchor.constraint(equalToConstant: 44),
+            suggestionBar.heightAnchor.constraint(equalToConstant: Self.barHeight),
             // Full-width key area, flush to the view bottom: the cell grid
             // carries its own side inset, and stock leaves no extra pad.
             rows.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -210,8 +277,9 @@ final class KeyboardViewController: UIInputViewController {
             // Measured: our input view's bottom sits 7pt above where stock
             // lands its key area, so the grid overhangs by that much to
             // line the rows up with stock against the system's globe/mic bar.
-            rows.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 7),
-            rows.heightAnchor.constraint(equalToConstant: StockLayoutMetrics.keyAreaHeight),
+            rowsBottomConstraint(for: rows),
+            rowsHeightConstraint(for: rows),
+            inputHeightConstraint(),
             emojiPanel.leadingAnchor.constraint(equalTo: rows.leadingAnchor),
             emojiPanel.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
             emojiPanel.topAnchor.constraint(equalTo: rows.topAnchor),
