@@ -18,6 +18,7 @@ final class BoundaryProbeTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         let field = focusStock(app)
+        seedField(app, field: field) { app.keys[$0] }
         probe(app, field: field, side: "stock") { app.keys[$0] }
     }
 
@@ -25,6 +26,7 @@ final class BoundaryProbeTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         let field = focusSmartSpaceKeyboard(app)
+        seedField(app, field: field) { app.buttons[$0] }
         probe(app, field: field, side: "smartspace") { app.buttons[$0] }
     }
 
@@ -59,19 +61,50 @@ final class BoundaryProbeTests: XCTestCase {
         return nil
     }
 
-    /// Taps one absolute point, returns the character it produced (empty when
-    /// the point typed nothing), and clears it so the next probe starts from
-    /// the same state.
+    /// The probe reads every keystroke as the field's value growing by one
+    /// character, so the field must never be empty: an empty field reports
+    /// its placeholder as `.value` and a length comparison from there scored
+    /// every real keystroke as "typed nothing" (2026-08-18). `fieldText`
+    /// normalizes the placeholder away; the seed keeps the field non-empty
+    /// and short enough that autocorrect never fires.
+    private static let seed = "hhh"
+
+    /// Clears the field, then types the seed. Auto-shift arms on an empty
+    /// field, so the first h lands capitalized and the key is re-resolved
+    /// on every tap.
+    private func seedField(_ app: XCUIApplication, field: XCUIElement,
+                           key: (String) -> XCUIElement) {
+        for _ in 0..<40 {
+            if fieldText(field).isEmpty { break }
+            deleteOne(app)
+        }
+        XCTAssertEqual(fieldText(field), "", "field never cleared before seeding")
+        for _ in Self.seed {
+            let h = key("h").exists ? key("h") : key("H")
+            h.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+        }
+        XCTAssertEqual(fieldText(field).lowercased(), Self.seed, "seed never landed")
+    }
+
+    /// Taps one absolute point, returns the character it produced, and
+    /// deletes it so the next probe starts from the seed again.
     private func type(_ app: XCUIApplication, field: XCUIElement,
                       x: CGFloat, y: CGFloat) -> String {
-        let before = (field.value as? String) ?? ""
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
-            .withOffset(CGVector(dx: x, dy: y)).tap()
-        RunLoop.current.run(until: Date().addingTimeInterval(0.25))
-        let after = (field.value as? String) ?? ""
-        guard after.count > before.count, let last = after.last else { return "" }
-        deleteOne(app)
-        return String(last).lowercased()
+        for _ in 0..<4 {
+            let before = fieldText(field)
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
+                .withOffset(CGVector(dx: x, dy: y)).tap()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+            let after = fieldText(field)
+            if after.count == before.count + 1, let last = after.last {
+                deleteOne(app)
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+                return String(last).lowercased()
+            }
+        }
+        XCTFail("four taps at x=\(x) y=\(y) typed nothing")
+        return ""
     }
 
     private func deleteOne(_ app: XCUIApplication) {
@@ -84,7 +117,7 @@ final class BoundaryProbeTests: XCTestCase {
     }
 
     private func focusStock(_ app: XCUIApplication) -> XCUIElement {
-        let field = app.textFields["Type here to test the keyboard"]
+        let field = app.textFields[XCTestCase.practiceFieldPlaceholder]
         XCTAssertTrue(field.waitForExistence(timeout: 10))
         field.tap()
         for _ in 0..<10 {

@@ -3,6 +3,22 @@ import XCTest
 /// Shared plumbing for driving the real SmartSpace keyboard in the simulator.
 extension XCTestCase {
 
+    /// The practice field's placeholder. An empty UITextField reports its
+    /// placeholder as `.value`, so a raw read of an empty field returns 30
+    /// characters of prose. Two suites have already read `.value` raw and
+    /// paid for it: a boundary probe scored every real keystroke as "typed
+    /// nothing" and reported 55 dead keys that do not exist (2026-08-18),
+    /// and the fix for that probe then deleted forever on an empty field.
+    /// Every suite reads the field through `fieldText`; none reads
+    /// `.value` directly.
+    static let practiceFieldPlaceholder = "Type here to test the keyboard"
+
+    /// The field's real text, with the empty-field placeholder read as "".
+    func fieldText(_ field: XCUIElement) -> String {
+        let value = field.value as? String ?? ""
+        return value == XCTestCase.practiceFieldPlaceholder ? "" : value
+    }
+
     /// Launches into the practice field and cycles keyboards until SmartSpace
     /// (the only keyboard exposing a "space" UIButton) is up. Tolerates
     /// keyboard-appear animation: every probe waits instead of checking
@@ -59,10 +75,28 @@ extension XCTestCase {
     /// that refresh. Wait for the key before tapping.
     func tapKey(_ app: XCUIApplication, _ title: String,
                 file: StaticString = #filePath, line: UInt = #line) {
-        let key = app.buttons[title]
+        let key = keyButton(app, title)
         XCTAssertTrue(key.waitForExistence(timeout: 3),
                       "key \(title) never appeared", file: file, line: line)
         key.tap()
+    }
+
+    /// Every bar slot carries its word as the label, so a bare
+    /// `app.buttons["-"]` matched the "completion-typed" slot and the "-" key,
+    /// and `app.buttons["a"]` matched the "prediction-1" slot and the "a" key.
+    /// XCUITest threw "Multiple matching elements found" both times
+    /// (2026-08-17). Key queries drop all three bar families by identifier;
+    /// function keys still resolve by identifier ("space", "return-key"),
+    /// character keys by label.
+    func keyButton(_ app: XCUIApplication, _ title: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(
+            format: """
+                (label == %@ OR identifier == %@) \
+                AND NOT (identifier BEGINSWITH 'completion-') \
+                AND NOT (identifier BEGINSWITH 'suggestion-') \
+                AND NOT (identifier BEGINSWITH 'prediction-')
+                """,
+            title, title)).firstMatch
     }
 
     /// The first tap after keyboard bringup is occasionally swallowed under

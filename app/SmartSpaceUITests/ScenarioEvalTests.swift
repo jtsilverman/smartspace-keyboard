@@ -5,7 +5,6 @@ import XCTest
 /// every scenario runs, misses print, the suite fails only on harness errors.
 final class ScenarioEvalTests: XCTestCase {
 
-    private static let placeholder = "Type here to test the keyboard"
     private static let numberChars = Set("1234567890-/:;()$&@\".,?!'")
     private static let symbolOnlyChars = Set("[]{}#%^*+=_\\|~<>")
 
@@ -50,8 +49,8 @@ final class ScenarioEvalTests: XCTestCase {
         XCTAssertEqual(pass + fail + skipped, rows.count)
     }
 
-    private func matches(got raw: String, scenario: ScenarioCase) -> Bool {
-        let got = raw.replacingOccurrences(of: Self.placeholder, with: "")
+    /// `got` arrives from `fieldText`, so the placeholder is already gone.
+    private func matches(got: String, scenario: ScenarioCase) -> Bool {
         var accepted = [scenario.expected]
         if let altRange = scenario.note.range(of: "ALT:") {
             accepted.append(
@@ -65,11 +64,6 @@ final class ScenarioEvalTests: XCTestCase {
             let trimmedWant = want.trimmingTrailingWhitespace()
             return trimmedGot == trimmedWant
         }
-    }
-
-    private func fieldText(_ field: XCUIElement) -> String {
-        let value = field.value as? String ?? ""
-        return value == Self.placeholder ? "" : value
     }
 
     /// Long-press backspace clears via the repeat timer; poll until the
@@ -117,17 +111,17 @@ final class ScenarioEvalTests: XCTestCase {
     }
 
     private func typeChar(_ ch: Character, app: XCUIApplication) {
-        if ch == " " { app.buttons["space"].tap(); return }
+        if ch == " " { keyButton(app, "space").tap(); return }
         let s = String(ch)
         if ch.isLetter {
             ensureLettersPlane(app)
-            if app.buttons[s].waitForExistence(timeout: 2) {
-                app.buttons[s].tap()
-            } else if ch.isUppercase, app.buttons[s.lowercased()].exists {
+            if keyButton(app, s).waitForExistence(timeout: 2) {
+                keyButton(app, s).tap()
+            } else if ch.isUppercase, keyButton(app, s.lowercased()).exists {
                 // Manual capital: arm one-shot shift, key titles flip.
-                app.buttons["shift"].tap()
+                keyButton(app, "shift").tap()
                 tapKey(app, s)
-            } else if ch.isLowercase, app.buttons[s.uppercased()].exists {
+            } else if ch.isLowercase, keyButton(app, s.uppercased()).exists {
                 // Auto-shift armed but the script wants lowercase: consume it.
                 // (Stock behavior types the capital; scripts assume the user
                 // accepts autocap, so tap the uppercase key.)
@@ -152,12 +146,13 @@ final class ScenarioEvalTests: XCTestCase {
     }
 
     private func ensureLettersPlane(_ app: XCUIApplication) {
-        if app.buttons["ABC"].exists { app.buttons["ABC"].tap() }
+        if keyButton(app, "ABC").exists { keyButton(app, "ABC").tap() }
     }
 
     private func ensurePlane(_ app: XCUIApplication, key: String, probe: String) {
-        if !app.buttons[probe].exists, app.buttons[key].waitForExistence(timeout: 2) {
-            app.buttons[key].tap()
+        if !keyButton(app, probe).exists,
+           keyButton(app, key).waitForExistence(timeout: 2) {
+            keyButton(app, key).tap()
         }
     }
 }

@@ -8,6 +8,15 @@ import XCTest
 final class EnableKeyboardTests: XCTestCase {
 
     func testEnableSmartSpaceKeyboardInSettings() throws {
+        // iOS lists a keyboard extension under "Add New Keyboard" only after
+        // its container app runs once. On a freshly erased simulator the
+        // SmartSpace row stayed missing through 8 Settings attempts across
+        // 164s, then appeared on the first attempt after one app launch
+        // (2026-08-17, Mac mini).
+        let app = XCUIApplication()
+        app.launch()
+        app.terminate()
+
         let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
         for attempt in 1...2 {
             settings.terminate()
@@ -19,16 +28,25 @@ final class EnableKeyboardTests: XCTestCase {
 
     private func enableViaSettings(_ settings: XCUIApplication) -> Bool {
         let general = settings.cells.staticTexts["General"]
-        guard general.waitForExistence(timeout: 10) else { return false }
+        guard general.waitForExistence(timeout: 10) else {
+            print("ENABLE-KEYBOARD failed at: root pane (General)")
+            return false
+        }
         general.tap()
 
         let keyboard = settings.cells.staticTexts["Keyboard"]
-        guard keyboard.waitForExistence(timeout: 5) else { return false }
+        guard keyboard.waitForExistence(timeout: 5) else {
+            print("ENABLE-KEYBOARD failed at: General > Keyboard")
+            return false
+        }
         keyboard.tap()
 
         let keyboards = settings.cells.element(
             matching: NSPredicate(format: "label BEGINSWITH 'Keyboards'"))
-        guard keyboards.waitForExistence(timeout: 5) else { return false }
+        guard keyboards.waitForExistence(timeout: 5) else {
+            print("ENABLE-KEYBOARD failed at: Keyboard > Keyboards")
+            return false
+        }
         keyboards.tap()
 
         if settings.cells.staticTexts["SmartSpace"].waitForExistence(timeout: 2) {
@@ -37,11 +55,17 @@ final class EnableKeyboardTests: XCTestCase {
 
         let add = settings.descendants(matching: .any).element(
             matching: NSPredicate(format: "label BEGINSWITH 'Add New Keyboard'")).firstMatch
-        guard add.waitForExistence(timeout: 5) else { return false }
+        guard add.waitForExistence(timeout: 5) else {
+            print("ENABLE-KEYBOARD failed at: Add New Keyboard row")
+            return false
+        }
         add.tap()
 
         let smartspace = settings.cells.staticTexts["SmartSpace"]
-        guard smartspace.waitForExistence(timeout: 5) else { return false }
+        guard smartspace.waitForExistence(timeout: 5) else {
+            print("ENABLE-KEYBOARD failed at: SmartSpace row in the add list")
+            return false
+        }
         smartspace.tap()
 
         return settings.cells.staticTexts["SmartSpace"].waitForExistence(timeout: 5)
