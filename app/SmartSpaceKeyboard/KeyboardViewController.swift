@@ -194,6 +194,13 @@ final class KeyboardViewController: UIInputViewController {
         suggestionBar.distribution = .fillEqually
         suggestionBar.spacing = 4
         suggestionBar.translatesAutoresizingMaskIntoConstraints = false
+        // Stock paints its own backdrop and so must we: a view with no
+        // visible background takes no touch, which left the 6pt gutter
+        // between every pair of caps dead (EdgeSweepTests, 2026-08-18).
+        view.backgroundColor = UIColor { traits in
+            Self.uiColor(StockKeyTheme.keyboardBackdrop(
+                dark: traits.userInterfaceStyle == .dark))
+        }
         view.addSubview(suggestionBar)
 
         let rows = PassthroughView()

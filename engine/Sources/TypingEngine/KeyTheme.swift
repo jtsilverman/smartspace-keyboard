@@ -56,6 +56,17 @@ public enum StockKeyTheme {
     }
 
     /// Active shift (one-shot or caps lock): opaque white cap, black glyph.
+    /// The keyboard's own backdrop, behind every key and every gutter.
+    /// Stock paints this opaque: over a red host app the stock backdrop
+    /// reads the same RGB as over a white one (iPhone 17, iOS 26.3,
+    /// screenshot measure 2026-08-18). Ours must paint it too. A view with
+    /// no visible background takes no touch, so the 6pt gutter between
+    /// every pair of caps went dead (EdgeSweepTests, 2026-08-18).
+    public static func keyboardBackdrop(dark: Bool) -> RGBA {
+        dark ? RGBA(red: 23.0 / 255, green: 23.0 / 255, blue: 23.0 / 255)
+             : RGBA(red: 226.0 / 255, green: 228.0 / 255, blue: 232.0 / 255)
+    }
+
     public static let shiftActiveFill = RGBA(red: 1, green: 1, blue: 1)
 
     /// Action return types (Search, Go, Send...) tint system blue.

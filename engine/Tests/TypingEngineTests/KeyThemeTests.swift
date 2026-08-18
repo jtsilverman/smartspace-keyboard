@@ -62,6 +62,17 @@ import TypingEngine
             == RGBA(red: 1, green: 1, blue: 1, alpha: 0.30))
 }
 
+@Test func theBackdropIsOpaqueInBothSchemes() {
+    for dark in [false, true] {
+        #expect(StockKeyTheme.keyboardBackdrop(dark: dark).alpha == 1,
+                "a translucent backdrop takes no touch and the gutters go dead")
+    }
+    #expect(StockKeyTheme.keyboardBackdrop(dark: false)
+            == RGBA(red: 226.0 / 255, green: 228.0 / 255, blue: 232.0 / 255))
+    #expect(StockKeyTheme.keyboardBackdrop(dark: true)
+            == RGBA(red: 23.0 / 255, green: 23.0 / 255, blue: 23.0 / 255))
+}
+
 @Test func activeShiftIsOpaqueWhiteInBothSchemes() {
     #expect(StockKeyTheme.shiftActiveFill == RGBA(red: 1, green: 1, blue: 1))
 }
