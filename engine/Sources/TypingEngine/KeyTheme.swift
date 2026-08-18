@@ -94,7 +94,11 @@ public enum StockKeyTheme {
 
 /// Legend typography per key label, stock sizes.
 public enum KeyLegend {
-    public static let iconPointSize: Double = 20
+    /// Measured from the stock icons' ink boxes (pixel scan 2026-08-18,
+    /// iPhone 17): shift 20.0 x 17.33pt, delete 20.33 x 17.0, emoji 19 x 19,
+    /// return 19.67 x 17.0. Every one is 0.745 of the 20pt rendering this
+    /// replaced, which puts stock at 15pt.
+    public static let iconPointSize: Double = 15
 
     /// Stock sits a letter legend above the cap's centre: measured 15.33pt
     /// from the cap top against a centred 17.0pt (pixel scan 2026-08-18,
@@ -107,7 +111,7 @@ public enum KeyLegend {
     public static func pointSize(for title: String) -> Double {
         switch title {
         case "ABC": return 15
-        case "123": return 16
+        case "123": return 17   // measured ink 27.33 x 13.33pt
         case "#+=": return 14
         default:
             guard title.count == 1 else { return 16 }

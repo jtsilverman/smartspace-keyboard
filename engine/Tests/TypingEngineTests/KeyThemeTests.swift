@@ -128,7 +128,8 @@ import TypingEngine
 // more ink than a 26pt light rendering, which fits 25pt regular. No legend
 // uses the light weight. The rest are KeyboardKit replica values: uppercase
 // letters and digits/symbols 23pt, layer labels ABC 15 / 123 16 / #+= 14,
-// word keys (space, return, Search) 16, SF Symbol keys 20pt.
+// word keys (space, return, Search) 16. The SF Symbol keys and the 123
+// label are measured too: 15pt icons and a 17pt "123".
 
 @Test func legendSizesMatchStock() {
     #expect(KeyLegend.pointSize(for: "q") == 25)
@@ -136,10 +137,10 @@ import TypingEngine
     #expect(KeyLegend.pointSize(for: "1") == 23)
     #expect(KeyLegend.pointSize(for: ".") == 23)
     #expect(KeyLegend.pointSize(for: "ABC") == 15)
-    #expect(KeyLegend.pointSize(for: "123") == 16)
+    #expect(KeyLegend.pointSize(for: "123") == 17)
     #expect(KeyLegend.pointSize(for: "#+=") == 14)
     #expect(KeyLegend.pointSize(for: "Search") == 16)
-    #expect(KeyLegend.iconPointSize == 20)
+    #expect(KeyLegend.iconPointSize == 15)
     #expect(KeyLegend.legendBottomInset(for: "q") == 3.33)
     #expect(KeyLegend.legendBottomInset(for: "123") == 0)
 }
