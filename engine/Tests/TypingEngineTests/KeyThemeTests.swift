@@ -27,19 +27,21 @@ import TypingEngine
 
 // Fill values from KeyboardKit 9.9.1 (reverse-engineered stock replica;
 // research 2026-08-10, high confidence): light letters #FFFFFF @0.95 idle,
-// function keys #ABB1BA @0.95; dark caps are translucent whites over the
-// system keyboard blur (30% letters, 10% function). A press swaps the
-// two levels; pressed caps are opaque.
-
-private let greyCap = RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 255, alpha: 0.95)
+// every idle light cap is white @0.95, function keys included: iOS 26 
+// dropped the grey idle function cap, measured by pixel scan across nine
+// iPhone 16/17 simulators (2026-08-18). #ABB1BA survives as the pressed
+// letter. Dark caps are translucent whites over the system keyboard blur
+// (30% letters, 10% function); a press swaps the two levels.
 
 @Test func lightCapsMatchStock() {
     #expect(StockKeyTheme.fill(role: .letter, dark: false, pressed: false)
             == RGBA(red: 1, green: 1, blue: 1, alpha: 0.95))
-    #expect(StockKeyTheme.fill(role: .function, dark: false, pressed: false) == greyCap)
+    #expect(StockKeyTheme.fill(role: .function, dark: false, pressed: false)
+            == RGBA(red: 1, green: 1, blue: 1, alpha: 0.95))
     #expect(StockKeyTheme.fill(role: .space, dark: false, pressed: false)
             == StockKeyTheme.fill(role: .letter, dark: false, pressed: false))
-    #expect(StockKeyTheme.fill(role: .returnKey, dark: false, pressed: false) == greyCap)
+    #expect(StockKeyTheme.fill(role: .returnKey, dark: false, pressed: false)
+            == RGBA(red: 1, green: 1, blue: 1, alpha: 0.95))
 }
 
 @Test func aPressSwapsTheTwoLevels() {
@@ -139,4 +141,23 @@ private let greyCap = RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 2
     #expect(KeyLegend.pointSize(for: "Search") == 16)
     #expect(!KeyLegend.usesLightWeight("Search"))
     #expect(KeyLegend.iconPointSize == 20)
+}
+
+// iOS 26 dropped the grey function key: a pixel scan of the stock keyboard
+// on nine iPhone 16/17 simulators (2026-08-18) read 255,255,255 at the
+// centre of shift, delete, 123, emoji and return, the same white as the
+// letter caps. The grey #ABB1BA belonged to iOS 18.
+@Test func lightFunctionKeysShareTheLetterWhite() {
+    for role in [KeyRole.function, .returnKey, .space] {
+        let fn = StockKeyTheme.fill(role: role, dark: false, pressed: false)
+        let letter = StockKeyTheme.fill(role: .letter, dark: false, pressed: false)
+        #expect(fn.red == letter.red && fn.green == letter.green && fn.blue == letter.blue)
+        #expect(fn.alpha == letter.alpha)
+    }
+}
+
+@Test func lightFunctionKeysStayWhiteUnderLiquidGlass() {
+    let fn = StockKeyTheme.fill(role: .function, dark: false, pressed: false, liquidGlass: true)
+    let letter = StockKeyTheme.fill(role: .letter, dark: false, pressed: false, liquidGlass: true)
+    #expect(fn.red == letter.red && fn.green == letter.green && fn.blue == letter.blue)
 }

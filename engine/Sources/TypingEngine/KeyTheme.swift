@@ -42,12 +42,17 @@ public enum StockKeyTheme {
         if dark {
             return RGBA(red: 1, green: 1, blue: 1, alpha: letterLevel ? 0.30 : 0.10)
         }
-        if letterLevel {
-            return RGBA(red: 1, green: 1, blue: 1, alpha: pressed ? 1 : 0.95)
+        // iOS 26 paints every idle cap white; a pixel scan of stock across
+        // nine iPhone 16/17 simulators (2026-08-18) read 255,255,255 at the
+        // centre of shift, delete, 123, emoji and return. The grey survives
+        // only as the pressed state of a letter, where stock still swaps the
+        // two levels under the key-pop bubble.
+        let pressedLetter = (role == .letter || role == .space) && pressed
+        if pressedLetter {
+            // #ABB1BA, the stock pressed-letter grey.
+            return RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 255)
         }
-        // #ABB1BA, the stock function-key grey.
-        return RGBA(red: 171.0 / 255, green: 177.0 / 255, blue: 186.0 / 255,
-                    alpha: pressed ? 1 : 0.95)
+        return RGBA(red: 1, green: 1, blue: 1, alpha: pressed ? 1 : 0.95)
     }
 
     /// Active shift (one-shot or caps lock): opaque white cap, black glyph.
