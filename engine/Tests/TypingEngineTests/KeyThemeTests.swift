@@ -123,24 +123,25 @@ import TypingEngine
     #expect(StockKeyTheme.shadowColor(dark: true) == RGBA(red: 0, green: 0, blue: 0, alpha: 0.70))
 }
 
-// Legend typography (KeyboardAction+ButtonFont.swift): lowercase letters
-// 26pt light, uppercase letters and digits/symbols 23pt regular, layer
-// labels ABC 15 / 123 16 / #+= 14, word keys (space, return, Search) 16,
-// SF Symbol keys 20pt.
+// Legend typography. The lowercase letter is measured: a pixel scan of the
+// stock keyboard (2026-08-18, iPhone 17) reads a 12.67pt x-height and 14%
+// more ink than a 26pt light rendering, which fits 25pt regular. No legend
+// uses the light weight. The rest are KeyboardKit replica values: uppercase
+// letters and digits/symbols 23pt, layer labels ABC 15 / 123 16 / #+= 14,
+// word keys (space, return, Search) 16, SF Symbol keys 20pt.
 
 @Test func legendSizesMatchStock() {
-    #expect(KeyLegend.pointSize(for: "q") == 26)
-    #expect(KeyLegend.usesLightWeight("q"))
+    #expect(KeyLegend.pointSize(for: "q") == 25)
     #expect(KeyLegend.pointSize(for: "Q") == 23)
-    #expect(!KeyLegend.usesLightWeight("Q"))
     #expect(KeyLegend.pointSize(for: "1") == 23)
     #expect(KeyLegend.pointSize(for: ".") == 23)
     #expect(KeyLegend.pointSize(for: "ABC") == 15)
     #expect(KeyLegend.pointSize(for: "123") == 16)
     #expect(KeyLegend.pointSize(for: "#+=") == 14)
     #expect(KeyLegend.pointSize(for: "Search") == 16)
-    #expect(!KeyLegend.usesLightWeight("Search"))
     #expect(KeyLegend.iconPointSize == 20)
+    #expect(KeyLegend.legendBottomInset(for: "q") == 3.33)
+    #expect(KeyLegend.legendBottomInset(for: "123") == 0)
 }
 
 // iOS 26 dropped the grey function key: a pixel scan of the stock keyboard

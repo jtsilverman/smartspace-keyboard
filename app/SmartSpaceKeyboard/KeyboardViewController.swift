@@ -711,8 +711,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private static func legendFont(for title: String) -> UIFont {
-        .systemFont(ofSize: KeyLegend.pointSize(for: title),
-                    weight: KeyLegend.usesLightWeight(title) ? .light : .regular)
+        .systemFont(ofSize: KeyLegend.pointSize(for: title), weight: .regular)
     }
 
     private func keyButton(symbol: String) -> UIButton {
@@ -731,7 +730,9 @@ final class KeyboardViewController: UIInputViewController {
         var config = UIButton.Configuration.plain()
         config.title = title
         config.baseForegroundColor = .label
-        config.contentInsets = .zero
+        config.contentInsets = NSDirectionalEdgeInsets(
+            top: 0, leading: 0,
+            bottom: CGFloat(KeyLegend.legendBottomInset(for: title)), trailing: 0)
         let button = KeyButton(configuration: config)
         button.titleLabel?.font = Self.legendFont(for: title)
         button.titleLabel?.adjustsFontSizeToFitWidth = true

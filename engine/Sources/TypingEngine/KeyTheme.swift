@@ -96,6 +96,14 @@ public enum StockKeyTheme {
 public enum KeyLegend {
     public static let iconPointSize: Double = 20
 
+    /// Stock sits a letter legend above the cap's centre: measured 15.33pt
+    /// from the cap top against a centred 17.0pt (pixel scan 2026-08-18,
+    /// iPhone 17). A bottom inset of twice the gap re-centres it, since the
+    /// cap centres its content. Word and layer labels stay centred.
+    public static func legendBottomInset(for title: String) -> Double {
+        title.count == 1 ? 3.33 : 0
+    }
+
     public static func pointSize(for title: String) -> Double {
         switch title {
         case "ABC": return 15
@@ -103,13 +111,11 @@ public enum KeyLegend {
         case "#+=": return 14
         default:
             guard title.count == 1 else { return 16 }
-            return usesLightWeight(title) ? 26 : 23
+            // Lowercase measured at 25pt regular (pixel scan 2026-08-18):
+            // stock's x-height is 12.67pt and its stroke carries 14% more
+            // ink than the 26pt light rendering this replaced.
+            return title != title.uppercased() ? 25 : 23
         }
-    }
-
-    /// Only lowercase letter legends render in the light weight.
-    public static func usesLightWeight(_ title: String) -> Bool {
-        title.count == 1 && title != title.uppercased()
     }
 }
 
