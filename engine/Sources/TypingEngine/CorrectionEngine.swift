@@ -89,6 +89,20 @@ public struct CorrectionEngine: Sendable {
         if word.count <= 2 { return .noChange }
         if hasLetterRun(word, of: 3) { return .noChange }
         var suggestions = checker.suggestions(for: word).map { recased($0, like: word) }
+        // UITextChecker's iOS guesses arrive alphabetically, not best-first;
+        // re-rank by edit distance, then English word frequency, then the
+        // checker's own order as the deterministic last tiebreak.
+        let lower = word.lowercased()
+        suggestions = suggestions.enumerated()
+            .map { (index: $0.offset, text: $0.element,
+                    distance: typoDistance(from: lower, to: $0.element.lowercased()),
+                    rank: WordRank.rank($0.element)) }
+            .sorted {
+                if $0.distance != $1.distance { return $0.distance < $1.distance }
+                if $0.rank != $1.rank { return $0.rank < $1.rank }
+                return $0.index < $1.index
+            }
+            .map(\.text)
         // A suggestion that is the typed word merely recased (jake -> Jake)
         // IS the word; it outranks any letter-changing suggestion.
         if let i = suggestions.firstIndex(where: { $0.lowercased() == word.lowercased() }),
@@ -103,6 +117,29 @@ public struct CorrectionEngine: Sendable {
         guard damerauLevenshtein(word.lowercased(), top.lowercased())
                 <= max(1, word.count / 4) else { return .noChange }
         return .correct(to: top, alternatives: Array(suggestions.dropFirst()))
+    }
+
+    /// Edit distance with one typo-shape refinement: a candidate that only
+    /// restores a dropped double letter (realy -> really) is closer than a
+    /// generic single edit (realy -> real), because dropping one of a
+    /// doubled pair is the more common slip.
+    private func typoDistance(from word: String, to candidate: String) -> Double {
+        let base = Double(damerauLevenshtein(word, candidate))
+        return base == 1 && restoresDoubledLetter(word: word, candidate: candidate)
+            ? 0.5 : base
+    }
+
+    /// True when removing one of a doubled pair in the candidate yields the
+    /// typed word exactly.
+    private func restoresDoubledLetter(word: String, candidate: String) -> Bool {
+        guard candidate.count == word.count + 1 else { return false }
+        let c = Array(candidate)
+        for i in 1..<c.count where c[i] == c[i - 1] {
+            var trimmed = c
+            trimmed.remove(at: i)
+            if String(trimmed) == word { return true }
+        }
+        return false
     }
 
     private func damerauLevenshtein(_ a: String, _ b: String) -> Int {

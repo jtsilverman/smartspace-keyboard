@@ -30,5 +30,8 @@ import PunctuationEngine
         print("MISS top-2: \"\(m.text)\" expected \(m.expected) got \(m.got.joined(separator: " "))")
     }
     #expect(top1 >= 0.9)
-    #expect(top2 >= 0.97)
+    // Re-baselined 0.97 -> 0.96 with comma-lists AC 1: "," took the second
+    // slot from "?", so misrecognized questions cost one more cycle tap.
+    // Jake accepted the trade for one-tap list commas (spec comma-lists).
+    #expect(top2 >= 0.96)
 }

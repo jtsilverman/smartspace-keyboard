@@ -37,22 +37,25 @@ final class SmartTypingTests: XCTestCase {
         // Eval v4 invariant: -- collapses only after a letter/digit
         // (so--anyway); after a quote it stays a literal hyphen run.
         typeFirstLetter(app, field, "A", expecting: "A")
-        app.buttons["123"].tap()
-        XCTAssertTrue(app.buttons["\""].waitForExistence(timeout: 3))
-        app.buttons["\""].tap()          // after "A": closing quote
-        app.buttons["-"].tap()
-        app.buttons["-"].tap()           // after a quote: NO collapse
+        tapKey(app, "123")
+        XCTAssertTrue(keyButton(app, "\"").waitForExistence(timeout: 3))
+        tapKey(app, "\"")                // after "A": closing quote
+        tapKey(app, "-")
+        tapKey(app, "-")                 // after a quote: NO collapse
         assertFieldValue(field, "A\u{201D}--",
                          "quote after letter closes; -- after a quote stays literal")
 
         // Space then quote opens; -- after a letter collapses to an em dash.
-        app.buttons["space"].tap()
-        app.buttons["\""].tap()
+        // A space on the 123 plane flips back to letters (KeyboardLayer
+        // .didTypeSpace, stock behavior), so the quote needs 123 again.
+        tapKey(app, "space")
+        tapKey(app, "123")
+        tapKey(app, "\"")
         tapKey(app, "ABC")
         tapKey(app, "b")
-        app.buttons["123"].tap()
-        app.buttons["-"].tap()
-        app.buttons["-"].tap()
+        tapKey(app, "123")
+        tapKey(app, "-")
+        tapKey(app, "-")
         assertFieldValue(field, "A\u{201D}-- \u{201C}b\u{2014}",
                          "quote after a space opens; -- after a letter collapses")
     }

@@ -18,6 +18,9 @@ final class KeyboardViewController: UIInputViewController {
     private var cursorDrag = SpacebarCursorDrag()
     private let haptic = UIImpactFeedbackGenerator(style: .light)
     private var keyPops: [UIButton: UIView] = [:]
+    /// Stock-parity touch layer over the character keys (rolled multitouch,
+    /// gutter hit zones); function keys stay plain buttons beneath it.
+    private let touchSurface = KeyTouchSurface()
     private var emojiPanelActive = false
     private var emojiSearchActive = false
     private var emojiQuery = ""
@@ -33,14 +36,36 @@ final class KeyboardViewController: UIInputViewController {
     private var settings = KeyboardSettings(store: AppGroupSettingsStore())
     private var lastPrediction: Prediction?
     private var lastContextWordCount = 0
+    /// The band above the keys measured 60.3pt against stock's 50.3pt with a
+    /// 44pt bar, and the system's own chrome above the bar accounts for the
+    /// remaining 16.3pt, so stock's candidate row is 34pt (pixel scan
+    /// 2026-08-18). The key grid then hangs below the input view by the
+    /// height of the system's globe and dictation bar, which measures 68pt
+    /// on the small class and 70pt on the large one, which puts the grid's
+    /// overhang at 7pt and 5pt (measured against stock's key rows).
+    private static let barHeight: Double = 34
+
+    private static func rowsBottomOverhang(width: Double) -> Double {
+        width >= StockLayoutMetrics.largeClassMinWidth ? 5 : 7
+    }
+
     private let suggestionBar = UIStackView()
-    private var rowsStack: UIStackView?
-    private let probeBadge = UILabel()
+    /// Vertical metrics step by device class, so both the key area and the
+    /// input view's own height follow the current width.
+    private var rowsHeight: NSLayoutConstraint?
+    private var inputHeight: NSLayoutConstraint?
+    private var rowsBottom: NSLayoutConstraint?
+    private var rowsStack: UIView?
     private var backspaceTimer: Timer?
-    private var backspaceRepeats = 0
+    private var backspaceRepeater = BackspaceRepeater()
+    private var trailingAutoSpace = TrailingAutoSpace()
     private var alternatesView: UIView?
     private var characterButtons: [(button: UIButton, key: String)] = []
     private var shiftButton: UIButton?
+    /// Every key button of the current plane by cell id ("__" = function).
+    private var planeButtons: [String: UIButton] = [:]
+    /// The laid-out hit cells, source of both key frames and touch zones.
+    private var currentCells: [String: CGRect] = [:]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -60,6 +85,55 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
+    /// The grid overhangs the input view so the rows land where stock lands
+    /// them against the system's globe and dictation bar.
+    private func rowsBottomConstraint(for rows: UIView) -> NSLayoutConstraint {
+        let c = rows.bottomAnchor.constraint(
+            equalTo: view.bottomAnchor,
+            constant: CGFloat(Self.rowsBottomOverhang(width: layoutWidth)))
+        rowsBottom = c
+        return c
+    }
+
+    /// The key area is four rows of the class pitch.
+    private func rowsHeightConstraint(for rows: UIView) -> NSLayoutConstraint {
+        let c = rows.heightAnchor.constraint(
+            equalToConstant: StockLayoutMetrics.keyAreaHeight(width: layoutWidth))
+        rowsHeight = c
+        return c
+    }
+
+    /// Without an explicit height the system pads the input view, and the
+    /// grey band above the candidate bar measured 60.3pt against stock's
+    /// 50.3pt (pixel scan 2026-08-18). Asking for exactly bar + key area,
+    /// less the bottom overhang, holds the band at stock's.
+    private func inputHeightConstraint() -> NSLayoutConstraint {
+        let c = view.heightAnchor.constraint(
+            equalToConstant: Self.barHeight + StockLayoutMetrics.keyAreaHeight(width: layoutWidth)
+                - Self.rowsBottomOverhang(width: layoutWidth))
+        c.priority = .required - 1      // the system owns the final say
+        inputHeight = c
+        return c
+    }
+
+    private var layoutWidth: Double {
+        let width = view.bounds.width
+        return width > 0 ? Double(width) : Double(UIScreen.main.bounds.width)
+    }
+
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        let keyArea = StockLayoutMetrics.keyAreaHeight(width: layoutWidth)
+        if rowsHeight?.constant != CGFloat(keyArea) {
+            let overhang = Self.rowsBottomOverhang(width: layoutWidth)
+            rowsHeight?.constant = CGFloat(keyArea)
+            rowsBottom?.constant = CGFloat(overhang)
+            inputHeight?.constant = CGFloat(Self.barHeight + keyArea - overhang)
+            rebuildRows()
+        }
+    }
+
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         settings = KeyboardSettings(store: AppGroupSettingsStore())
@@ -69,11 +143,17 @@ final class KeyboardViewController: UIInputViewController {
             shift.armAutoShift(for: textDocumentProxy.documentContextBeforeInput ?? "")
         }
         rebuildRows()
+        refreshSuggestionBar()      // predictions from the first frame
     }
 
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         applyKeyboardAppearance()
+        // Cursor moves change the prediction context; a live correction
+        // or completion bar re-renders unchanged (barContent is state).
+        refreshSuggestionBar()
+        // The empty-field state gates the action return key's color.
+        planeButtons["__return"]?.setNeedsUpdateConfiguration()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -114,19 +194,78 @@ final class KeyboardViewController: UIInputViewController {
         suggestionBar.distribution = .fillEqually
         suggestionBar.spacing = 4
         suggestionBar.translatesAutoresizingMaskIntoConstraints = false
+        // Stock paints its own backdrop and so must we: a view with no
+        // visible background takes no touch, which left the 6pt gutter
+        // between every pair of caps dead (EdgeSweepTests, 2026-08-18).
+        view.backgroundColor = UIColor { traits in
+            Self.uiColor(StockKeyTheme.keyboardBackdrop(
+                dark: traits.userInterfaceStyle == .dark))
+        }
         view.addSubview(suggestionBar)
 
-        let rows = UIStackView()
-        rows.axis = .vertical
-        rows.distribution = .fillEqually
-        rows.spacing = 8
+        let rows = PassthroughView()
         rows.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(rows)
         rowsStack = rows
 
-        probeBadge.font = .systemFont(ofSize: 10, weight: .semibold)
-        probeBadge.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(probeBadge)
+        // Below the rows (above would cull the buttons from the AX tree):
+        // the surface is still the single touch resolver, because the rows
+        // container claims nothing. Its zone map routes every touch to the
+        // nearest key -- character keys it tracks itself, function zones it
+        // hands to their button -- so no gutter anywhere is dead.
+        touchSurface.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(touchSurface, belowSubview: rows)
+        touchSurface.zoneProvider = { [weak self] in self?.buildZones() ?? [] }
+        touchSurface.functionButtonProvider = { [weak self] id in self?.planeButtons[id] }
+        // The bigram prior only applies on the letters plane: number and
+        // symbol ids are non-letters and fall back to geometry anyway.
+        touchSurface.contextProvider = { [weak self] in
+            self?.textDocumentProxy.documentContextBeforeInput ?? ""
+        }
+        touchSurface.onTouchDown = { [weak self] key in
+            guard let self else { return }
+            self.keyTouchDown()
+            if let button = self.characterButton(named: key) { self.showKeyPop(above: button) }
+        }
+        touchSurface.onTouchMoved = { [weak self] from, to in
+            guard let self else { return }
+            // Only this finger's pop moves; other fingers keep theirs.
+            if let old = self.characterButton(named: from) { self.dismissKeyPop(for: old) }
+            if let button = self.characterButton(named: to) { self.showKeyPop(above: button) }
+        }
+        touchSurface.onTouchExit = { [weak self] key in
+            guard let self else { return }
+            if let button = self.characterButton(named: key) { self.dismissKeyPop(for: button) }
+        }
+        touchSurface.onCommit = { [weak self] key in
+            guard let self else { return }
+            // Stock keeps the balloon up >= 0.05s so a fast tap shows it.
+            // Detach the pop from the map first: a re-touch within the
+            // dwell shows a fresh pop that this removal must not kill.
+            if let button = self.characterButton(named: key),
+               let pop = self.keyPops.removeValue(forKey: button) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + CalloutGeometry.minimumDwell) {
+                    pop.removeFromSuperview()
+                }
+            }
+            self.commitCharacter(key)
+        }
+        touchSurface.onCancel = { [weak self] in self?.dismissAllKeyPops() }
+        touchSurface.onHold = { [weak self] key in
+            guard let self, !self.emojiSearchActive,
+                  let options = KeyboardLayout.alternates[key],
+                  let button = self.characterButton(named: key) else { return false }
+            self.dismissKeyPop(for: button)
+            self.showAlternates(options, above: button,
+                                shifted: self.layer == .letters && self.shift.isShifted)
+            return true
+        }
+        touchSurface.onAlternateMoved = { [weak self] point in
+            self?.highlightAlternate(atSurfacePoint: point)
+        }
+        touchSurface.onAlternateEnded = { [weak self] base, point in
+            self?.commitAlternate(base: base, atSurfacePoint: point)
+        }
 
         emojiPanel.isHidden = true
         emojiPanel.translatesAutoresizingMaskIntoConstraints = false
@@ -135,19 +274,27 @@ final class KeyboardViewController: UIInputViewController {
         NSLayoutConstraint.activate([
             suggestionBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
             suggestionBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-            suggestionBar.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
-            suggestionBar.heightAnchor.constraint(equalToConstant: 40),
-            rows.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
-            rows.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-            rows.topAnchor.constraint(equalTo: suggestionBar.bottomAnchor, constant: 4),
-            rows.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
-            rows.heightAnchor.constraint(equalToConstant: 216),
+            suggestionBar.topAnchor.constraint(equalTo: view.topAnchor),
+            suggestionBar.heightAnchor.constraint(equalToConstant: Self.barHeight),
+            // Full-width key area, flush to the view bottom: the cell grid
+            // carries its own side inset, and stock leaves no extra pad.
+            rows.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            rows.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            rows.topAnchor.constraint(equalTo: suggestionBar.bottomAnchor),
+            // Measured: our input view's bottom sits 7pt above where stock
+            // lands its key area, so the grid overhangs by that much to
+            // line the rows up with stock against the system's globe/mic bar.
+            rowsBottomConstraint(for: rows),
+            rowsHeightConstraint(for: rows),
+            inputHeightConstraint(),
             emojiPanel.leadingAnchor.constraint(equalTo: rows.leadingAnchor),
             emojiPanel.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
             emojiPanel.topAnchor.constraint(equalTo: rows.topAnchor),
             emojiPanel.bottomAnchor.constraint(equalTo: rows.bottomAnchor),
-            probeBadge.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -6),
-            probeBadge.topAnchor.constraint(equalTo: view.topAnchor, constant: 2),
+            touchSurface.leadingAnchor.constraint(equalTo: rows.leadingAnchor),
+            touchSurface.trailingAnchor.constraint(equalTo: rows.trailingAnchor),
+            touchSurface.topAnchor.constraint(equalTo: rows.topAnchor),
+            touchSurface.bottomAnchor.constraint(equalTo: rows.bottomAnchor),
         ])
         rebuildRows()
     }
@@ -158,180 +305,464 @@ final class KeyboardViewController: UIInputViewController {
     /// finish the word). This function never changes state -- only the
     /// three typing trigger points call typingUpdate.
     private func refreshSuggestionBar() {
-        suggestionBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        // subviews, not arrangedSubviews: the hairline separators are plain
+        // subviews and would leak across refreshes.
+        suggestionBar.subviews.forEach { $0.removeFromSuperview() }
         switch autocorrect.barContent {
         case .empty:
-            break
+            // Stock's bar is never empty: at-rest predictions fill it.
+            guard settings.autocorrect, !emojiSearchActive else { break }
+            let words = NextWordPredictor.predictions(
+                after: textDocumentProxy.documentContextBeforeInput ?? "")
+            for (index, word) in words.enumerated() {
+                suggestionBar.addArrangedSubview(
+                    barSlot(title: word, tag: index, identifier: "prediction-\(index)"))
+            }
+            addBarSeparators()
         case .correction(let slots):
             for (index, word) in slots.enumerated() {
                 suggestionBar.addArrangedSubview(
                     barSlot(title: word, tag: index, identifier: "suggestion-\(index)"))
             }
-        case .completions(let typed, let completions):
+            addBarSeparators()
+        case .completions(let typed, let completions, let correction):
+            // Stock quotes the literal only when a commit would correct it,
+            // and pills the correction slot (completions[0] by contract).
             suggestionBar.addArrangedSubview(barSlot(
-                title: "\u{201C}\(typed)\u{201D}", tag: 0, identifier: "completion-typed"))
+                title: correction != nil ? "\u{201C}\(typed)\u{201D}" : typed,
+                tag: 0, identifier: "completion-typed"))
             for (index, word) in completions.enumerated() {
-                suggestionBar.addArrangedSubview(barSlot(
-                    title: word, tag: index + 1, identifier: "completion-\(index + 1)"))
+                let slot = barSlot(title: word, tag: index + 1,
+                                   identifier: "completion-\(index + 1)")
+                if index == 0, correction != nil { applyCandidatePill(slot) }
+                suggestionBar.addArrangedSubview(slot)
             }
+            addBarSeparators()
         }
     }
 
+    /// QuickType slot, stock-style: flat text on the bar, no key-cap
+    /// chrome; a tap flashes the stock grey pill.
     private func barSlot(title: String, tag: Int, identifier: String) -> UIButton {
-        let slot = keyButton(title: title)
+        var config = UIButton.Configuration.plain()
+        config.title = title
+        config.baseForegroundColor = .label
+        config.contentInsets = .zero
+        config.cornerStyle = .fixed
+        config.background.cornerRadius = StockKeyTheme.candidatePillCornerRadius
+        let slot = UIButton(configuration: config)
+        slot.configurationUpdateHandler = { b in
+            b.configuration?.background.backgroundColor =
+                b.isHighlighted ? .systemGray4 : .clear
+        }
+        // Stock candidates are body-size 17pt regular.
+        slot.titleLabel?.font = .systemFont(ofSize: 17)
+        slot.titleLabel?.adjustsFontSizeToFitWidth = true
         slot.tag = tag
         slot.accessibilityIdentifier = identifier
         slot.addTarget(self, action: #selector(suggestionTapped(_:)), for: .touchUpInside)
         return slot
     }
 
+    /// Stock's soft pill behind the candidate a commit would apply; the
+    /// tap flash wins while highlighted.
+    private func applyCandidatePill(_ slot: UIButton) {
+        slot.configurationUpdateHandler = { b in
+            b.configuration?.background.backgroundColor = b.isHighlighted
+                ? .systemGray4
+                : UIColor { traits in
+                    Self.uiColor(StockKeyTheme.candidatePillFill(
+                        dark: traits.userInterfaceStyle == .dark))
+                }
+        }
+    }
+
+    /// Stock draws a hairline between candidate slots. Non-arranged
+    /// subviews, so fillEqually still sizes the slots evenly.
+    private func addBarSeparators() {
+        let slots = suggestionBar.arrangedSubviews
+        guard slots.count > 1 else { return }
+        for slot in slots.dropLast() {
+            // Stock hairline: 1pt wide, 30pt tall, half-faded secondary.
+            let line = UIView()
+            line.backgroundColor = .secondaryLabel.withAlphaComponent(0.5)
+            line.translatesAutoresizingMaskIntoConstraints = false
+            suggestionBar.addSubview(line)
+            NSLayoutConstraint.activate([
+                line.widthAnchor.constraint(equalToConstant: 1),
+                line.centerXAnchor.constraint(equalTo: slot.trailingAnchor,
+                                              constant: suggestionBar.spacing / 2),
+                line.heightAnchor.constraint(equalToConstant: 30),
+                line.centerYAnchor.constraint(equalTo: suggestionBar.centerYAnchor),
+            ])
+        }
+    }
+
     /// Typing trigger: refreshes mid-word completions from the live context.
+    /// Deferred off the tap's touch-event cycle (stock-parity AC 5): the
+    /// context read + spell-checker call + bar rebuild run after the runloop
+    /// drains the touch, so fast typing never waits on them. Coalesced --
+    /// only the newest pending refresh runs.
+    private var pendingCompletionRefresh = 0
     private func refreshTypingCompletions() {
         guard settings.autocorrect else { return }
-        autocorrect.typingUpdate(context: textDocumentProxy.documentContextBeforeInput ?? "")
-        refreshSuggestionBar()
+        pendingCompletionRefresh += 1
+        let ticket = pendingCompletionRefresh
+        DispatchQueue.main.async { [weak self] in
+            guard let self, ticket == self.pendingCompletionRefresh else { return }
+            self.autocorrect.typingUpdate(context: self.textDocumentProxy.documentContextBeforeInput ?? "")
+            self.refreshSuggestionBar()
+        }
     }
 
     /// Updates key titles in place -- button identity survives, so a
     /// double-tap's second touch still lands on the same shift button.
+    /// Stock: an active shift cap goes opaque white with a black glyph
+    /// (both schemes); letter legends re-case and re-size (26pt light
+    /// lowercase, 23pt regular uppercase).
     private func refreshShiftAppearance() {
-        shiftButton?.configuration?.title = shiftTitle()
+        if let shiftButton {
+            shiftButton.configuration?.image = UIImage(systemName: shiftSymbolName())
+            let active = shift.isShifted
+            shiftButton.configurationUpdateHandler = { b in
+                if active {
+                    b.configuration?.background.backgroundColor =
+                        Self.uiColor(StockKeyTheme.shiftActiveFill)
+                    b.configuration?.baseForegroundColor = .black
+                } else {
+                    b.configuration?.background.backgroundColor =
+                        Self.capFill(role: .function, pressed: b.isHighlighted)
+                    b.configuration?.baseForegroundColor = .label
+                }
+            }
+        }
         guard layer == .letters else { return }
         for (button, key) in characterButtons {
-            button.configuration?.title = shift.isShifted ? key.uppercased() : key
+            let title = shift.isShifted ? key.uppercased() : key
+            button.configuration?.title = title
+            button.titleLabel?.font = Self.legendFont(for: title)
         }
     }
 
     /// Rebuilds the visible plane from pure layout data + current state.
+    /// Buttons are created here and framed in layoutPlane() from the
+    /// measured stock cell geometry (stock-parity AC 1).
     private func rebuildRows() {
         guard let rows = rowsStack else { return }
         dismissAlternates()
         dismissAllKeyPops()  // buttons are torn down; orphan pops would leak
         characterButtons = []
         shiftButton = nil
-        rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        planeButtons = [:]
+        rows.subviews.forEach { $0.removeFromSuperview() }
 
-        let plane: [[String]]
-        switch layer {
-        case .letters: plane = KeyboardLayout.letterRows
-        case .numbers: plane = KeyboardLayout.numberRows
-        case .symbols: plane = KeyboardLayout.symbolRows
-        }
-
-        for (index, keys) in plane.enumerated() {
-            let row = UIStackView()
-            row.axis = .horizontal
-            row.distribution = .fillEqually
-            row.spacing = 4
+        for keys in currentPlane() {
             for key in keys {
-                row.addArrangedSubview(characterButton(for: key))
+                let button = characterButton(for: key)
+                planeButtons[key] = button
+                rows.addSubview(button)
             }
-            if index == plane.count - 1 {
-                let leading: UIButton
-                if layer == .letters {
-                    leading = keyButton(title: shiftTitle())
-                    leading.accessibilityIdentifier = "shift"
-                    leading.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
-                    shiftButton = leading
-                } else {
-                    leading = keyButton(title: layer == .numbers ? "#+=" : "123")
-                    leading.addTarget(self, action: #selector(subLayerTapped), for: .touchUpInside)
-                }
-                row.insertArrangedSubview(leading, at: 0)
-
-                let backspace = keyButton(title: "⌫")
-                let press = UILongPressGestureRecognizer(target: self, action: #selector(backspaceHeld(_:)))
-                press.minimumPressDuration = 0.4
-                backspace.addGestureRecognizer(press)
-                backspace.addTarget(self, action: #selector(backspaceTapped), for: .touchUpInside)
-                row.addArrangedSubview(backspace)
-            }
-            rows.addArrangedSubview(row)
         }
 
-        let bottomRow = UIStackView()
-        bottomRow.axis = .horizontal
-        bottomRow.spacing = 4
+        let leading: UIButton
+        if layer == .letters {
+            leading = keyButton(symbol: shiftSymbolName())
+            leading.accessibilityIdentifier = "shift"
+            leading.addTarget(self, action: #selector(shiftTapped), for: .touchUpInside)
+            shiftButton = leading
+        } else {
+            leading = keyButton(title: layer == .numbers ? "#+=" : "123")
+            leading.addTarget(self, action: #selector(subLayerTapped), for: .touchUpInside)
+        }
+        planeButtons["__shift"] = leading
+
+        // Stock draws backspace as the delete.left symbol, not a text glyph.
+        let backspace = keyButton(symbol: "delete.left")
+        backspace.accessibilityLabel = "⌫"   // UI suites address it by this
+        let press = UILongPressGestureRecognizer(target: self, action: #selector(backspaceHeld(_:)))
+        press.minimumPressDuration = 0.4
+        backspace.addGestureRecognizer(press)
+        backspace.addTarget(self, action: #selector(backspaceTapped), for: .touchUpInside)
+        planeButtons["__delete"] = backspace
 
         let layerKey = keyButton(title: layer == .letters ? "123" : "ABC")
         layerKey.addTarget(self, action: #selector(layerTapped), for: .touchUpInside)
+        planeButtons["__layer"] = layerKey
 
-        let emojiKey = keyButton(title: "😀")
+        // Stock draws the emoji key as a smiley glyph, not an emoji.
+        let emojiKey = keyButton(symbol: "face.smiling")
         emojiKey.accessibilityIdentifier = "emoji-key"
         emojiKey.addTarget(self, action: #selector(emojiKeyTapped), for: .touchUpInside)
+        planeButtons["__emoji"] = emojiKey
 
-        let globe: UIButton?
         if needsInputModeSwitchKey {
-            let key = keyButton(title: "🌐")
-            key.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
-            globe = key
-        } else {
-            globe = nil
+            let globe = keyButton(symbol: "globe")
+            globe.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
+            planeButtons["__globe"] = globe
         }
 
-        let space = keyButton(title: "space")
+        // Stock's space bar carries no label; the identifier keeps it
+        // findable for accessibility and the UI suite.
+        let space = keyButton(title: "")
+        space.accessibilityIdentifier = "space"
+        space.accessibilityLabel = "space"
         space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
         let drag = UILongPressGestureRecognizer(target: self, action: #selector(spaceDragged(_:)))
         drag.minimumPressDuration = 0.4
         space.addGestureRecognizer(drag)
+        planeButtons["__space"] = space
 
+        // Stock shows the ⏎ glyph for a plain return and a word for the
+        // action variants (Search, Go, Send).
         let returnTitle = ReturnKeyLabel.label(
             for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default))
-        let returnKey = keyButton(title: returnTitle)
+        let returnKey = returnTitle == "return"
+            ? keyButton(symbol: "return")
+            : keyButton(title: returnTitle)
         returnKey.accessibilityIdentifier = "return-key"
+        returnKey.accessibilityLabel = returnTitle
         returnKey.addTarget(self, action: #selector(returnTapped), for: .touchUpInside)
+        planeButtons["__return"] = returnKey
 
-        bottomRow.addArrangedSubview(layerKey)
-        bottomRow.addArrangedSubview(emojiKey)
-        if let globe { bottomRow.addArrangedSubview(globe) }
-        bottomRow.addArrangedSubview(space)
-        bottomRow.addArrangedSubview(returnKey)
-        layerKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.12).isActive = true
-        emojiKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
-        globe?.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.1).isActive = true
-        returnKey.widthAnchor.constraint(equalTo: bottomRow.widthAnchor, multiplier: 0.2).isActive = true
-        rows.addArrangedSubview(bottomRow)
+        for (id, button) in planeButtons where id.hasPrefix("__") {
+            rows.addSubview(button)
+            applyRole(KeyRole.role(forCellID: id), to: button)
+        }
+        styleReturnKey(returnKey, actionTitle: returnTitle)
+        refreshShiftAppearance()
+        layoutPlane()
     }
 
+    private func currentPlane() -> [[String]] {
+        switch layer {
+        case .letters: return KeyboardLayout.letterRows
+        case .numbers: return KeyboardLayout.numberRows
+        case .symbols: return KeyboardLayout.symbolRows
+        }
+    }
+
+    /// Stock hit cells from the measured metrics; visible key = cell minus
+    /// the stock visual insets. When the system wants a globe key it takes
+    /// the emoji cell and the emoji key takes the leading slice of space.
+    private func layoutPlane() {
+        guard let rows = rowsStack, rows.bounds.width > 0 else { return }
+        var cellRects: [String: CGRect] = [:]
+        for c in StockLayoutMetrics.cells(width: rows.bounds.width, plane: currentPlane()) {
+            cellRects[c.id] = CGRect(x: c.frame.x, y: c.frame.y,
+                                     width: c.frame.width, height: c.frame.height)
+        }
+        if planeButtons["__globe"] != nil, let emoji = cellRects["__emoji"],
+           var space = cellRects["__space"] {
+            cellRects["__globe"] = emoji
+            cellRects["__emoji"] = CGRect(x: space.minX, y: space.minY,
+                                          width: emoji.width, height: emoji.height)
+            space = CGRect(x: space.minX + emoji.width, y: space.minY,
+                           width: space.width - emoji.width, height: space.height)
+            cellRects["__space"] = space
+        }
+        currentCells = cellRects
+        for (id, button) in planeButtons {
+            guard let cell = cellRects[id] else { continue }
+            // Visible cap inside the touch cell, measured off stock.
+            let cap = StockLayoutMetrics.capFrame(in: Rect(
+                x: cell.origin.x, y: cell.origin.y,
+                width: cell.width, height: cell.height))
+            button.frame = CGRect(x: cap.x, y: cap.y, width: cap.width, height: cap.height)
+            // Function keys accept the gutter touches the surface routes to
+            // them: hit area = full cell plus the zone-map tolerance, or
+            // UIControl sees the touch as "outside" and drops the tap.
+            if id.hasPrefix(KeyTouchSurface.passthroughPrefix), let key = button as? KeyButton {
+                let tol = KeyZoneMap.tolerance
+                key.hitOutset = UIEdgeInsets(
+                    top: -(StockLayoutMetrics.capInsetTop + tol),
+                    left: -(StockLayoutMetrics.capInsetSide + tol),
+                    bottom: -(StockLayoutMetrics.capInsetBottom + tol),
+                    right: -(StockLayoutMetrics.capInsetSide + tol))
+            }
+            button.layer.shadowPath = UIBezierPath(
+                roundedRect: button.bounds,
+                cornerRadius: StockKeyTheme.capCornerRadius(
+                    liquidGlass: Self.liquidGlass)).cgPath
+        }
+        touchSurface.invalidateZones()
+    }
+
+    /// Character keys are passive visuals: KeyTouchSurface owns their
+    /// touches (rolled multitouch, gutters, hold-for-alternates).
     private func characterButton(for key: String) -> UIButton {
         let title = (layer == .letters && shift.isShifted) ? key.uppercased() : key
         let button = keyButton(title: title)
-        button.addTarget(self, action: #selector(characterTapped(_:)), for: .touchUpInside)
-        button.addTarget(self, action: #selector(characterTouchDown(_:)), for: .touchDown)
-        button.addTarget(self, action: #selector(characterTouchEnded(_:)),
-                         for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit])
-        if KeyboardLayout.alternates[key] != nil {
-            let press = UILongPressGestureRecognizer(target: self, action: #selector(keyHeld(_:)))
-            press.minimumPressDuration = 0.4
-            button.addGestureRecognizer(press)
-        }
+        button.isUserInteractionEnabled = false
         characterButtons.append((button, key))
         return button
     }
 
+    private func characterButton(named key: String) -> UIButton? {
+        characterButtons.first(where: { $0.key == key })?.button
+    }
+
+    /// Re-frame the plane whenever the container size settles.
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        layoutPlane()
+    }
+
+    /// Touch zones are the same stock hit cells the buttons are framed
+    /// from: character keys by name, "__" cells pass through to their
+    /// interactive buttons.
+    private func buildZones() -> [KeyZone] {
+        currentCells.map { id, r in
+            KeyZone(id: id, frame: Rect(x: r.origin.x, y: r.origin.y,
+                                        width: r.width, height: r.height))
+        }
+    }
+
+    static func uiColor(_ rgba: RGBA) -> UIColor {
+        UIColor(red: rgba.red, green: rgba.green, blue: rgba.blue, alpha: rgba.alpha)
+    }
+
+    /// iOS 26 renders the Liquid Glass chrome; the theme forks on it.
+    static let liquidGlass: Bool = {
+        if #available(iOS 26.0, *) { return true }
+        return false
+    }()
+
+    /// Role fill straight from the engine theme (KeyboardKit-verified
+    /// stock values). Dynamic per trait collection; the dark fills are
+    /// translucent whites over the system keyboard blur, so nothing may
+    /// paint an opaque background behind the keys.
+    private static func capFill(role: KeyRole, pressed: Bool = false) -> UIColor {
+        UIColor { traits in
+            uiColor(StockKeyTheme.fill(role: role,
+                                       dark: traits.userInterfaceStyle == .dark,
+                                       pressed: pressed,
+                                       liquidGlass: liquidGlass))
+        }
+    }
+
+    /// Shared cap chrome: fill, stock corner radius, and the 1pt bottom
+    /// shadow stock draws under every key. Role fills are applied after
+    /// rebuildRows knows each button's cell id.
+    private func styleAsKeyCap(_ button: UIButton) {
+        // The radius must live on the configuration's background: a
+        // configuration's default .dynamic corner style overrides
+        // layer.cornerRadius and rounded our caps into pills.
+        button.configuration?.cornerStyle = .fixed
+        button.configuration?.background.cornerRadius =
+            StockKeyTheme.capCornerRadius(liquidGlass: Self.liquidGlass)
+        button.configuration?.background.backgroundColor = Self.capFill(role: .letter)
+        applyCapShadow(button)
+        button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+    }
+
+    /// CGColor cannot be a dynamic color; traitCollectionDidChange
+    /// re-applies the shadows on a scheme flip.
+    private func applyCapShadow(_ button: UIButton) {
+        guard StockKeyTheme.hasShadow(liquidGlass: Self.liquidGlass) else {
+            button.layer.shadowOpacity = 0
+            return
+        }
+        let dark = traitCollection.userInterfaceStyle == .dark
+        button.layer.shadowColor = Self.uiColor(StockKeyTheme.shadowColor(dark: dark)).cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: StockKeyTheme.shadowOffsetY)
+        button.layer.shadowRadius = 0
+        button.layer.shadowOpacity = 1
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle
+        else { return }
+        for (_, button) in planeButtons { applyCapShadow(button) }
+    }
+
+    /// Stock press feedback: a pressed function key swaps to the letter
+    /// fill (letters hide behind the preview balloon instead of dimming).
+    private func applyRole(_ role: KeyRole, to button: UIButton) {
+        button.configurationUpdateHandler = { b in
+            b.configuration?.background.backgroundColor =
+                Self.capFill(role: role, pressed: b.isHighlighted)
+        }
+    }
+
+    /// Stock tints action return types (Search, Go, Send) system blue
+    /// with a white legend; a plain return stays a grey function key.
+    /// With enablesReturnKeyAutomatically the key greys out and goes
+    /// inert while the field is empty, flipping blue on the first text.
+    private func styleReturnKey(_ button: UIButton, actionTitle: String) {
+        guard actionTitle != "return" else { return }
+        button.configurationUpdateHandler = { [weak self] b in
+            let dark = b.traitCollection.userInterfaceStyle == .dark
+            if self?.returnKeyDisabled == true {
+                b.configuration?.background.backgroundColor = Self.capFill(role: .returnKey)
+                b.configuration?.baseForegroundColor = .tertiaryLabel
+            } else if b.isHighlighted {
+                b.configuration?.background.backgroundColor =
+                    Self.uiColor(StockKeyTheme.returnActionPressedFill(dark: dark))
+                b.configuration?.baseForegroundColor = dark ? .white : .black
+            } else {
+                b.configuration?.background.backgroundColor =
+                    Self.uiColor(StockKeyTheme.returnActionFill(dark: dark))
+                b.configuration?.baseForegroundColor = .white
+            }
+        }
+    }
+
+    private var returnKeyDisabled: Bool {
+        textDocumentProxy.enablesReturnKeyAutomatically == true && !hostHasText
+    }
+
+    private var hostHasText: Bool {
+        !(textDocumentProxy.documentContextBeforeInput ?? "").isEmpty
+            || !(textDocumentProxy.documentContextAfterInput ?? "").isEmpty
+    }
+
+    private static func legendFont(for title: String) -> UIFont {
+        .systemFont(ofSize: KeyLegend.pointSize(for: title), weight: .regular)
+    }
+
+    private func keyButton(symbol: String) -> UIButton {
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: symbol)
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(
+            pointSize: KeyLegend.iconPointSize, weight: .regular)
+        config.baseForegroundColor = .label
+        config.contentInsets = .zero
+        let button = KeyButton(configuration: config)
+        styleAsKeyCap(button)
+        return button
+    }
+
     private func keyButton(title: String) -> UIButton {
-        var config = UIButton.Configuration.gray()
+        var config = UIButton.Configuration.plain()
         config.title = title
         config.baseForegroundColor = .label
-        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0)
-        let button = UIButton(configuration: config)
-        button.titleLabel?.font = .systemFont(ofSize: 18)
-        button.addTarget(self, action: #selector(keyTouchDown), for: .touchDown)
+        config.contentInsets = NSDirectionalEdgeInsets(
+            top: 0, leading: 0,
+            bottom: CGFloat(KeyLegend.legendBottomInset(for: title)), trailing: 0)
+        let button = KeyButton(configuration: config)
+        button.titleLabel?.font = Self.legendFont(for: title)
+        button.titleLabel?.adjustsFontSizeToFitWidth = true
+        styleAsKeyCap(button)
         return button
     }
 
     /// UX.md: every key press gets a haptic tick. Extensions without Full
     /// Access may silently no-op; accepted (device verification owed).
+    /// The stock click plays through the system service and honors the
+    /// user's Keyboard Clicks setting on its own.
     @objc private func keyTouchDown() {
+        UIDevice.current.playInputClick()
         guard settings.haptics else { return }
         haptic.impactOccurred()
     }
 
-    private func shiftTitle() -> String {
+    /// Stock iOS shift glyphs: outline, filled while armed, caps-lock fill.
+    private func shiftSymbolName() -> String {
         switch shift.mode {
-        case .off: return "⇧"
-        case .oneShot: return "⬆"
-        case .capsLock: return "⇪"
+        case .off: return "shift"
+        case .oneShot: return "shift.fill"
+        case .capsLock: return "capslock.fill"
         }
     }
 
@@ -354,8 +785,8 @@ final class KeyboardViewController: UIInputViewController {
 
     // MARK: - Keys
 
-    @objc private func characterTapped(_ sender: UIButton) {
-        guard let title = sender.configuration?.title else { return }
+    private func commitCharacter(_ key: String) {
+        let title = (layer == .letters && shift.isShifted) ? key.uppercased() : key
         dismissAlternates()
         endSmartSpaceCycle()
         if emojiSearchActive {
@@ -364,6 +795,20 @@ final class KeyboardViewController: UIInputViewController {
             emojiQuery += title.lowercased()
             refreshEmojiSearchStrip()
             return
+        }
+        // Stock: an auto-inserted space yields to the sentence mark typed
+        // after it, and sentence punctuation ends the word and commits any
+        // pending correction before the mark lands (matrix rows "trailing
+        // space absorption", "commit delimiters"). insertSmart reads the
+        // document after these rewrites.
+        if title.count == 1, let char = title.first {
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            for _ in 0..<trailingAutoSpace.deletions(forTyping: char, context: context) {
+                textDocumentProxy.deleteBackward()
+            }
+            if AutocorrectController.isCommitDelimiter(char) {
+                applyAutocorrectOnCommit()
+            }
         }
         insertSmart(title)
         if layer == .letters, shift.mode == .oneShot {
@@ -421,6 +866,7 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         autocorrect.backspace()
+        trailingAutoSpace.disarm()
         textDocumentProxy.deleteBackward()
         refreshTypingCompletions()
         armAutoShiftIfSentenceStart()
@@ -430,14 +876,9 @@ final class KeyboardViewController: UIInputViewController {
         guard !emojiSearchActive else { return }    // repeats edit the document
         switch gesture.state {
         case .began:
-            backspaceRepeats = 0
-            backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                guard let self else { return }
-                backspaceRepeats += 1
-                textDocumentProxy.deleteBackward()
-                // accelerate after ~1.5s of holding
-                if backspaceRepeats > 15 { textDocumentProxy.deleteBackward() }
-            }
+            backspaceRepeater.reset()
+            trailingAutoSpace.disarm()
+            scheduleBackspaceTimer(every: 0.1)
         case .ended, .cancelled, .failed:
             backspaceTimer?.invalidate()
             backspaceTimer = nil
@@ -449,52 +890,73 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    @objc private func keyHeld(_ gesture: UILongPressGestureRecognizer) {
-        guard !emojiSearchActive,   // alternates insert into the document
-              gesture.state == .began,
-              let button = gesture.view as? UIButton,
-              let title = button.configuration?.title,
-              let options = KeyboardLayout.alternates[title.lowercased()] else { return }
-        showAlternates(options, above: button, shifted: layer == .letters && shift.isShifted)
+    /// Word-phase deletes pace slower than the character repeat, like stock.
+    private static let wordDeleteInterval: TimeInterval = 0.45
+
+    private func scheduleBackspaceTimer(every interval: TimeInterval) {
+        backspaceTimer?.invalidate()
+        backspaceTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            switch backspaceRepeater.tick(before: context) {
+            case .characters(let n):
+                for _ in 0..<n { textDocumentProxy.deleteBackward() }
+            case .word(let n):
+                for _ in 0..<n { textDocumentProxy.deleteBackward() }
+                if interval != Self.wordDeleteInterval {
+                    scheduleBackspaceTimer(every: Self.wordDeleteInterval)
+                }
+            }
+        }
     }
 
+    /// Stock action callout: a cap-colored bubble with the neck fused to
+    /// the held key, extending toward the screen center. Slide-select:
+    /// the ongoing touch stays with the surface, moves highlight an
+    /// option, release commits it. The items are passive visuals.
     private func showAlternates(_ options: [String], above button: UIButton, shifted: Bool) {
         dismissAlternates()
-        let bar = UIStackView()
-        bar.axis = .horizontal
-        bar.spacing = 2
-        bar.translatesAutoresizingMaskIntoConstraints = false
-        bar.backgroundColor = .systemBackground
-        bar.layer.cornerRadius = 8
-        bar.layer.borderWidth = 1
-        bar.layer.borderColor = UIColor.separator.cgColor
-        for option in options {
-            let alt = keyButton(title: shifted ? option.uppercased() : option)
-            alt.addTarget(self, action: #selector(alternateTapped(_:)), for: .touchUpInside)
-            bar.addArrangedSubview(alt)
-        }
-        view.addSubview(bar)
-        let center = bar.centerXAnchor.constraint(equalTo: button.centerXAnchor)
-        center.priority = .defaultHigh  // yields at screen edges
-        NSLayoutConstraint.activate([
-            center,
-            bar.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 4),
-            bar.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -4),
-            bar.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -4),
-            bar.heightAnchor.constraint(equalToConstant: 44),
-        ])
-        alternatesView = bar
+        let capFrame = view.convert(button.frame, from: button.superview ?? view)
+        let display = options.map { shifted ? $0.uppercased() : $0 }
+        let callout = AlternatesCalloutView(options: display, capFrame: capFrame,
+                                            screenWidth: view.bounds.width)
+        view.addSubview(callout)
+        alternatesView = callout
     }
 
-    @objc private func alternateTapped(_ sender: UIButton) {
-        if let title = sender.configuration?.title {
+    /// The alternate button under the finger's x, or nil for "base key".
+    private func alternateButton(atSurfacePoint point: CGPoint) -> UIButton? {
+        guard let callout = alternatesView as? AlternatesCalloutView else { return nil }
+        // Stock is forgiving on y: only x picks the option.
+        let x = callout.convert(view.convert(point, from: touchSurface), from: view).x
+        return callout.item(atX: x)
+    }
+
+    private func highlightAlternate(atSurfacePoint point: CGPoint) {
+        guard let callout = alternatesView as? AlternatesCalloutView else { return }
+        let selected = alternateButton(atSurfacePoint: point)
+        for button in callout.itemButtons {
+            button.configuration?.background.backgroundColor =
+                button === selected ? .systemBlue : .clear
+            button.configuration?.baseForegroundColor =
+                button === selected ? .white : .label
+        }
+    }
+
+    /// Release during slide-select: type the highlighted option, or the
+    /// held base key when the finger never reached the overlay (stock).
+    private func commitAlternate(base: String, atSurfacePoint point: CGPoint) {
+        let selected = alternateButton(atSurfacePoint: point)?.configuration?.title
+        dismissAlternates()
+        if let selected {
             endSmartSpaceCycle()
-            insertSmart(title)
+            insertSmart(selected)
             if layer == .letters { shift.didTypeLetter() }
             refreshTypingCompletions()
+            refreshShiftAppearance()
+        } else {
+            commitCharacter(base)
         }
-        dismissAlternates()
-        refreshShiftAppearance()
     }
 
     private func dismissAlternates() {
@@ -522,8 +984,11 @@ final class KeyboardViewController: UIInputViewController {
             let afterWordChar = context.last.map { $0.isLetter || $0.isNumber } == true
             switch stockSpaceBar.spaceTapped(at: CACurrentMediaTime(), afterWordChar: afterWordChar) {
             case .insertSpace:
-                applyAutocorrectOnCommit()
+                // A space that auto-committed a correction is stock's
+                // absorbable auto-space; a plain typed space is not.
+                let replaced = applyAutocorrectOnCommit()
                 textDocumentProxy.insertText(" ")
+                if replaced { trailingAutoSpace.arm() } else { trailingAutoSpace.disarm() }
             case .insertPeriod:
                 // The word was committed by the first space; swap that space
                 // for ". " with no re-commit.
@@ -532,6 +997,7 @@ final class KeyboardViewController: UIInputViewController {
                 log.debug("stock double-space period")
             }
             armAutoShiftIfSentenceStart()
+            returnToLettersAfterSpace()
             return
         }
         let decision = spaceBar.spaceTapped(at: CACurrentMediaTime()) {
@@ -551,8 +1017,9 @@ final class KeyboardViewController: UIInputViewController {
         }
         switch decision {
         case .insertSpace:
-            applyAutocorrectOnCommit()
+            let replaced = applyAutocorrectOnCommit()
             textDocumentProxy.insertText(" ")
+            if replaced { trailingAutoSpace.arm() } else { trailingAutoSpace.disarm() }
             armAutoShiftIfSentenceStart()
         case .insertMark(let mark):
             textDocumentProxy.deleteBackward()          // the first space
@@ -590,6 +1057,15 @@ final class KeyboardViewController: UIInputViewController {
                 refreshShiftAppearance()
             }
         }
+        returnToLettersAfterSpace()
+    }
+
+    /// Stock: a space typed on the 123 / #+= plane flips the keyboard back
+    /// to letters (cycle taps land after the first space already flipped).
+    private func returnToLettersAfterSpace() {
+        guard layer != .letters else { return }
+        layer.didTypeSpace()
+        rebuildRows()
     }
 
     @objc private func returnTapped() {
@@ -597,9 +1073,11 @@ final class KeyboardViewController: UIInputViewController {
             exitEmojiPanel()
             return
         }
+        guard !returnKeyDisabled else { return }    // stock: the key is inert
         dismissAlternates()
         endSmartSpaceCycle()
         applyAutocorrectOnCommit()
+        trailingAutoSpace.disarm()
         textDocumentProxy.insertText("\n")
         armAutoShiftIfSentenceStart()
     }
@@ -613,9 +1091,11 @@ final class KeyboardViewController: UIInputViewController {
         case .began:
             dismissAlternates()
             endSmartSpaceCycle()
+            trailingAutoSpace.disarm()
             // Pending bar edits target the pre-move tail; drop them.
             autocorrect.invalidateBar()
             refreshSuggestionBar()
+            blankKeyLegendsForCursorDrag()
             cursorDrag.began(at: gesture.location(in: view).x)
         case .changed:
             let delta = cursorDrag.moved(to: gesture.location(in: view).x)
@@ -624,40 +1104,33 @@ final class KeyboardViewController: UIInputViewController {
             }
         case .ended, .cancelled, .failed:
             armAutoShiftIfSentenceStart()
+            rebuildRows()   // restore the blanked legends
         default:
             break
         }
     }
 
+    /// Stock trackpad mode: every key legend blanks while the cursor
+    /// drags; the caps stay. rebuildRows restores them on release.
+    private func blankKeyLegendsForCursorDrag() {
+        for (_, button) in planeButtons {
+            button.configuration?.title = nil
+            button.configuration?.image = nil
+        }
+    }
+
     // MARK: - Key-pop (WORKPLAN 3.5)
 
-    /// Magnified preview above a touched character key, stock-style.
-    /// Keyed per button: two-finger typing keeps each finger's pop
-    /// independent (releasing one never removes the other's).
+    /// Stock balloon above a touched character key. Keyed per button:
+    /// two-finger typing keeps each finger's pop independent (releasing
+    /// one never removes the other's).
     private func showKeyPop(above button: UIButton) {
         dismissKeyPop(for: button)
         guard let title = button.configuration?.title else { return }
-        let pop = UILabel()
-        pop.text = title
-        pop.font = .systemFont(ofSize: 32)
-        pop.textAlignment = .center
-        pop.backgroundColor = .systemBackground
-        pop.layer.cornerRadius = 8
-        pop.clipsToBounds = true
-        pop.layer.borderWidth = 1
-        pop.layer.borderColor = UIColor.separator.cgColor
-        pop.translatesAutoresizingMaskIntoConstraints = false
+        let capFrame = view.convert(button.frame, from: button.superview ?? view)
+        let pop = KeyPopView(title: title, capFrame: capFrame,
+                             screenWidth: view.bounds.width)
         view.addSubview(pop)
-        let center = pop.centerXAnchor.constraint(equalTo: button.centerXAnchor)
-        center.priority = .defaultHigh  // yields at screen edges
-        NSLayoutConstraint.activate([
-            center,
-            pop.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 2),
-            pop.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -2),
-            pop.bottomAnchor.constraint(equalTo: button.topAnchor, constant: -2),
-            pop.widthAnchor.constraint(equalTo: button.widthAnchor, multiplier: 1.4),
-            pop.heightAnchor.constraint(equalToConstant: 50),
-        ])
         keyPops[button] = pop
     }
 
@@ -668,14 +1141,6 @@ final class KeyboardViewController: UIInputViewController {
     private func dismissAllKeyPops() {
         keyPops.values.forEach { $0.removeFromSuperview() }
         keyPops = [:]
-    }
-
-    @objc private func characterTouchDown(_ sender: UIButton) {
-        showKeyPop(above: sender)
-    }
-
-    @objc private func characterTouchEnded(_ sender: UIButton) {
-        dismissKeyPop(for: sender)
     }
 
     // MARK: - Emoji panel (WORKPLAN 3.6)
@@ -786,7 +1251,11 @@ final class KeyboardViewController: UIInputViewController {
         let abc = keyButton(title: "ABC")
         abc.accessibilityIdentifier = "emoji-abc"
         abc.addTarget(self, action: #selector(emojiAbcTapped), for: .touchUpInside)
-        let space = keyButton(title: "space")
+        // Stock's space bar carries no label; the identifier keeps it
+        // findable for accessibility and the UI suite.
+        let space = keyButton(title: "")
+        space.accessibilityIdentifier = "space"
+        space.accessibilityLabel = "space"
         space.addTarget(self, action: #selector(spaceTapped), for: .touchUpInside)
         let returnKey = keyButton(title: ReturnKeyLabel.label(
             for: returnKeyTypeName(textDocumentProxy.returnKeyType ?? .default)))
@@ -794,6 +1263,10 @@ final class KeyboardViewController: UIInputViewController {
         bottom.addArrangedSubview(abc)
         bottom.addArrangedSubview(space)
         bottom.addArrangedSubview(returnKey)
+        // Stock emoji plane colors its bottom row by role too.
+        applyRole(.function, to: abc)
+        applyRole(.space, to: space)
+        applyRole(.returnKey, to: returnKey)
         abc.widthAnchor.constraint(equalTo: bottom.widthAnchor, multiplier: 0.15).isActive = true
         returnKey.widthAnchor.constraint(equalTo: bottom.widthAnchor, multiplier: 0.22).isActive = true
 
@@ -825,7 +1298,7 @@ final class KeyboardViewController: UIInputViewController {
         var config = UIButton.Configuration.plain()
         config.title = title
         config.contentInsets = .zero
-        let button = UIButton(configuration: config)
+        let button = KeyButton(configuration: config)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.accessibilityIdentifier = identifier
         return button
@@ -835,7 +1308,7 @@ final class KeyboardViewController: UIInputViewController {
         var config = UIButton.Configuration.plain()
         config.title = emoji
         config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)
-        let button = UIButton(configuration: config)
+        let button = KeyButton(configuration: config)
         button.titleLabel?.font = .systemFont(ofSize: 26)
         button.accessibilityIdentifier = "emoji-item-\(emoji)"
         button.addTarget(self, action: #selector(emojiItemTapped(_:)), for: .touchUpInside)
@@ -872,7 +1345,8 @@ final class KeyboardViewController: UIInputViewController {
     /// Query strip in the suggestion-bar area: query label, up to 5 results,
     /// cancel. Letter taps feed the query while this is up.
     private func refreshEmojiSearchStrip() {
-        suggestionBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        // subviews: leftover candidate separators must go too.
+        suggestionBar.subviews.forEach { $0.removeFromSuperview() }
         let label = UILabel()
         label.text = "🔍 " + emojiQuery
         label.font = .systemFont(ofSize: 16)
@@ -893,22 +1367,26 @@ final class KeyboardViewController: UIInputViewController {
     /// Decides the correction for the word the space/return just committed
     /// and rewrites it in the document. Called BEFORE the separator is
     /// inserted so the word is still the exact document tail.
-    private func applyAutocorrectOnCommit() {
-        guard settings.autocorrect else { return }
+    /// Returns true when a correction was written into the document.
+    @discardableResult
+    private func applyAutocorrectOnCommit() -> Bool {
+        // Stock honors the host field's opt-out (password, code fields).
+        guard settings.autocorrect, textDocumentProxy.autocorrectionType != .no else { return false }
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
         let commit = autocorrect.wordCommitted(context: context)
         defer { refreshSuggestionBar() }
-        guard case .replace(let original, let corrected, _) = commit else { return }
+        guard case .replace(let original, let corrected, _) = commit else { return false }
         // Trailing punctuation ("teh)") detaches the word from the tail;
         // skip the edit rather than delete the wrong characters, and drop
         // the bar so it never advertises a correction that was not made.
         guard context.hasSuffix(original) else {
             autocorrect.backspace()
-            return
+            return false
         }
         for _ in 0..<original.count { textDocumentProxy.deleteBackward() }
         textDocumentProxy.insertText(corrected)
         log.debug("autocorrect applied (\(original.count) -> \(corrected.count) chars)")
+        return true
     }
 
     @objc private func suggestionTapped(_ sender: UIButton) {
@@ -918,7 +1396,12 @@ final class KeyboardViewController: UIInputViewController {
         defer { refreshSuggestionBar() }
         switch autocorrect.barContent {
         case .empty:
-            break
+            // Prediction slot: insert the word plus the stock auto-space;
+            // the refreshed bar then shows the chained predictions.
+            guard let word = sender.configuration?.title else { break }
+            textDocumentProxy.insertText(word + " ")
+            trailingAutoSpace.arm()
+            armAutoShiftIfSentenceStart()
         case .correction:
             // The correction must still be the document tail ("word" + the
             // separator that committed it). If the user typed on or moved
@@ -939,7 +1422,7 @@ final class KeyboardViewController: UIInputViewController {
             default:
                 break
             }
-        case .completions(let typed, _):
+        case .completions(let typed, _, _):
             // Same guard class: the partial must still be the tail.
             guard context.hasSuffix(typed) else {
                 autocorrect.invalidateBar()
@@ -948,10 +1431,12 @@ final class KeyboardViewController: UIInputViewController {
             switch autocorrect.barTapped(slot: sender.tag) {
             case .acceptTyped:
                 textDocumentProxy.insertText(" ")
+                trailingAutoSpace.arm()
                 log.debug("completion: typed word accepted")
             case .complete(let from, let to):
                 for _ in 0..<from.count { textDocumentProxy.deleteBackward() }
                 textDocumentProxy.insertText(to + " ")
+                trailingAutoSpace.arm()
                 log.debug("completion applied")
             default:
                 break
@@ -982,17 +1467,29 @@ final class KeyboardViewController: UIInputViewController {
         guard settings.autoCapitalization else { return }
         let before = textDocumentProxy.documentContextBeforeInput ?? ""
         let wasShifted = shift.isShifted
-        shift.armAutoShift(for: before)
+        shift.armAutoShift(for: before, trait: hostAutocapTrait)
         if shift.isShifted != wasShifted { refreshShiftAppearance() }
+    }
+
+    /// The host field's trait, mirrored into the engine's UIKit-free enum.
+    /// Stock never auto-shifts in a field that asks for .none.
+    private var hostAutocapTrait: AutocapTrait {
+        switch textDocumentProxy.autocapitalizationType ?? .sentences {
+        case .none: return .none
+        case .words: return .words
+        case .allCharacters: return .allCharacters
+        case .sentences: return .sentences
+        @unknown default: return .sentences
+        }
     }
 
     // MARK: - App-group probe (WORKPLAN 3.1)
 
+    /// Verdict goes to the system log only (stock-parity AC 4: no debug
+    /// chrome on the keyboard surface). .notice so it persists on device.
     private func runAppGroupProbe() {
         let value = UserDefaults(suiteName: appGroupID)?.string(forKey: probeKey)
         let ok = value == probeValue
-        probeBadge.text = ok ? "AG:OK" : "AG:BLOCKED"
-        probeBadge.textColor = ok ? .systemGreen : .systemRed
-        log.debug("app-group probe: \(ok ? "OK" : "BLOCKED", privacy: .public)")
+        log.notice("app-group probe: \(ok ? "OK" : "BLOCKED", privacy: .public)")
     }
 }

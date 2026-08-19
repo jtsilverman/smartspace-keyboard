@@ -29,13 +29,13 @@ private func controller(
         var c = controller()
         let commit = c.wordCommitted(context: "hi teh")
         #expect(commit == .replace(original: "teh", corrected: "the",
-                                   alternatives: ["ten", "tech"]))
+                                   alternatives: ["tech", "ten"]))
     }
 
     @Test func barShowsOriginalThenAtMostTwoAlternatives() {
         var c = controller()
         _ = c.wordCommitted(context: "hi teh")
-        #expect(c.barContent == .correction(slots: ["teh", "ten", "tech"]))
+        #expect(c.barContent == .correction(slots: ["teh", "tech", "ten"]))
     }
 
     @Test func correctWordCommitKeepsAndClearsBar() {
@@ -89,15 +89,15 @@ private func controller(
         var c = controller()
         _ = c.wordCommitted(context: "hi teh")
         let action = c.barTapped(slot: 1)
-        #expect(action == .swap(from: "the", to: "ten"))
-        #expect(c.barContent == .correction(slots: ["teh", "the", "tech"]))
+        #expect(action == .swap(from: "the", to: "tech"))
+        #expect(c.barContent == .correction(slots: ["teh", "the", "ten"]))
     }
 
     @Test func undoAfterSwapDeletesTheSwappedWord() {
         var c = controller()
         _ = c.wordCommitted(context: "hi teh")
         _ = c.barTapped(slot: 1)
-        #expect(c.barTapped(slot: 0) == .undo(original: "teh", corrected: "ten"))
+        #expect(c.barTapped(slot: 0) == .undo(original: "teh", corrected: "tech"))
     }
 
     @Test func currentCorrectedTracksSwapsAndClears() {
@@ -106,7 +106,7 @@ private func controller(
         _ = c.wordCommitted(context: "hi teh")
         #expect(c.currentCorrected == "the")
         _ = c.barTapped(slot: 1)
-        #expect(c.currentCorrected == "ten")
+        #expect(c.currentCorrected == "tech")
         c.backspace()
         #expect(c.currentCorrected == nil)
     }
@@ -166,7 +166,7 @@ private func controller(
         // Not protected: only an undo tap protects.
         #expect(c.wordCommitted(context: "again teh")
                 == .replace(original: "teh", corrected: "the",
-                            alternatives: ["ten", "tech"]))
+                            alternatives: ["tech", "ten"]))
     }
 
     @Test func nextCommitRefillsBarForNewWord() {
@@ -214,13 +214,13 @@ private func controller(
         var c = typingController()
         c.typingUpdate(context: "hello keyb")
         #expect(c.barContent == .completions(typed: "keyb",
-                                             completions: ["keyboard", "keybinding"]))
+                                             completions: ["keyboard", "keybinding"], correction: nil))
     }
 
     @Test func partialWithNoCompletionsStillShowsTyped() {
         var c = typingController()
         c.typingUpdate(context: "zzq")
-        #expect(c.barContent == .completions(typed: "zzq", completions: []))
+        #expect(c.barContent == .completions(typed: "zzq", completions: [], correction: nil))
     }
 
     @Test func emptyPartialLeavesCorrectionUntouched() {
@@ -242,7 +242,7 @@ private func controller(
         _ = c.wordCommitted(context: "hi teh")
         #expect(c.barContent == .correction(slots: ["teh"]))
         c.typingUpdate(context: "hi the k")
-        #expect(c.barContent == .completions(typed: "k", completions: []))
+        #expect(c.barContent == .completions(typed: "k", completions: [], correction: nil))
     }
 
     @Test func backspaceThenTypingRepopulatesCompletions() {
@@ -250,7 +250,7 @@ private func controller(
         _ = c.wordCommitted(context: "hi teh")
         c.backspace()
         c.typingUpdate(context: "hi ke")
-        #expect(c.barContent == .completions(typed: "ke", completions: ["keep", "key"]))
+        #expect(c.barContent == .completions(typed: "ke", completions: ["keep", "key"], correction: nil))
     }
 
     @Test func completionTapReturnsCompleteAndClears() {
@@ -273,7 +273,7 @@ private func controller(
         c.typingUpdate(context: "hello keyb")
         #expect(c.barTapped(slot: 3) == AutocorrectController.BarAction.none)
         #expect(c.barContent == .completions(typed: "keyb",
-                                             completions: ["keyboard", "keybinding"]))
+                                             completions: ["keyboard", "keybinding"], correction: nil))
     }
 }
 
@@ -300,7 +300,7 @@ private func controller(
         var c = AutocorrectController(checker: TableChecker(
             table: [:], completionTable: ["hi": ["high", "hind"]]))
         c.typingUpdate(context: "hi")
-        #expect(c.barContent == .completions(typed: "hi", completions: ["high", "hind"]))
+        #expect(c.barContent == .completions(typed: "hi", completions: ["high", "hind"], correction: nil))
         c.typingUpdate(context: "hi!")
         #expect(c.barContent == .empty)
     }

@@ -46,6 +46,12 @@ public enum ShiftMode: Equatable, Sendable {
     case off, oneShot, capsLock
 }
 
+/// The host field's autocapitalization trait, mirrored from UIKit so the
+/// engine stays UIKit-free.
+public enum AutocapTrait: Equatable, Sendable {
+    case none, words, sentences, allCharacters
+}
+
 /// Shift state machine: tap arms one-shot, double-tap within the window locks
 /// caps, tap while locked releases. Auto-shift arms one-shot at sentence
 /// starts via the shared CapitalizationRule.
@@ -81,11 +87,22 @@ public struct ShiftState: Sendable {
         if mode == .oneShot { mode = .off }
     }
 
-    /// Arms one-shot at a sentence start; never touches caps lock or an
-    /// already-armed one-shot.
-    public mutating func armAutoShift(for context: String) {
-        guard mode == .off, CapitalizationRule.shouldCapitalize(before: context) else { return }
-        mode = .oneShot
+    /// Arms one-shot where the host field's trait says so; never touches
+    /// caps lock or an already-armed one-shot.
+    public mutating func armAutoShift(for context: String, trait: AutocapTrait = .sentences) {
+        guard mode == .off else { return }
+        let arms: Bool
+        switch trait {
+        case .none:
+            arms = false
+        case .sentences:
+            arms = CapitalizationRule.shouldCapitalize(before: context)
+        case .words:
+            arms = context.last.map(\.isWhitespace) ?? true
+        case .allCharacters:
+            arms = true
+        }
+        if arms { mode = .oneShot }
     }
 
     /// Arms one-shot unconditionally (except caps lock): for sites that KNOW
@@ -111,6 +128,11 @@ public enum KeyboardLayer: Equatable, Sendable {
     /// "123" from symbols.
     public mutating func tapSecondary() {
         self = (self == .numbers) ? .symbols : .numbers
+    }
+
+    /// Stock: a space typed on the 123 / #+= plane flips back to letters.
+    public mutating func didTypeSpace() {
+        self = .letters
     }
 }
 

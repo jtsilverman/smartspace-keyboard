@@ -14,6 +14,10 @@ DATA="$HOME/Library/Developer/CoreSimulator/Devices/$UDID/data"
 
 xcrun simctl shutdown "$UDID" 2>/dev/null || true
 rm -rf "$DATA/Library/Keyboard"/*
-find "$DATA/Containers" -path "*Preferences/com.jtsilverman.smartspace*" -name "*.plist" -delete
+# The app-group plist is named group.com.jtsilverman.smartspace.plist -- the
+# old "*Preferences/com.jtsilverman.smartspace*" pattern silently missed it,
+# so PersonalRanking training survived every reset (found 2026-08-02: five
+# stale ?->. cycle rows kept flipping question predictions to '.').
+find "$DATA/Containers" -path "*Preferences/*com.jtsilverman.smartspace*" -name "*.plist" -delete
 xcrun simctl boot "$UDID"
 echo "keyboard model + extension state reset for $UDID"

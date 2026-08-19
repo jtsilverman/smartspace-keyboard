@@ -66,12 +66,15 @@ private func marks(_ text: String) -> [String] {
     }
 }
 
-@Test func firstPersonCompletionRanksExclamationSecond() {
+@Test func firstPersonCompletionKeepsExclamationAheadOfQuestion() {
+    // comma-lists AC 1 moved "," into second everywhere; the v4 excited-news
+    // tweak survives as ! third, still ahead of ? (spec comma-lists).
     for text in ["i finally organized the garage", "we just adopted a kitten"] {
         assertNovel(text)
         let m = marks(text)
         #expect(m.first == ".", "completion statements stay period-first: \(text)")
-        #expect(m.count > 1 && m[1] == "!", "expected ! ranked second for: \(text)")
+        #expect(m.count > 2 && m[1] == "," && m[2] == "!",
+                "expected , second and ! third for: \(text)")
     }
 }
 

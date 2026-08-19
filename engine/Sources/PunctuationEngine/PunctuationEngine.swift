@@ -278,7 +278,7 @@ public struct PunctuationEngine: Sendable {
         // rules keep only their period-first ranking (v4 e2e invariant).
         if Self.dottedAbbreviations.contains(rawLastToken) {
             return Prediction(rule: .dottedAbbreviation,
-                              candidates: Self.ranked([".", "?", "!", ",", "\""]))
+                              candidates: Self.ranked([".", ",", "?", "!", "\""]))
         }
 
         let sentence = Self.currentSentence(in: context)
@@ -288,7 +288,7 @@ public struct PunctuationEngine: Sendable {
         }
         if let last = words.last, Self.abbreviations.contains(last) {
             return Prediction(rule: .abbreviation,
-                              candidates: Self.ranked([".", "?", "!", ",", "\""]))
+                              candidates: Self.ranked([".", ",", "?", "!", "\""]))
         }
 
         // A question can hide in the last comma-separated clause
@@ -326,16 +326,27 @@ public struct PunctuationEngine: Sendable {
             return Prediction(rule: .exclamation,
                               candidates: Self.ranked(["!", ".", "?", ",", "\""]))
         }
+        // comma-lists AC 2: from item 2 onward the sentence itself says
+        // "list" -- a comma boundary followed by a short chunk. An "and"/"or"
+        // chunk is the final item, so the guess falls through to period-first.
+        // Digit-grouping commas ("3,000") are separators, not boundaries.
+        let delisted = Self.strippingDigitGroupCommas(sentence)
+        let listChunk = Self.tokens(delisted.split(separator: ",").last ?? delisted)
+        if delisted.contains(","), (1...3).contains(listChunk.count),
+           let opener = listChunk.first, opener != "and", opener != "or" {
+            return Prediction(rule: .list,
+                              candidates: Self.ranked([",", ".", "?", "!", "\""]))
+        }
         // First-person completion statements ("i finally...", "we just...")
         // stay period-first but rank ! second: excited news recovers in one
         // cycle tap. Same .fallback label -- ordering tweak, not a new rule.
         if let first = words.first, ["i", "we", "im", "my"].contains(first),
            words.contains("finally") || words.contains("just") {
             return Prediction(rule: .fallback,
-                              candidates: Self.ranked([".", "!", "?", ",", "\""]))
+                              candidates: Self.ranked([".", ",", "!", "?", "\""]))
         }
         return Prediction(rule: .fallback,
-                          candidates: Self.ranked([".", "?", "!", ",", "\""]))
+                          candidates: Self.ranked([".", ",", "?", "!", "\""]))
     }
 
     /// Returns candidates ranked best-first for the text before the cursor.
@@ -554,6 +565,20 @@ public struct PunctuationEngine: Sendable {
     }
 
     /// The sentence being typed: text after the last terminal mark.
+    /// Removes commas flanked by digits ("3,000" -> "3000") so number
+    /// grouping never reads as a list boundary (reviewer finding).
+    private static func strippingDigitGroupCommas(_ sentence: Substring) -> Substring {
+        var out = ""
+        out.reserveCapacity(sentence.count)
+        let chars = Array(sentence)
+        for (i, ch) in chars.enumerated() {
+            if ch == ",", i > 0, i + 1 < chars.count,
+               chars[i - 1].isNumber, chars[i + 1].isNumber { continue }
+            out.append(ch)
+        }
+        return Substring(out)
+    }
+
     private static func currentSentence(in context: String) -> Substring {
         context.split(omittingEmptySubsequences: false,
                       whereSeparator: { ".!?".contains($0) }).last ?? ""

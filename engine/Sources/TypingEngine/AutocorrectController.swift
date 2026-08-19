@@ -19,8 +19,11 @@ public struct AutocorrectController: Sendable {
         /// undo), then alternatives (tap to swap).
         case correction(slots: [String])
         /// Mid-word: slot 0 = the word as typed (tap to keep + protect),
-        /// then dictionary completions (tap to finish the word).
-        case completions(typed: String, completions: [String])
+        /// then follow slots (tap to finish the word). When `correction`
+        /// is set, a commit would correct: slot 0 renders in quotation
+        /// marks (stock's tell), completions[0] IS the correction and
+        /// draws the stock highlight pill.
+        case completions(typed: String, completions: [String], correction: String?)
     }
 
     /// What a suggestion-bar tap means for the document.
@@ -41,10 +44,19 @@ public struct AutocorrectController: Sendable {
     /// The bar shows at most the original/typed plus two follow slots.
     private static let maxAlternatives = 2
 
+    /// True when typing `char` ends the current word and must commit any
+    /// pending correction, like space and return do on their own paths.
+    /// Apostrophe and hyphen stay word characters ("don't", "well-known").
+    public static func isCommitDelimiter(_ char: Character) -> Bool {
+        commitDelimiters.contains(char)
+    }
+
+    private static let commitDelimiters: Set<Character> = [".", ",", "!", "?", ":", ";"]
+
     private enum State: Sendable {
         case idle
         case correction(original: String, corrected: String, alternatives: [String])
-        case typing(typed: String, completions: [String])
+        case typing(typed: String, correction: String?, completions: [String])
     }
 
     private let checker: any SpellChecking
@@ -70,8 +82,11 @@ public struct AutocorrectController: Sendable {
             return .empty
         case .correction(let original, _, let alternatives):
             return .correction(slots: [original] + alternatives)
-        case .typing(let typed, let completions):
-            return .completions(typed: typed, completions: completions)
+        case .typing(let typed, let correction, let completions):
+            return .completions(typed: typed,
+                                completions: Self.follows(correction: correction,
+                                                          completions: completions),
+                                correction: correction)
         }
     }
 
@@ -113,7 +128,19 @@ public struct AutocorrectController: Sendable {
             return
         }
         let completions = Array(checker.completions(for: partial).prefix(Self.maxAlternatives))
-        state = .typing(typed: partial, completions: completions)
+        var correction: String?
+        if case .correct(let to, _) = engine.decision(for: context, session: session) {
+            correction = to
+        }
+        state = .typing(typed: partial, correction: correction, completions: completions)
+    }
+
+    /// The follow slots after the typed word: a pending correction leads
+    /// (stock pills it), then completions, never more than two total.
+    private static func follows(correction: String?, completions: [String]) -> [String] {
+        guard let correction else { return completions }
+        return [correction] + completions.filter { $0 != correction }
+            .prefix(maxAlternatives - 1)
     }
 
     /// The word actively being typed: the trailing run of letters and word
@@ -147,14 +174,15 @@ public struct AutocorrectController: Sendable {
             state = .correction(original: original, corrected: chosen,
                                 alternatives: alternatives)
             return .swap(from: corrected, to: chosen)
-        case .typing(let typed, let completions):
-            guard slot >= 0, slot <= completions.count else { return .none }
+        case .typing(let typed, let correction, let completions):
+            let follows = Self.follows(correction: correction, completions: completions)
+            guard slot >= 0, slot <= follows.count else { return .none }
             state = .idle
             if slot == 0 {
                 session.protect(typed)
                 return .acceptTyped(word: typed)
             }
-            return .complete(from: typed, to: completions[slot - 1])
+            return .complete(from: typed, to: follows[slot - 1])
         }
     }
 
