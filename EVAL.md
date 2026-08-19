@@ -68,3 +68,34 @@ Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`
 - Code-context detection (JSON/CLI straight quotes), single-quote elision vs quote at type time ('n' rock 'n' roll), text-start --- divider (aside chosen), one join-ambiguous authored row (sym-107).
 - Completions: NONE-rows (short valid words get junk completions) and context-aware ranking need a frequency/context model.
 - {RET} scenarios (2) need a multiline practice field (Phase 4 host-app work).
+
+## Stock design parity, measured from screenshots
+
+`eval/parity/run-parity.sh` captures the stock keyboard and SmartSpace on the same
+simulator and diffs the key area. iPhone 17, iOS 26.3, light mode, 2026-08-19:
+
+| Measure | Result |
+|---|---|
+| Letter cap position, worst | 0.33pt (one device pixel) |
+| Letter cap size, worst | 0.33pt |
+| Space bar position / width | 0.00pt / 0.33pt |
+| Function key fill | 254,254,254 against stock's 255,255,255 |
+| Key area pixels differing | 2.77%, at glyph edges and the emoji key |
+
+Dark mode is not at parity and predates the 2026-08-19 work: function keys read
+36,36,36 against stock's 61,61,61, caps sit up to 1.33pt off, 11.7% of pixels differ.
+Measured with and without the backdrop change; both runs identical.
+
+## Key coverage against stock
+
+`CoverageProofTests` taps every point of every letter row in 1pt steps on both
+keyboards and records what each point types. iPhone 17, iOS 26.3, 2026-08-19:
+
+| Row | Points | Same letter as stock | Dead on stock | Dead on SmartSpace |
+|---|---|---|---|---|
+| qwertyuiop | 393 | 89.6% | 0 | 0 |
+| asdfghjkl | 353 | 90.1% | 0 | 0 |
+| zxcvbnm | 274 | 89.8% | 2 | 0 |
+
+No point of the keyboard is dead. Every disagreement sits within 4pt of a key
+boundary, where stock's own map flips back and forth between the two letters.
