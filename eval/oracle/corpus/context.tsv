@@ -1,0 +1,101 @@
+id	slice	typed	offsets	note
+ctx-001a	context	thanks fro the ride	-	token fro, sentence a
+ctx-001b	context	i just got back fro work	-	token fro, sentence b
+ctx-002a	context	that si really great	-	token si, sentence a
+ctx-002b	context	si happy for you guys	-	token si, sentence b
+ctx-003a	context	i want ot go home	-	token ot, sentence a
+ctx-003b	context	a lot ot people showed up	-	token ot, sentence b
+ctx-004a	context	wat time is dinner	-	token wat, sentence a
+ctx-004b	context	wat for me outside	-	token wat, sentence b
+ctx-005a	context	i am driving hom now	-	token hom, sentence a
+ctx-005b	context	hom many are coming	-	token hom, sentence b
+ctx-006a	context	i will be ther soon	-	token ther, sentence a
+ctx-006b	context	ther car is outside	-	token ther, sentence b
+ctx-007a	context	call me bak later	-	token bak, sentence a
+ctx-007b	context	can you bak a cake	-	token bak, sentence b
+ctx-008a	context	we wer already gone	-	token wer, sentence a
+ctx-008b	context	wer are you right now	-	token wer, sentence b
+ctx-009a	context	thn i went home	-	token thn, sentence a
+ctx-009b	context	thn you so much	-	token thn, sentence b
+ctx-010a	context	i am leaving nw	-	token nw, sentence a
+ctx-010b	context	she got a nw phone	-	token nw, sentence b
+ctx-011a	context	do you hav a minute	-	token hav, sentence a
+ctx-011b	context	i hav to leave early	-	token hav, sentence b
+ctx-012a	context	i sen it yesterday	-	token sen, sentence a
+ctx-012b	context	have you sen my keys	-	token sen, sentence b
+ctx-013a	context	she was so mad	-	token mad, sentence a
+ctx-013b	context	i mad you a sandwich	-	token mad, sentence b
+ctx-014a	context	i liv on the third floor	-	token liv, sentence a
+ctx-014b	context	he is still liv at home	-	token liv, sentence b
+ctx-015a	context	throw it in the bin	-	token bin, sentence a
+ctx-015b	context	i have bin waiting an hour	-	token bin, sentence b
+ctx-016a	context	how ar you doing	-	token ar, sentence a
+ctx-016b	context	we ar almost there	-	token ar, sentence b
+ctx-017a	context	i cant find my keys	-	token cant, sentence a
+ctx-017b	context	the cant was too high	-	token cant, sentence b
+ctx-018a	context	he wont answer me	-	token wont, sentence a
+ctx-018b	context	she has a wont of leaving early	-	token wont, sentence b
+ctx-019a	context	i fell asleep on the couch	-	token fell, sentence a
+ctx-019b	context	the fell of the room was off	-	token fell, sentence b
+ctx-020a	context	hte door is unlocked	-	token hte, sentence a
+ctx-020b	context	give it to hte other guy	-	token hte, sentence b
+ctx-021a	context	teh meeting got moved	-	token teh, sentence a
+ctx-021b	context	i left it on teh counter	-	token teh, sentence b
+ctx-022a	context	you adn me both	-	token adn, sentence a
+ctx-022b	context	adn then he left	-	token adn, sentence b
+ctx-023a	context	salt nad pepper	-	token nad, sentence a
+ctx-023b	context	nad i told him no	-	token nad, sentence b
+ctx-024a	context	coffee ans a bagel	-	token ans, sentence a
+ctx-024b	context	ans then we left	-	token ans, sentence b
+ctx-025a	context	dont forget the milk	-	token dont, sentence a
+ctx-025b	context	i dont think so	-	token dont, sentence b
+ctx-026a	context	im on my way	-	token im, sentence a
+ctx-026b	context	tell im i said hi	-	token im, sentence b
+ctx-027a	context	i think im getting ill	-	token ill, sentence a
+ctx-027b	context	ill call you tonight	-	token ill, sentence b
+ctx-028a	context	i lost my id card	-	token id, sentence a
+ctx-028b	context	id rather stay home	-	token id, sentence b
+ctx-029a	context	wel be there at six	-	token wel, sentence a
+ctx-029b	context	the wel ran dry	-	token wel, sentence b
+ctx-030a	context	shes already left	-	token shes, sentence a
+ctx-030b	context	the shes are in the closet	-	token shes, sentence b
+ctx-031a	context	thier car broke down	-	token thier, sentence a
+ctx-031b	context	i went over thier last night	-	token thier, sentence b
+ctx-032a	context	did you recieve my email	-	token recieve, sentence a
+ctx-032b	context	the recieve was very warm	-	token recieve, sentence b
+ctx-033a	context	i definately left it there	-	token definately, sentence a
+ctx-033b	context	that was definately him	-	token definately, sentence b
+ctx-034a	context	we took seperate cars	-	token seperate, sentence a
+ctx-034b	context	keep them seperate please	-	token seperate, sentence b
+ctx-035a	context	it occured to me later	-	token occured, sentence a
+ctx-035b	context	the delay occured again	-	token occured, sentence b
+ctx-036a	context	becuase i said so	-	token becuase, sentence a
+ctx-036b	context	i left becuase of the rain	-	token becuase, sentence b
+ctx-037a	context	i recomend the fish	-	token recomend, sentence a
+ctx-037b	context	would you recomend it	-	token recomend, sentence b
+ctx-038a	context	see you tommorow morning	-	token tommorow, sentence a
+ctx-038b	context	tommorow works better	-	token tommorow, sentence b
+ctx-039a	context	i miss you alot	-	token alot, sentence a
+ctx-039b	context	alot of people came	-	token alot, sentence b
+ctx-040a	context	prolly around eight	-	token prolly, sentence a
+ctx-040b	context	i will prolly be late	-	token prolly, sentence b
+ctx-041a	context	i am gonna be late	-	token gonna, sentence a
+ctx-041b	context	it is gonna rain	-	token gonna, sentence b
+ctx-042a	context	we finaly got a table	-	token finaly, sentence a
+ctx-042b	context	finaly some good news	-	token finaly, sentence b
+ctx-043a	context	wich one do you want	-	token wich, sentence a
+ctx-043b	context	the wich hazel is empty	-	token wich, sentence b
+ctx-044a	context	i have no idea	-	token no, sentence a
+ctx-044b	context	did you no about this	-	token no, sentence b
+ctx-045a	context	a cup of coffee	-	token of, sentence a
+ctx-045b	context	i want to get of the train	-	token of, sentence b
+ctx-046a	context	i am going to work	-	token to, sentence a
+ctx-046b	context	the food was to cold	-	token to, sentence b
+ctx-047a	context	is that your car	-	token your, sentence a
+ctx-047b	context	your going to love this	-	token your, sentence b
+ctx-048a	context	its going to rain	-	token its, sentence a
+ctx-048b	context	the dog hurt its paw	-	token its, sentence b
+ctx-049a	context	we were already there	-	token were, sentence a
+ctx-049b	context	were you at the game	-	token were, sentence b
+ctx-050a	context	then we went home	-	token then, sentence a
+ctx-050b	context	bigger then the last one	-	token then, sentence b

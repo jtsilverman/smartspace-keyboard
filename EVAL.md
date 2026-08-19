@@ -69,6 +69,35 @@ Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`
 - Completions: NONE-rows (short valid words get junk completions) and context-aware ranking need a frequency/context model.
 - {RET} scenarios (2) need a multiline practice field (Phase 4 host-app work).
 
+## The stock oracle, recorded from the stock keyboard
+
+Apple's own answers to the frozen 400-row keystroke corpus
+(`specs/autocorrect-parity.md` unit 0). `eval/oracle/record.py` types each row
+into the real stock keyboard and records what stock produced. iPhone 17 Pro,
+iOS 26.3, 2026-08-19, learned keyboard state reset before every slice.
+
+| Slice | Rows | What stock did |
+|---|---|---|
+| sloppy | 150 | Recovered the intended phrase in 150 (145 verbatim, 5 more as `im` -> `I'm`) |
+| nospace, missing space | 50 | Split the run-together token in 48 |
+| nospace, stray space | 50 | Changed 22; `tomo rrow` -> `tomorrow`, but `than ks` -> `Than is` |
+| context | 100 | Resolved the same typed token two different ways in 20 of the 50 pairs |
+| names, typed clean | 25 | Left all 25 untouched |
+| names, one slip | 25 | Changed 19; `jaje` -> `Jake`, `davod` -> `David`, `youtub` -> `YouTube` |
+
+The sloppy slice is sloppy by geometry, not by spelling: 2.7% of its 2,270
+letter taps land past a key boundary onto the neighbouring key, and 50 of the
+150 rows carry at least one such tap. Stock recovered every one of them.
+
+Stock does not fix everything, and the rows it left alone are gold labels too.
+`michal` stayed `Michal`, `jesica` stayed `Jesica`, `detla` stayed `delta`, and
+the stray-space join failed more often than it worked. A unit that "improves" on
+those rows disagrees with the oracle and fails its check.
+
+Not yet proven: the drift gate. Check 1 also requires the 30-row held-back slice
+to re-record after a full day of unrelated simulator sessions and reproduce its
+recorded output. That run cannot happen before 2026-08-20.
+
 ## Stock design parity, measured from screenshots
 
 `eval/parity/run-parity.sh` captures the stock keyboard and SmartSpace on the same

@@ -1,0 +1,51 @@
+id	slice	typed	offsets	note
+name-001	names	tell jake i said hi	-	typed clean, must survive
+name-002	names	i saw sarah at the store	-	typed clean, must survive
+name-003	names	michael is running late	-	typed clean, must survive
+name-004	names	ask jessica about it	-	typed clean, must survive
+name-005	names	david never texted back	-	typed clean, must survive
+name-006	names	emily got the job	-	typed clean, must survive
+name-007	names	call daniel tonight	-	typed clean, must survive
+name-008	names	rachel is bringing dessert	-	typed clean, must survive
+name-009	names	matthew forgot his keys	-	typed clean, must survive
+name-010	names	olivia is on her way	-	typed clean, must survive
+name-011	names	i sent it to andrew	-	typed clean, must survive
+name-012	names	sophia picked the place	-	typed clean, must survive
+name-013	names	ryan is parking the car	-	typed clean, must survive
+name-014	names	hannah left already	-	typed clean, must survive
+name-015	names	nathan is still working	-	typed clean, must survive
+name-016	names	i work at google now	-	typed clean, must survive
+name-017	names	she bought a new iphone	-	typed clean, must survive
+name-018	names	we watched it on netflix	-	typed clean, must survive
+name-019	names	order it from amazon	-	typed clean, must survive
+name-020	names	the starbucks on main street	-	typed clean, must survive
+name-021	names	i uninstalled instagram	-	typed clean, must survive
+name-022	names	he posted it on youtube	-	typed clean, must survive
+name-023	names	we booked it on airbnb	-	typed clean, must survive
+name-024	names	my flight is on delta	-	typed clean, must survive
+name-025	names	i paid with venmo	-	typed clean, must survive
+name-026	names	tell jaje i said hi	-	one slip, target jake
+name-027	names	i saw sarha at the store	-	one slip, target sarah
+name-028	names	michal is running late	-	one slip, target michael
+name-029	names	ask jesica about it	-	one slip, target jessica
+name-030	names	davod never texted back	-	one slip, target david
+name-031	names	emliy got the job	-	one slip, target emily
+name-032	names	call danial tonight	-	one slip, target daniel
+name-033	names	rachal is bringing dessert	-	one slip, target rachel
+name-034	names	mathew forgot his keys	-	one slip, target matthew
+name-035	names	olivai is on her way	-	one slip, target olivia
+name-036	names	i sent it to andrwe	-	one slip, target andrew
+name-037	names	sophie picked the place	-	one slip, target sophia
+name-038	names	rryan is parking the car	-	one slip, target ryan
+name-039	names	hanah left already	-	one slip, target hannah
+name-040	names	nathen is still working	-	one slip, target nathan
+name-041	names	i work at googel now	-	one slip, target google
+name-042	names	she bought a new ipone	-	one slip, target iphone
+name-043	names	we watched it on netlix	-	one slip, target netflix
+name-044	names	order it from amazn	-	one slip, target amazon
+name-045	names	the starbcks on main street	-	one slip, target starbucks
+name-046	names	i uninstalled instgram	-	one slip, target instagram
+name-047	names	he posted it on youtub	-	one slip, target youtube
+name-048	names	we booked it on airbnd	-	one slip, target airbnb
+name-049	names	my flight is on detla	-	one slip, target delta
+name-050	names	i paid with vemno	-	one slip, target venmo

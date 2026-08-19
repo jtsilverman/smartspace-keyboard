@@ -1,0 +1,101 @@
+id	slice	typed	offsets	note
+nosp-001	nospace	im onmy way	-	one space missing
+nosp-002	nospace	see youtomorrow	-	one space missing
+nosp-003	nospace	thankyou so much	-	one space missing
+nosp-004	nospace	i willbe there soon	-	one space missing
+nosp-005	nospace	call melater	-	one space missing
+nosp-006	nospace	whattime is it	-	one space missing
+nosp-007	nospace	iam almost there	-	one space missing
+nosp-008	nospace	letme know	-	one space missing
+nosp-009	nospace	sounds goodto me	-	one space missing
+nosp-010	nospace	are youcoming	-	one space missing
+nosp-011	nospace	i gotyour message	-	one space missing
+nosp-012	nospace	we shouldgo	-	one space missing
+nosp-013	nospace	the mealwas great	-	one space missing
+nosp-014	nospace	can youhear me	-	one space missing
+nosp-015	nospace	i willcall you back	-	one space missing
+nosp-016	nospace	howwas your day	-	one space missing
+nosp-017	nospace	i needmore coffee	-	one space missing
+nosp-018	nospace	the storecloses soon	-	one space missing
+nosp-019	nospace	did youlock the door	-	one space missing
+nosp-020	nospace	meet meat the corner	-	one space missing
+nosp-021	nospace	sendme the link	-	one space missing
+nosp-022	nospace	that isa good idea	-	one space missing
+nosp-023	nospace	the packagearrived	-	one space missing
+nosp-024	nospace	my phoneis dying	-	one space missing
+nosp-025	nospace	give meone second	-	one space missing
+nosp-026	nospace	i amin a meeting	-	one space missing
+nosp-027	nospace	maybenext week	-	one space missing
+nosp-028	nospace	any timeworks	-	one space missing
+nosp-029	nospace	i willbe there early	-	one space missing
+nosp-030	nospace	do notwait for me	-	one space missing
+nosp-031	nospace	i parkedaround back	-	one space missing
+nosp-032	nospace	buzz mein	-	one space missing
+nosp-033	nospace	which apartmentis it	-	one space missing
+nosp-034	nospace	who elseis coming	-	one space missing
+nosp-035	nospace	bring ajacket	-	one space missing
+nosp-036	nospace	the rainstopped	-	one space missing
+nosp-037	nospace	drivesafe	-	one space missing
+nosp-038	nospace	i madeit back	-	one space missing
+nosp-039	nospace	we landedearly	-	one space missing
+nosp-040	nospace	the hotelis nice	-	one space missing
+nosp-041	nospace	breakfastis included	-	one space missing
+nosp-042	nospace	i bookedthe flight	-	one space missing
+nosp-043	nospace	the ticketwas cheap	-	one space missing
+nosp-044	nospace	i amboarding now	-	one space missing
+nosp-045	nospace	see youat the gate	-	one space missing
+nosp-046	nospace	sorry ifell asleep	-	one space missing
+nosp-047	nospace	just wokeup	-	one space missing
+nosp-048	nospace	almostready	-	one space missing
+nosp-049	nospace	leavingin five	-	one space missing
+nosp-050	nospace	order methe usual	-	one space missing
+nosp-051	nospace	see you tomo rrow	-	one stray space inside a word
+nosp-052	nospace	than ks so much	-	one stray space inside a word
+nosp-053	nospace	i will be there toni ght	-	one stray space inside a word
+nosp-054	nospace	call me la ter	-	one stray space inside a word
+nosp-055	nospace	what ti me is it	-	one stray space inside a word
+nosp-056	nospace	i am al most there	-	one stray space inside a word
+nosp-057	nospace	let me kn ow	-	one stray space inside a word
+nosp-058	nospace	sounds go od to me	-	one stray space inside a word
+nosp-059	nospace	are you com ing	-	one stray space inside a word
+nosp-060	nospace	i got your mess age	-	one stray space inside a word
+nosp-061	nospace	we should g o	-	one stray space inside a word
+nosp-062	nospace	the meal was gre at	-	one stray space inside a word
+nosp-063	nospace	can you he ar me	-	one stray space inside a word
+nosp-064	nospace	i will call you ba ck	-	one stray space inside a word
+nosp-065	nospace	how was your d ay	-	one stray space inside a word
+nosp-066	nospace	i need more cof fee	-	one stray space inside a word
+nosp-067	nospace	the store clo ses soon	-	one stray space inside a word
+nosp-068	nospace	did you lock the do or	-	one stray space inside a word
+nosp-069	nospace	meet me at the cor ner	-	one stray space inside a word
+nosp-070	nospace	send me the li nk	-	one stray space inside a word
+nosp-071	nospace	that is a good id ea	-	one stray space inside a word
+nosp-072	nospace	the pack age arrived	-	one stray space inside a word
+nosp-073	nospace	my ph one is dying	-	one stray space inside a word
+nosp-074	nospace	give me one sec ond	-	one stray space inside a word
+nosp-075	nospace	i am in a meet ing	-	one stray space inside a word
+nosp-076	nospace	may be next week	-	one stray space inside a word
+nosp-077	nospace	any time wor ks	-	one stray space inside a word
+nosp-078	nospace	i will be there ear ly	-	one stray space inside a word
+nosp-079	nospace	do not wa it for me	-	one stray space inside a word
+nosp-080	nospace	i parked around ba ck	-	one stray space inside a word
+nosp-081	nospace	buzz me i n	-	one stray space inside a word
+nosp-082	nospace	which apart ment is it	-	one stray space inside a word
+nosp-083	nospace	who else is com ing	-	one stray space inside a word
+nosp-084	nospace	bring a jack et	-	one stray space inside a word
+nosp-085	nospace	the ra in stopped	-	one stray space inside a word
+nosp-086	nospace	dri ve safe	-	one stray space inside a word
+nosp-087	nospace	i made it ba ck	-	one stray space inside a word
+nosp-088	nospace	we lan ded early	-	one stray space inside a word
+nosp-089	nospace	the ho tel is nice	-	one stray space inside a word
+nosp-090	nospace	break fast is included	-	one stray space inside a word
+nosp-091	nospace	i booked the fli ght	-	one stray space inside a word
+nosp-092	nospace	the tick et was cheap	-	one stray space inside a word
+nosp-093	nospace	i am board ing now	-	one stray space inside a word
+nosp-094	nospace	see you at the ga te	-	one stray space inside a word
+nosp-095	nospace	sorry i fell asle ep	-	one stray space inside a word
+nosp-096	nospace	just woke u p	-	one stray space inside a word
+nosp-097	nospace	almost rea dy	-	one stray space inside a word
+nosp-098	nospace	leav ing in five	-	one stray space inside a word
+nosp-099	nospace	order me the usu al	-	one stray space inside a word
+nosp-100	nospace	the food is he re	-	one stray space inside a word

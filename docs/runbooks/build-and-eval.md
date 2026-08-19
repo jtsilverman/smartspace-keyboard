@@ -90,6 +90,52 @@ metric.
 The ship gate is top-2 at or above 80% on blind test and at or above 85% on real-v3 test. As of the
 2026-07-27 pass it is not met: 76 and 84.
 
+## Record the stock oracle
+
+The oracle is Apple's own answers to a frozen corpus of keystrokes
+(`specs/autocorrect-parity.md` unit 0). Every autocorrect check scores agreement
+with it, so it is recorded once and never re-labelled by hand.
+
+The corpus regenerates deterministically; regeneration is what freezes it.
+
+```
+python3 eval/oracle/gen-corpus.py
+```
+
+That writes `eval/oracle/corpus/*.tsv` (400 rows in four slices, plus the
+30-row drift subset) and `app/SmartSpaceUITests/OracleCorpus.swift`.
+
+Record one slice at a time. Each run resets the learned keyboard state first,
+and each slice stays under the 40-minute UI-suite cap.
+
+```
+xcodebuild build-for-testing -scheme SmartSpace -project app/SmartSpace.xcodeproj \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -derivedDataPath ~/.smartspace-oracle/DD
+python3 eval/oracle/record.py <udid> names
+python3 eval/oracle/record.py <udid> nospace
+python3 eval/oracle/record.py <udid> context
+python3 eval/oracle/record.py <udid> sloppy
+```
+
+Rows land in `eval/oracle/stock-<date>.tsv`. Rerunning a slice resumes: ids
+already in the file are skipped, so a run killed at row 90 costs 90 rows, not
+the slice. Run solo, like every other checker-dependent suite.
+
+## Prove the oracle is still ground truth
+
+Stock's engine adapts to what it has typed. The drift slice re-types 30 held-back
+rows and diffs them against the frozen recording:
+
+```
+python3 eval/oracle/record.py <udid> drift
+```
+
+Run it after a full day of unrelated simulator sessions, never in the same
+session as the recording. It prints `DRIFT-RESULT <same>/<total>` and exits
+non-zero on any row that moved. A row that moved means the oracle is not ground
+truth: that stops the loop and reopens vision milestone 5 with Jake.
+
 ## Regenerate a corpus
 
 Corpus regeneration is its own commit and never rides along with an engine change.

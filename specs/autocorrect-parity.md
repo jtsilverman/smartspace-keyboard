@@ -242,7 +242,8 @@ STOP when every check is true, the named check commands pass, and `agents/vision
 
 ## Progress
 
-- [ ] 0 stock oracle
+- [ ] 0 stock oracle -- 400 rows recorded from stock 2026-08-19 (EVAL.md);
+      check 1 stays open until the drift slice reproduces, earliest 2026-08-20
 - [ ] 1 our own dictionary
 - [ ] 2 touch points reach the corrector
 - [ ] 3 missed spaces
