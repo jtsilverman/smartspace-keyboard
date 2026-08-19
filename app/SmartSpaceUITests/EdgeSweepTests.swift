@@ -50,21 +50,4 @@ final class EdgeSweepTests: XCTestCase {
             }
         }
     }
-
-    private func focusStock(_ app: XCUIApplication) -> XCUIElement {
-        let field = app.textFields[XCTestCase.practiceFieldPlaceholder]
-        XCTAssertTrue(field.waitForExistence(timeout: 10))
-        field.tap()
-        for _ in 0..<10 {
-            if app.keys["q"].waitForExistence(timeout: 2)
-                || app.keys["Q"].waitForExistence(timeout: 1) { return field }
-            for hop in [app.buttons["Next keyboard"], app.keys["Next keyboard"], app.buttons["emoji"]]
-            where hop.exists {
-                hop.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-                break
-            }
-        }
-        XCTFail("stock keyboard never appeared")
-        return field
-    }
 }

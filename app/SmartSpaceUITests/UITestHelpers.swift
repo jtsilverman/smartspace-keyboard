@@ -63,6 +63,27 @@ extension XCTestCase {
         return app.textFields["Type here to test the keyboard"]
     }
 
+    /// Brings up the real stock keyboard in the practice field. Stock keys
+    /// are XCUIElement `keys`, ours are `buttons`, which is how every suite
+    /// tells the two sides apart. Hop taps go through coordinates for the
+    /// same reason `focusSmartSpaceKeyboard` does.
+    func focusStock(_ app: XCUIApplication) -> XCUIElement {
+        let field = app.textFields[XCTestCase.practiceFieldPlaceholder]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        for _ in 0..<10 {
+            if app.keys["q"].waitForExistence(timeout: 2)
+                || app.keys["Q"].waitForExistence(timeout: 1) { return field }
+            for hop in [app.buttons["Next keyboard"], app.keys["Next keyboard"], app.buttons["emoji"]]
+            where hop.exists {
+                hop.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                break
+            }
+        }
+        XCTFail("stock keyboard never appeared")
+        return field
+    }
+
     /// Coordinate tap: same target as .tap() for an on-screen element, but
     /// never runs the AX scroll-to-visible action that can throw
     /// kAXErrorCannotComplete mid-keyboard-transition.
