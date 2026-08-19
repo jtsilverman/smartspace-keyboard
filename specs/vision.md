@@ -38,6 +38,12 @@ judges by eye and thumb is the target; engine simulations are proxies (trace
 3. When punctuation is ambiguous, the correct mark is within the top two picks (the second pick is
    one extra space-tap away, per the cycling mechanic).
 4. The punctuation engine improves with continued use, matching Jake's personal style.
+5. "For me to type on SmartSpace and it feels like I'm typing on the Apple keyboard when
+   it comes to autocorrect" (Jake, 2026-08-19). Sloppy thumbs land on the word stock
+   lands on, missed spaces come back as words, and the same typo corrects two ways in
+   two different sentences.
+   Shown by: Jake types twenty real messages on stock and twenty on SmartSpace, and
+   counts the ones he had to fix by hand. The counts match.
 
 Build phasing and unit status live in `WORKPLAN.md`. Behavior journeys live in `UX.md`.
 
@@ -50,6 +56,9 @@ Build phasing and unit status live in `WORKPLAN.md`. Behavior journeys live in `
 
 ## Decision log (newest first, cap 10)
 
+- 2026-08-19: Milestone 5 added. Autocorrect is judged against the stock keyboard's own
+  output, recorded by the XCUITest harness that already drives stock. See
+  `specs/autocorrect-parity.md`.
 - 2026-08-12: Milestone 2 threshold deferred to its contract; the vision stays number-free.
 - 2026-08-12: Muscle-memory invariant declared the top acceptance test, above engine metrics.
 - 2026-08-12: Scope held to the one change; languages, themes, iPad stay out until the picture ships.
