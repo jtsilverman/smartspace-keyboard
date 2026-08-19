@@ -93,6 +93,9 @@ public enum StockKeyTheme {
     /// iOS 26.3, 2026-08-19).
     public static let candidateLift: Double = 9
 
+    /// Stock candidates are body size, 17pt regular.
+    public static let candidatePointSize: Double = 17
+
     public static let candidatePillCornerRadius: Double = 4
     public static func candidatePillFill(dark: Bool) -> RGBA {
         RGBA(red: 1, green: 1, blue: 1, alpha: dark ? 0.2 : 0.5)

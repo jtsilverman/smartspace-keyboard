@@ -341,16 +341,27 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
+    /// Stock's lift, clamped so the candidate line can never leave the
+    /// bar. A lift that pushes the line past the bar's top edge draws
+    /// outside the button and the device clips the ascenders (Jake, on an
+    /// iPhone 16, 2026-08-19). The clamp costs about 2pt of the 9 on a
+    /// 402pt screen and holds on every width.
+    private static var candidateLift: CGFloat {
+        let line = UIFont.systemFont(ofSize: StockKeyTheme.candidatePointSize).lineHeight
+        return min(CGFloat(StockKeyTheme.candidateLift),
+                   max(0, (CGFloat(barHeight) - line) / 2))
+    }
+
     /// QuickType slot, stock-style: flat text on the bar, no key-cap
     /// chrome; a tap flashes the stock grey pill.
     private func barSlot(title: String, tag: Int, identifier: String) -> UIButton {
         var config = UIButton.Configuration.plain()
         config.title = title
         config.baseForegroundColor = .label
-        // The title rides the whole slot, shifted up by the measured lift:
-        // equal and opposite insets keep the content box full height, so
-        // the 17pt line never shrinks.
-        let lift = CGFloat(StockKeyTheme.candidateLift)
+        // The title rides the whole slot, shifted up by the lift: equal and
+        // opposite insets keep the content box full height, so the 17pt
+        // line never shrinks.
+        let lift = Self.candidateLift
         config.contentInsets = NSDirectionalEdgeInsets(
             top: -lift, leading: 0, bottom: lift, trailing: 0)
         config.cornerStyle = .fixed
@@ -361,7 +372,7 @@ final class KeyboardViewController: UIInputViewController {
                 b.isHighlighted ? .systemGray4 : .clear
         }
         // Stock candidates are body-size 17pt regular.
-        slot.titleLabel?.font = .systemFont(ofSize: 17)
+        slot.titleLabel?.font = .systemFont(ofSize: StockKeyTheme.candidatePointSize)
         slot.titleLabel?.adjustsFontSizeToFitWidth = true
         slot.tag = tag
         slot.accessibilityIdentifier = identifier
@@ -398,9 +409,8 @@ final class KeyboardViewController: UIInputViewController {
                 line.centerXAnchor.constraint(equalTo: slot.trailingAnchor,
                                               constant: suggestionBar.spacing / 2),
                 line.heightAnchor.constraint(equalToConstant: 30),
-                line.centerYAnchor.constraint(
-                    equalTo: suggestionBar.centerYAnchor,
-                    constant: -CGFloat(StockKeyTheme.candidateLift)),
+                line.centerYAnchor.constraint(equalTo: suggestionBar.centerYAnchor,
+                                              constant: -Self.candidateLift),
             ])
         }
     }

@@ -64,6 +64,7 @@ import TypingEngine
 
 @Test func candidatesLiftOffTheBarCentre() {
     #expect(StockKeyTheme.candidateLift == 9)
+    #expect(StockKeyTheme.candidatePointSize == 17)
 }
 
 @Test func theBackdropIsOpaqueInBothSchemes() {
