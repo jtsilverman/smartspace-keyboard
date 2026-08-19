@@ -14,7 +14,7 @@ final class KeyboardViewController: UIInputViewController {
     private var spaceBar = SmartSpaceBar()
     /// Fallback when smart double-space is off: stock double-space-period.
     private var stockSpaceBar = StockDoubleSpace()
-    private var autocorrect = AutocorrectController(checker: SystemSpellChecker())
+    private var autocorrect = AutocorrectController(checker: DictionarySpellChecker())
     private var cursorDrag = SpacebarCursorDrag()
     private let haptic = UIImpactFeedbackGenerator(style: .light)
     private var keyPops: [UIButton: UIView] = [:]

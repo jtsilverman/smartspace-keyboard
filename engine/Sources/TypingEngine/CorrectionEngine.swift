@@ -89,9 +89,10 @@ public struct CorrectionEngine: Sendable {
         if word.count <= 2 { return .noChange }
         if hasLetterRun(word, of: 3) { return .noChange }
         var suggestions = checker.suggestions(for: word).map { recased($0, like: word) }
-        // UITextChecker's iOS guesses arrive alphabetically, not best-first;
-        // re-rank by edit distance, then English word frequency, then the
-        // checker's own order as the deterministic last tiebreak.
+        // Re-rank by edit distance, then English word frequency, then the
+        // checker's own order as the deterministic last tiebreak. The order a
+        // checker hands up is not trusted: UITextChecker returned its guesses
+        // alphabetically, and DictionarySpellChecker's scan is capped at eight.
         let lower = word.lowercased()
         suggestions = suggestions.enumerated()
             .map { (index: $0.offset, text: $0.element,
@@ -114,7 +115,7 @@ public struct CorrectionEngine: Sendable {
         // at a word it doesn't know (names, slang, loanwords) -- rejecting
         // it beats mangling. Damerau (transposition = 1 edit), so wierd ->
         // weird stays a near fix.
-        guard damerauLevenshtein(word.lowercased(), top.lowercased())
+        guard EditDistance.damerau(word.lowercased(), top.lowercased())
                 <= max(1, word.count / 4) else { return .noChange }
         return .correct(to: top, alternatives: Array(suggestions.dropFirst()))
     }
@@ -124,7 +125,7 @@ public struct CorrectionEngine: Sendable {
     /// generic single edit (realy -> real), because dropping one of a
     /// doubled pair is the more common slip.
     private func typoDistance(from word: String, to candidate: String) -> Double {
-        let base = Double(damerauLevenshtein(word, candidate))
+        let base = Double(EditDistance.damerau(word, candidate))
         return base == 1 && restoresDoubledLetter(word: word, candidate: candidate)
             ? 0.5 : base
     }
@@ -140,27 +141,6 @@ public struct CorrectionEngine: Sendable {
             if String(trimmed) == word { return true }
         }
         return false
-    }
-
-    private func damerauLevenshtein(_ a: String, _ b: String) -> Int {
-        let s = Array(a), t = Array(b)
-        if s.isEmpty { return t.count }
-        if t.isEmpty { return s.count }
-        var prev2 = [Int](repeating: 0, count: t.count + 1)
-        var prev = Array(0...t.count)
-        var curr = [Int](repeating: 0, count: t.count + 1)
-        for i in 1...s.count {
-            curr[0] = i
-            for j in 1...t.count {
-                let cost = s[i - 1] == t[j - 1] ? 0 : 1
-                curr[j] = min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
-                if i > 1, j > 1, s[i - 1] == t[j - 2], s[i - 2] == t[j - 1] {
-                    curr[j] = min(curr[j], prev2[j - 2] + 1)
-                }
-            }
-            (prev2, prev, curr) = (prev, curr, prev2)
-        }
-        return prev[t.count]
     }
 
     private func hasLetterRun(_ word: String, of length: Int) -> Bool {

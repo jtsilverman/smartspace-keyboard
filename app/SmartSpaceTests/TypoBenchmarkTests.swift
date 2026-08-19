@@ -33,7 +33,7 @@ final class SystemSpellCheckerTests: XCTestCase {
 /// failure. Baseline report -- gate set from evidence, not guessed.
 final class TypoBenchmarkTests: XCTestCase {
     func testTypoCorpusBaselineReport() {
-        let engine = CorrectionEngine(checker: SystemSpellChecker())
+        let engine = CorrectionEngine(checker: DictionarySpellChecker())
         var corrected = 0, leftAlone = 0, miscorrected = 0
         var byCategory: [String: (n: Int, ok: Int, mis: Int)] = [:]
 
@@ -59,6 +59,12 @@ final class TypoBenchmarkTests: XCTestCase {
             print("  \(cat): corrected \(s.ok)/\(s.n)  miscorrected \(s.mis)")
         }
         XCTAssertEqual(corrected + leftAlone + miscorrected, n)
-        XCTAssertGreaterThan(corrected, 0)
+        // Check 2 of specs/autocorrect-parity.md. The gate is where
+        // UITextChecker left it, so our own dictionary may not buy typo
+        // coverage back with miscorrections.
+        XCTAssertGreaterThanOrEqual(corrected * 100 / n, 90,
+                                    "corrected \(corrected)/\(n)")
+        XCTAssertLessThanOrEqual(miscorrected, 23,
+                                 "miscorrected \(miscorrected)")
     }
 }

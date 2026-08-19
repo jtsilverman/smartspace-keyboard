@@ -2,14 +2,19 @@ import XCTest
 import TypingEngine
 
 /// Keyboard-wide blind eval v4 (specs/keyboard-eval.md): the checker-dependent
-/// sets, scored through the real CorrectionEngine + UITextChecker like the v3
-/// typo benchmark. Dev misses may be studied; test halves aggregate only.
+/// sets, scored through the real CorrectionEngine + DictionarySpellChecker
+/// like the v3 typo benchmark. Dev misses may be studied; test halves aggregate only.
 
 /// Protection set: strings autocorrect must leave untouched. Any .correct
 /// decision is a failure (the expensive kind -- mangling intended text).
 final class ProtectionEvalTests: XCTestCase {
-    private func score(_ rows: [ProtectCase], name: String, printMisses: Bool) {
-        let engine = CorrectionEngine(checker: SystemSpellChecker())
+    /// Check 2 of specs/autocorrect-parity.md: the frozen protection corpus
+    /// holds where UITextChecker left it (EVAL.md, 100 dev / 97 test), and
+    /// every name and brand row passes. A mangled name is the most expensive
+    /// miscorrection there is.
+    private func score(_ rows: [ProtectCase], name: String, printMisses: Bool,
+                       floor: Int) {
+        let engine = CorrectionEngine(checker: DictionarySpellChecker())
         var ok = 0
         var missesBySub: [String: [String]] = [:]
         for r in rows {
@@ -32,14 +37,22 @@ final class ProtectionEvalTests: XCTestCase {
             }
         }
         XCTAssertEqual(ok + missesBySub.values.map(\.count).reduce(0, +), rows.count)
+        XCTAssertGreaterThanOrEqual(ok * 100 / max(rows.count, 1), floor,
+                                    "left alone \(ok)/\(rows.count)")
+        for sub in ["name", "brand"] {
+            XCTAssertEqual(missesBySub[sub]?.count ?? 0, 0,
+                           "\(sub) rows touched: \(missesBySub[sub] ?? [])")
+        }
     }
 
     func testProtectionDevReport() {
-        score(protectCorpus.filter { $0.half == "dev" }, name: "PROTECT DEV", printMisses: true)
+        score(protectCorpus.filter { $0.half == "dev" }, name: "PROTECT DEV",
+              printMisses: true, floor: 100)
     }
 
     func testProtectionTestReport() {
-        score(protectCorpus.filter { $0.half == "test" }, name: "PROTECT TEST", printMisses: false)
+        score(protectCorpus.filter { $0.half == "test" }, name: "PROTECT TEST",
+              printMisses: false, floor: 97)
     }
 }
 
@@ -47,7 +60,7 @@ final class ProtectionEvalTests: XCTestCase {
 /// frozen v3 typo benchmark, separate corpus.
 final class TypoBenchmarkV4Tests: XCTestCase {
     func testTypoV4Report() {
-        let engine = CorrectionEngine(checker: SystemSpellChecker())
+        let engine = CorrectionEngine(checker: DictionarySpellChecker())
         var corrected = 0, leftAlone = 0, miscorrected = 0
         var byCategory: [String: (n: Int, ok: Int, mis: Int)] = [:]
         // Engine contraction fixes use the curly apostrophe; intended
@@ -83,7 +96,7 @@ final class TypoBenchmarkV4Tests: XCTestCase {
 /// acceptable == ["NONE"] passes when nothing (or only the prefix) is offered.
 final class CompletionEvalTests: XCTestCase {
     private func score(_ rows: [CompletionCase], name: String, printMisses: Bool) {
-        let checker = SystemSpellChecker()
+        let checker = DictionarySpellChecker()
         var ok = 0
         var missesBySub: [String: [String]] = [:]
         for r in rows {
