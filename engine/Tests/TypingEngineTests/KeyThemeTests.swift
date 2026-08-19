@@ -62,6 +62,10 @@ import TypingEngine
             == RGBA(red: 1, green: 1, blue: 1, alpha: 0.30))
 }
 
+@Test func candidatesLiftOffTheBarCentre() {
+    #expect(StockKeyTheme.candidateLift == 9)
+}
+
 @Test func theBackdropIsOpaqueInBothSchemes() {
     for dark in [false, true] {
         #expect(StockKeyTheme.keyboardBackdrop(dark: dark).alpha == 1,

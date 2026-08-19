@@ -84,6 +84,15 @@ public enum StockKeyTheme {
 
     /// The soft pill behind the bar candidate a commit would apply.
     /// Dark value approximates stock's grey (medium confidence).
+    /// How far above the bar's own centre the candidate text sits. Stock
+    /// centres its candidates in the whole band between the keyboard's top
+    /// edge and the key rows. Our input view starts partway down that band,
+    /// because the system draws a fixed strip above it, so centring inside
+    /// our own bar drops the text. Measured against stock on the same
+    /// screenshot: stock's candidate baseline sits 9pt higher (iPhone 17,
+    /// iOS 26.3, 2026-08-19).
+    public static let candidateLift: Double = 9
+
     public static let candidatePillCornerRadius: Double = 4
     public static func candidatePillFill(dark: Bool) -> RGBA {
         RGBA(red: 1, green: 1, blue: 1, alpha: dark ? 0.2 : 0.5)

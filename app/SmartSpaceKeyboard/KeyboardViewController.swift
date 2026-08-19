@@ -347,7 +347,12 @@ final class KeyboardViewController: UIInputViewController {
         var config = UIButton.Configuration.plain()
         config.title = title
         config.baseForegroundColor = .label
-        config.contentInsets = .zero
+        // The title rides the whole slot, shifted up by the measured lift:
+        // equal and opposite insets keep the content box full height, so
+        // the 17pt line never shrinks.
+        let lift = CGFloat(StockKeyTheme.candidateLift)
+        config.contentInsets = NSDirectionalEdgeInsets(
+            top: -lift, leading: 0, bottom: lift, trailing: 0)
         config.cornerStyle = .fixed
         config.background.cornerRadius = StockKeyTheme.candidatePillCornerRadius
         let slot = UIButton(configuration: config)
@@ -393,7 +398,9 @@ final class KeyboardViewController: UIInputViewController {
                 line.centerXAnchor.constraint(equalTo: slot.trailingAnchor,
                                               constant: suggestionBar.spacing / 2),
                 line.heightAnchor.constraint(equalToConstant: 30),
-                line.centerYAnchor.constraint(equalTo: suggestionBar.centerYAnchor),
+                line.centerYAnchor.constraint(
+                    equalTo: suggestionBar.centerYAnchor,
+                    constant: -CGFloat(StockKeyTheme.candidateLift)),
             ])
         }
     }
