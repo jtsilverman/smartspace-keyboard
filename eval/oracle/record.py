@@ -111,6 +111,10 @@ def main():
     parser.add_argument("slice", choices=SLICES)
     parser.add_argument("--merge-only", action="store_true",
                         help="merge an existing run's log without retyping it")
+    parser.add_argument("--no-reset", action="store_true",
+                        help="keep the learned keyboard state; the drift slice "
+                             "runs this way first, because a reset would wipe "
+                             "the adaptation it is looking for")
     args = parser.parse_args()
 
     device, ios = device_info(args.udid)
@@ -120,10 +124,12 @@ def main():
     out = ORACLE / (f"drift-{today}.tsv" if drift else f"stock-{today}.tsv")
     rows = read_existing(out)
 
-    # Called through bash: the checked-in script is not mode +x.
     if not args.merge_only:
-        subprocess.run(["bash", str(ROOT / "eval" / "v4" / "reset-keyboard-state.sh"),
-                        args.udid], check=True)
+        if not args.no_reset:
+            # Called through bash: the checked-in script is not mode +x.
+            subprocess.run(["bash", str(ROOT / "eval" / "v4" / "reset-keyboard-state.sh"),
+                            args.udid], check=True)
+        subprocess.run(["xcrun", "simctl", "boot", args.udid], capture_output=True)
         subprocess.run(["xcrun", "simctl", "bootstatus", args.udid], capture_output=True)
         app = DERIVED / "Build/Products/Debug-iphonesimulator/SmartSpace.app"
         subprocess.run(["xcrun", "simctl", "install", args.udid, str(app)], check=True)
