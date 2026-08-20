@@ -82,6 +82,12 @@ public enum WordRank {
         ranked[word.lowercased()] ?? Int.max
     }
 
+    /// True when the dictionary's own casing for the word starts with a
+    /// capital, which is how the list marks a proper noun.
+    public static func isProperNoun(_ word: String) -> Bool {
+        cased[word.lowercased()]?.first?.isUppercase == true
+    }
+
     /// True when the list holds the word, case-insensitively. An unknown word
     /// is the one a correction is offered for.
     public static func isKnown(_ word: String) -> Bool {

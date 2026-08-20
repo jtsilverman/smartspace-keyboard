@@ -75,14 +75,14 @@ Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`
 Two word lists were measured on the frozen benches, both through the same
 `CorrectionEngine` with every guard intact. iPhone 17 Pro, iOS 26.3, 2026-08-19.
 
-| Bench | UITextChecker | Norvig + Webster, 15,328 words | AOSP LatinIME, 165,804 words | Check 2 gate |
-|---|---|---|---|---|
-| v3 typos corrected | 90% | 93% | 92% | at or above 90% |
-| v3 typo miscorrections | 23 | 16 | 17 | at most 23 |
-| v4 typos corrected | 89% | 90% | 87% | not gated |
-| Protection, dev | 100 | 98 | 95 | at or above 100 |
-| Protection, test | 97 | 94 | 94 | at or above 97 |
-| Completions, dev / test | 91 / 95 | 91 / 91 | 95 / 97 | not gated |
+| Bench | UITextChecker | Norvig + Webster, 15,328 words | AOSP LatinIME, 165,804 words | AOSP plus the confidence rule | Check 2 gate |
+|---|---|---|---|---|---|
+| v3 typos corrected | 90% | 93% | 92% | 92% | at or above 90% |
+| v3 typo miscorrections | 23 | 16 | 17 | 17 | at most 23 |
+| v4 typos corrected | 89% | 90% | 87% | 89% | not gated |
+| Protection, dev | 100 | 98 | 95 | **100** | at or above 100 |
+| Protection, test | 97 | 94 | 94 | 96 | at or above 97 |
+| Completions, dev / test | 91 / 95 | 91 / 91 | 95 / 97 | 95 / 97 | not gated |
 
 The bigger list wins on completions and loses on protection. Every protection
 loss is a name the engine corrects toward a near neighbour it now knows:
@@ -93,8 +93,18 @@ cannot close check 2.
 
 The oracle says stock does not behave this way: `michal` stayed `Michal` and
 `jesica` stayed `Jesica`. Stock leaves a name-shaped unknown alone rather than
-moving it to the nearest name. The missing piece is a confidence rule, not more
-words.
+moving it to the nearest name.
+
+**The confidence rule** closed the gap without costing a typo fix. A capitalized
+word the list does not know keeps its spelling when the best candidate is either
+a proper noun in its own right, or a swap for a key that is not next to the one
+typed. `KeyNeighbors` derives which keys touch from the same measured stock
+geometry the keyboard draws, so `Kylian` -> `Kalian` is refused because `y` and
+`a` sit at opposite ends of the keyboard. Every name and brand row now passes on
+both halves, and protection dev is back at 100.
+
+Protection test sits at 96 against a 97 gate, one row short of 93/95. That row
+is in the held-out half and stays unstudied.
 
 ## The stock oracle, recorded from the stock keyboard
 

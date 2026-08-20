@@ -111,6 +111,25 @@ public struct CorrectionEngine: Sendable {
             suggestions.insert(suggestions.remove(at: i), at: 0)
         }
         guard let top = suggestions.first else { return .noChange }
+        // Swapping one name for another is the most expensive miscorrection
+        // there is, and a bigger dictionary makes it likelier: it knows more
+        // names one edit apart. The stock oracle recorded stock refusing the
+        // same move -- michal stayed Michal, jesica stayed Jesica. So a
+        // capitalized word the list does not know keeps its spelling when the
+        // best candidate is itself a proper noun. The dictionary's own casing
+        // decides that, never the recased output: "Teh" -> "The" is a common
+        // word wearing an autocap, and it still corrects.
+        if word.first?.isUppercase == true, !WordRank.isKnown(word) {
+            if WordRank.isProperNoun(top) { return .noChange }
+            // A far-key swap is not a thumb slip. Kylian -> Kalian trades y
+            // for a, which sit at opposite ends of the keyboard, so the word
+            // was meant as typed.
+            if let slip = KeyNeighbors.singleSubstitution(word.lowercased(),
+                                                          top.lowercased()),
+               !KeyNeighbors.areAdjacent(slip.typed, slip.meant) {
+                return .noChange
+            }
+        }
         // A top suggestion far from the typed word is the checker guessing
         // at a word it doesn't know (names, slang, loanwords) -- rejecting
         // it beats mangling. Damerau (transposition = 1 edit), so wierd ->
@@ -126,8 +145,16 @@ public struct CorrectionEngine: Sendable {
     /// doubled pair is the more common slip.
     private func typoDistance(from word: String, to candidate: String) -> Double {
         let base = Double(EditDistance.damerau(word, candidate))
-        return base == 1 && restoresDoubledLetter(word: word, candidate: candidate)
-            ? 0.5 : base
+        guard base == 1 else { return base }
+        if restoresDoubledLetter(word: word, candidate: candidate) { return 0.5 }
+        // A mistyped letter is usually the key next to the one meant, so a
+        // swap for a far key ranks behind every other single edit. Neighbour
+        // swaps stay level with the rest: word frequency decides between
+        // them, and a shape bonus there buried the common word under a rare
+        // one (teh offered eth ahead of ten).
+        guard let slip = KeyNeighbors.singleSubstitution(word, candidate),
+              !KeyNeighbors.areAdjacent(slip.typed, slip.meant) else { return base }
+        return 1.5
     }
 
     /// True when removing one of a doubled pair in the candidate yields the
