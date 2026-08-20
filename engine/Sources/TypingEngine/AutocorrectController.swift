@@ -100,8 +100,11 @@ public struct AutocorrectController: Sendable {
 
     /// A word was committed (space or return). Decides keep vs replace and
     /// refills or clears the bar.
-    public mutating func wordCommitted(context: String) -> Commit {
-        switch engine.decision(for: context, session: session) {
+    /// - Parameter touches: where the thumb landed for each letter of the word
+    ///   being committed, when the caller tracked them.
+    public mutating func wordCommitted(context: String,
+                                       touches: TouchTrail? = nil) -> Commit {
+        switch engine.decision(for: context, touches: touches, session: session) {
         case .noChange:
             state = .idle
             return .keep

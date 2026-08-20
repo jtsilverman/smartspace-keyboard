@@ -237,8 +237,9 @@ final class KeyboardViewController: UIInputViewController {
             guard let self else { return }
             if let button = self.characterButton(named: key) { self.dismissKeyPop(for: button) }
         }
-        touchSurface.onCommit = { [weak self] key in
+        touchSurface.onCommit = { [weak self] key, point in
             guard let self else { return }
+            self.recordTouch(key: key, at: point)
             // Stock keeps the balloon up >= 0.05s so a fast tap shows it.
             // Detach the pop from the map first: a re-touch within the
             // dwell shows a fresh pop that this removal must not kill.
@@ -882,6 +883,7 @@ final class KeyboardViewController: UIInputViewController {
             refreshEmojiSearchStrip()
             return
         }
+        touchTrail = nil
         autocorrect.backspace()
         trailingAutoSpace.disarm()
         textDocumentProxy.deleteBackward()
@@ -899,7 +901,8 @@ final class KeyboardViewController: UIInputViewController {
         case .ended, .cancelled, .failed:
             backspaceTimer?.invalidate()
             backspaceTimer = nil
-            autocorrect.backspace()
+            touchTrail = nil
+        autocorrect.backspace()
             refreshTypingCompletions()
             armAutoShiftIfSentenceStart()
         default:
@@ -1385,19 +1388,41 @@ final class KeyboardViewController: UIInputViewController {
     /// and rewrites it in the document. Called BEFORE the separator is
     /// inserted so the word is still the exact document tail.
     /// Returns true when a correction was written into the document.
+    /// Where the thumb landed for each letter of the word being typed. A
+    /// letter commit appends; anything that ends or disturbs the word clears
+    /// it. CorrectionEngine ignores a trail whose length disagrees with the
+    /// word, so a missed reset costs nothing beyond the touch signal.
+    private var touchTrail: TouchTrail?
+
+    private func recordTouch(key: String, at point: CGPoint) {
+        guard key.count == 1, key.first!.isLetter else {
+            touchTrail = nil
+            return
+        }
+        if touchTrail == nil {
+            touchTrail = TouchTrail(zones: touchSurface.currentZones)
+        }
+        touchTrail?.record(Point(x: point.x, y: point.y))
+    }
+
     @discardableResult
     private func applyAutocorrectOnCommit() -> Bool {
         // Stock honors the host field's opt-out (password, code fields).
         guard settings.autocorrect, textDocumentProxy.autocorrectionType != .no else { return false }
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
-        let commit = autocorrect.wordCommitted(context: context)
+        let commit = autocorrect.wordCommitted(context: context, touches: touchTrail)
+        // The word ended here. Space and backspace are function keys and never
+        // reach onCommit, so without this the trail would run on across the
+        // whole sentence and never match a word's length again.
+        touchTrail = nil
         defer { refreshSuggestionBar() }
         guard case .replace(let original, let corrected, _) = commit else { return false }
         // Trailing punctuation ("teh)") detaches the word from the tail;
         // skip the edit rather than delete the wrong characters, and drop
         // the bar so it never advertises a correction that was not made.
         guard context.hasSuffix(original) else {
-            autocorrect.backspace()
+            touchTrail = nil
+        autocorrect.backspace()
             return false
         }
         for _ in 0..<original.count { textDocumentProxy.deleteBackward() }

@@ -53,6 +53,13 @@ final class KeyTouchSurface: UIView, UIInputViewAudioFeedback {
     /// hit targets toward likely next letters (stock behavior).
     var contextProvider: (() -> String)?
     private var zones: [KeyZone] = []
+
+    /// The zone frames behind the current layout, so a caller can measure a
+    /// touch point against the same geometry the surface resolved it with.
+    var currentZones: [KeyZone] {
+        freshenZones()
+        return zones
+    }
     private var zonesDirty = true
 
     func invalidateZones() {
@@ -74,7 +81,10 @@ final class KeyTouchSurface: UIView, UIInputViewAudioFeedback {
     var onTouchDown: ((String) -> Void)?
     /// (from, to): the finger slid from one character key to another.
     var onTouchMoved: ((String, String) -> Void)?
-    var onCommit: ((String) -> Void)?
+    /// The committed key and where the finger left the surface. The point
+    /// is what lets the corrector tell a thumb slip from a deliberate press
+    /// (specs/autocorrect-parity.md unit 2); before this it died here.
+    var onCommit: ((String, CGPoint) -> Void)?
     /// The finger slid off the character keys; that touch types nothing.
     var onTouchExit: ((String) -> Void)?
     var onCancel: (() -> Void)?
@@ -167,7 +177,7 @@ final class KeyTouchSurface: UIView, UIInputViewAudioFeedback {
             let event = tracker.ended(touch.hash, x: loc.x)
             switch event {
             case .commit(let key):
-                onCommit?(key)
+                onCommit?(key, loc)
             case .commitAlternate(let base, _):
                 onAlternateEnded?(base, loc)
             default:
