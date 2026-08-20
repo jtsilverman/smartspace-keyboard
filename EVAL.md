@@ -69,6 +69,55 @@ Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`
 - Completions: NONE-rows (short valid words get junk completions) and context-aware ranking need a frequency/context model.
 - {RET} scenarios (2) need a multiline practice field (Phase 4 host-app work).
 
+## What stock's autocorrect actually keys on (probes, 2026-08-20)
+
+Two probe sets were typed into the stock keyboard through the XCUITest harness.
+The alphabet sweep holds a word and a slot fixed and puts all 25 other letters
+through it, inside the carrier `i said X to him`, so siblings differ by one
+letter and nothing else. 150 rows over `water`, `phone`, `night`, `house`,
+`money`, `check`.
+
+**Distance from the right key does not predict what stock does.** Counting only
+slips that produced a non-word:
+
+| Wrong key sits | Fixed | Corrected to another word | Left alone |
+|---|---|---|---|
+| Next to the right one | 14 | 1 | 10 |
+| Two or three keys away | 22 | 9 | 20 |
+| Far across the keyboard | 26 | 8 | 21 |
+
+Every row sits one letter from a common word, so a close candidate always
+existed. The fix rate is flat at 56%, 43% and 47%.
+
+**The sloppy slice says the opposite, and that is the finding.** Those 150 rows
+tapped real coordinates off the key centre, and 61 of their taps landed past a
+boundary onto the neighbouring key. Stock recovered the intended phrase in every
+one. Clean centre taps on a wrong key: 47% recovered. Off-centre taps that
+produced a wrong letter: 100% recovered.
+
+Stock's slip detection reads where the thumb landed, not which letter came out.
+A dead-centre press of the wrong key is a deliberate keystroke to it, and it
+corrects that only when the language model is confident on its own. That is why
+letter-level key adjacency cannot replicate it, and it is what unit 2 of
+`specs/autocorrect-parity.md` builds.
+
+Where stock did pick another word, it picked the nearest one: `waber` ->
+`waver`, `waier` -> `waiter`, `wamer` -> `warmer`, `ninht` -> `ninth`.
+
+Slip shapes, from the 181 carrier probes, all with clean taps:
+
+| Shape | Fixed |
+|---|---|
+| One neighbour swap | 9/10 |
+| Deleted letter | 6/10 |
+| Doubled letter | 3/10 |
+| Transposition | 1/9 |
+| Two slips in one word | 0/10 |
+
+Word length changes nothing (4/4 at three, five and eight letters). Autocap
+protects hard: the same probes typed alone, where autocap capitalizes them,
+came back untouched (`helllo`, `Josue` for `hosue`).
+
 ## Our own dictionary against UITextChecker (unit 1, in progress)
 
 `DictionarySpellChecker` scans the engine's own word list within an edit budget.

@@ -37,9 +37,11 @@ FIELDS = ["id", "slice", "typed", "offsets", "produced", "device", "ios", "recor
 
 
 def corpus_rows():
+    """Every corpus file, so a new slice needs no edit here. A slice list that
+    had to be kept in step lost 75 typed rows to a KeyError on 2026-08-20."""
     rows = {}
-    for name in SLICES[:5]:
-        with open(CORPUS / f"{name}.tsv", newline="") as f:
+    for path in sorted(CORPUS.glob("*.tsv")):
+        with open(path, newline="") as f:
             for row in csv.DictReader(f, delimiter="\t"):
                 rows[row["id"]] = row
     return rows
