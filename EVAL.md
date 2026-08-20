@@ -69,6 +69,27 @@ Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`
 - Completions: NONE-rows (short valid words get junk completions) and context-aware ranking need a frequency/context model.
 - {RET} scenarios (2) need a multiline practice field (Phase 4 host-app work).
 
+## Missed spaces: what stock splits, and what we can (unit 3)
+
+Read off the 50 recorded missing-space rows. Stock split 48, and every split it
+made had both halves common: the weakest half scored 90 on the AOSP 0-255
+frequency scale. It refused `amin` rather than offer `am in`.
+
+Scoring a split below a one-edit substitution, which is what stock does
+(`onmy` -> `on my` over `only`), costs 8 points of the typo bench and takes
+miscorrections from 17 to 41. The winners become `din net` for `dinnet`, `go ID`
+for `goid`, `GT eat` for `gteat`, `SB out` for `sbout`.
+
+Frequency cannot separate those from the real splits. `din` scores 94, and
+`woke`, `parked` and `thank` score 90, 99 and 100. What separates them is
+whether the two words go together, which is the word-pair model of unit 4a.
+
+Ours therefore splits conservatively: only when no single word sits one edit
+away, only when one half is four letters or more, and never when a half is
+capitalized. Without those last two, `badass` became `bad ass` and `Kaius`
+became `Kai us`, which the protection corpus gates on. `thankyou` -> `thank you`
+lands; `onmy` -> `on my` waits for 4a.
+
 ## What stock's autocorrect actually keys on (probes, 2026-08-20)
 
 Two probe sets were typed into the stock keyboard through the XCUITest harness.

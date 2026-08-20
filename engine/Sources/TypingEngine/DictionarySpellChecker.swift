@@ -24,7 +24,7 @@ public struct DictionarySpellChecker: SpellChecking {
         // A short word admits one edit; two edits on four letters reaches
         // most of the vocabulary and every candidate is noise.
         let limit = typed.count <= 4 ? 1 : 2
-        var scored: [(text: String, distance: Int, rank: Int)] = []
+        var scored: [(text: String, distance: Double, rank: Int)] = []
         let typedLetters = WordRank.letterMask(typed)
         for length in max(1, typed.count - limit)...(typed.count + limit) {
             for entry in WordRank.byLength[length] ?? [] {
@@ -35,9 +35,12 @@ public struct DictionarySpellChecker: SpellChecking {
                 else { continue }
                 let distance = EditDistance.damerau(typed, entry.lower, limit: limit)
                 guard distance <= limit else { continue }
-                scored.append((WordRank.cased[entry.lower] ?? entry.lower, distance,
+                scored.append((WordRank.cased[entry.lower] ?? entry.lower, Double(distance),
                                WordRank.ranked[entry.lower] ?? .max))
             }
+        }
+        for split in splits(of: typed) {
+            scored.append((split.text, EditDistance.splitCost, split.rank))
         }
         return scored
             .sorted {
@@ -46,6 +49,45 @@ public struct DictionarySpellChecker: SpellChecking {
             }
             .prefix(Self.candidateLimit)
             .map(\.text)
+    }
+
+    /// Rank cutoff for a split half. Every split stock made in the recorded
+    /// missed-space slice had both halves at 90 or better on the AOSP 0-255
+    /// frequency scale, over 45 splits (EVAL.md). 20,308 words sit at or above
+    /// that frequency, and the list is ordered by it.
+    private static let commonEnough = 20_308
+
+    /// A run-together token read as two words. Stock splits "onmy" into "on
+    /// my" and "thankyou" into "thank you", which `UITextChecker` could not
+    /// propose at all, and it only does so when both halves are common: it
+    /// refused "amin" rather than offer "am in".
+    private func splits(of typed: String) -> [(text: String, rank: Int)] {
+        guard typed.count >= 4 else { return [] }
+        // A split needs at least one substantial word in it. Two short common
+        // words are what produced "bad ass" for "badass", "din net" for
+        // "dinnet" and "go ID" for "goid".
+        let substantial = 4
+        let letters = Array(typed)
+        var found: [(text: String, rank: Int)] = []
+        // A one-letter half is "a" or "i" and nothing else, so the scan starts
+        // where a half can carry a word.
+        for cut in 1..<letters.count {
+            let left = String(letters[..<cut]), right = String(letters[cut...])
+            guard let leftRank = WordRank.ranked[left],
+                  let rightRank = WordRank.ranked[right],
+                  leftRank <= Self.commonEnough, rightRank <= Self.commonEnough
+            else { continue }
+            guard max(left.count, right.count) >= substantial else { continue }
+            let leftCased = WordRank.cased[left] ?? left
+            let rightCased = WordRank.cased[right] ?? right
+            // A capitalized token is a name or a sentence start; splitting one
+            // gives "Kai us" for "Kaius" and is never what the thumb meant.
+            guard leftCased.first?.isUppercase != true,
+                  rightCased.first?.isUppercase != true else { continue }
+            // A split is as likely as its weaker half.
+            found.append(("\(leftCased) \(rightCased)", max(leftRank, rightRank)))
+        }
+        return found
     }
 
     /// Words the list holds that start with the prefix, most frequent first.
@@ -66,6 +108,20 @@ public struct DictionarySpellChecker: SpellChecking {
 /// Shared by the candidate scan and `CorrectionEngine`'s distance guard so the
 /// two never disagree about how far apart two words are.
 enum EditDistance {
+    /// What a split candidate ("on my" for "onmy") costs against a one-edit
+    /// candidate. Above 1, so a split wins only when no single word sits one
+    /// edit away.
+    ///
+    /// Stock is bolder: it read "onmy" as "on my" over "only". Scoring a split
+    /// below a substitution to match that cost 8 points of the typo bench and
+    /// took miscorrections from 17 to 41, because the winners were "din net"
+    /// for "dinnet", "go ID" for "goid" and "GT eat" for "gteat". Frequency
+    /// cannot separate those from the real splits: "din" scores 94 on the AOSP
+    /// scale and "woke", "parked" and "thank" score 90, 99 and 100. What
+    /// separates them is whether the two words go together, which is the
+    /// word-pair model of unit 4a. This stays conservative until that lands.
+    static let splitCost: Double = 1.1
+
     /// - Parameter limit: rows stop early once every cell exceeds it, so a
     ///   far-apart pair costs a fraction of the full matrix.
     static func damerau(_ a: String, _ b: String, limit: Int = .max) -> Int {

@@ -166,6 +166,9 @@ public struct CorrectionEngine: Sendable {
     /// generic single edit (realy -> real), because dropping one of a
     /// doubled pair is the more common slip.
     private func typoDistance(from word: String, to candidate: String) -> Double {
+        // A candidate carrying a space is a missed-space split, and it keeps
+        // every letter the thumb typed.
+        if candidate.contains(" ") { return EditDistance.splitCost }
         let base = Double(EditDistance.damerau(word, candidate))
         guard base == 1 else { return base }
         if restoresDoubledLetter(word: word, candidate: candidate) { return 0.5 }
