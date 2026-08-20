@@ -1,0 +1,15 @@
+# en_wordlist.combined.gz
+
+The English word list from the Android Open Source Project's LatinIME keyboard.
+
+- Source: https://android.googlesource.com/platform/packages/inputmethods/LatinIME/+/refs/heads/main/dictionaries/en_wordlist.combined.gz
+- Retrieved: 2026-08-19
+- Header: `dictionary=main:en,locale=en,description=English,date=1414726273,version=54`
+- Entries: 165,544 words, each with a 0-255 frequency and its own casing
+- Licence: Apache License 2.0, Copyright (C) The Android Open Source Project
+
+The list is vendored rather than downloaded at build time so
+`engine/tools/gen-wordrank.py` reproduces `WordRank.swift` offline.
+
+The 2014 date is a known limit: the list has `iPhone` and `Mateo`, and it does
+not have `Jaxon` or `Malia`.

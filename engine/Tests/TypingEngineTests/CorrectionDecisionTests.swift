@@ -21,7 +21,7 @@ let checker = FakeChecker(misspellings: [
 @Test func misspelledWordIsCorrectedToTopSuggestionWithAlternatives() {
     let engine = CorrectionEngine(checker: checker)
     #expect(engine.decision(for: "hello teh") ==
-        .correct(to: "the", alternatives: ["tech", "ten"]))
+        .correct(to: "the", alternatives: ["ten", "tech"]))
 }
 
 @Test func correctlySpelledWordIsLeftAlone() {
@@ -38,7 +38,7 @@ let checker = FakeChecker(misspellings: [
 @Test func leadingCapitalIsReappliedToSuggestions() {
     let engine = CorrectionEngine(checker: checker)
     #expect(engine.decision(for: "Teh") ==
-        .correct(to: "The", alternatives: ["Tech", "Ten"]))
+        .correct(to: "The", alternatives: ["Ten", "Tech"]))
 }
 
 // Sentence-start context: mid-sentence a capitalized unknown reads as a

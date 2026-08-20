@@ -4,10 +4,9 @@
 /// words for one token, so missed spaces are impossible however good the
 /// re-ranking above it.
 ///
-/// The vocabulary is `WordRank`'s 20k frequency-ranked words, which the engine
-/// already ships. Candidates come from a scan of that vocabulary bounded by
-/// edit distance; a scan is the simplest thing that runs, and the bench in
-/// `TypoBenchmarkTests` is what says whether it needs an index.
+/// Candidates come from `WordRank`, the engine's own word list, scanned within
+/// an edit budget. The scan reads only the length buckets inside that budget,
+/// so a lookup never walks the whole list.
 public struct DictionarySpellChecker: SpellChecking {
     /// Candidates handed up to `CorrectionEngine`, which applies its own
     /// guards and re-ranking. Eight is past the three the bar can show.
@@ -26,13 +25,19 @@ public struct DictionarySpellChecker: SpellChecking {
         // most of the vocabulary and every candidate is noise.
         let limit = typed.count <= 4 ? 1 : 2
         var scored: [(text: String, distance: Int, rank: Int)] = []
-        for (candidate, rank) in WordRank.ranked {
-            // Length alone rules out most of the vocabulary, and it costs one
-            // comparison against the distance matrix's O(n*m).
-            guard abs(candidate.count - typed.count) <= limit else { continue }
-            let distance = EditDistance.damerau(typed, candidate, limit: limit)
-            guard distance <= limit else { continue }
-            scored.append((candidate, distance, rank))
+        let typedLetters = WordRank.letterMask(typed)
+        for length in max(1, typed.count - limit)...(typed.count + limit) {
+            for entry in WordRank.byLength[length] ?? [] {
+                // Each edit changes at most two letters of the set, so a pair
+                // whose letter sets differ by more than 2 * limit cannot be
+                // within limit edits. The xor rejects most of the list.
+                guard (typedLetters ^ entry.letters).nonzeroBitCount <= 2 * limit
+                else { continue }
+                let distance = EditDistance.damerau(typed, entry.lower, limit: limit)
+                guard distance <= limit else { continue }
+                scored.append((WordRank.cased[entry.lower] ?? entry.lower, distance,
+                               WordRank.ranked[entry.lower] ?? .max))
+            }
         }
         return scored
             .sorted {
@@ -48,11 +53,12 @@ public struct DictionarySpellChecker: SpellChecking {
     public func completions(for prefix: String) -> [String] {
         let typed = prefix.lowercased()
         guard typed.count >= 2 else { return [] }
-        return WordRank.ranked
-            .filter { $0.key.hasPrefix(typed) && $0.key != typed }
-            .sorted { $0.value < $1.value }
+        let bucket = WordRank.byPrefix[String(typed.prefix(2))] ?? []
+        return bucket
+            .filter { $0.hasPrefix(typed) && $0 != typed }
+            .sorted { (WordRank.ranked[$0] ?? .max) < (WordRank.ranked[$1] ?? .max) }
             .prefix(Self.candidateLimit)
-            .map(\.key)
+            .map { WordRank.cased[$0] ?? $0 }
     }
 }
 

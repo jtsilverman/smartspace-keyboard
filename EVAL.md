@@ -69,6 +69,33 @@ Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`
 - Completions: NONE-rows (short valid words get junk completions) and context-aware ranking need a frequency/context model.
 - {RET} scenarios (2) need a multiline practice field (Phase 4 host-app work).
 
+## Our own dictionary against UITextChecker (unit 1, in progress)
+
+`DictionarySpellChecker` scans the engine's own word list within an edit budget.
+Two word lists were measured on the frozen benches, both through the same
+`CorrectionEngine` with every guard intact. iPhone 17 Pro, iOS 26.3, 2026-08-19.
+
+| Bench | UITextChecker | Norvig + Webster, 15,328 words | AOSP LatinIME, 165,804 words | Check 2 gate |
+|---|---|---|---|---|
+| v3 typos corrected | 90% | 93% | 92% | at or above 90% |
+| v3 typo miscorrections | 23 | 16 | 17 | at most 23 |
+| v4 typos corrected | 89% | 90% | 87% | not gated |
+| Protection, dev | 100 | 98 | 95 | at or above 100 |
+| Protection, test | 97 | 94 | 94 | at or above 97 |
+| Completions, dev / test | 91 / 95 | 91 / 91 | 95 / 97 | not gated |
+
+The bigger list wins on completions and loses on protection. Every protection
+loss is a name the engine corrects toward a near neighbour it now knows:
+`Kaius` -> `Kai's`, `Anaya` -> `Anya`, `Giannis` -> `Gianni`, `Kylian` ->
+`Kalian`, `Jaxon` -> `Jason`, `Malia` -> `Maria`, `Dakari` -> `Dakar`. A wider
+vocabulary supplies more plausible wrong candidates, so vocabulary size alone
+cannot close check 2.
+
+The oracle says stock does not behave this way: `michal` stayed `Michal` and
+`jesica` stayed `Jesica`. Stock leaves a name-shaped unknown alone rather than
+moving it to the nearest name. The missing piece is a confidence rule, not more
+words.
+
 ## The stock oracle, recorded from the stock keyboard
 
 Apple's own answers to the frozen 400-row keystroke corpus
