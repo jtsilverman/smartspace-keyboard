@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ORACLE = ROOT / "eval" / "oracle"
 CORPUS = ORACLE / "corpus"
 DERIVED = Path.home() / ".smartspace-oracle" / "DD"
-SLICES = ["sloppy", "nospace", "context", "names", "probes", "carrier", "drift"]
+SLICES = ["sloppy", "nospace", "context", "names", "probes", "carrier", "carrier2", "sweep", "sweep2", "drift"]
 FIELDS = ["id", "slice", "typed", "offsets", "produced", "device", "ios", "recorded"]
 
 
@@ -75,7 +75,10 @@ def write_rows(path: Path, rows: dict):
 
 def run_slice(udid: str, slice_name: str, skip: set, log: Path):
     method = {"drift": "testRecordDrift",
-              "carrier": "testRecordCarrierProbesFirstHalf"}.get(
+              "carrier": "testRecordCarrierProbesFirstHalf",
+              "carrier2": "testRecordCarrierProbesSecondHalf",
+              "sweep": "testRecordSweepFirstHalf",
+              "sweep2": "testRecordSweepSecondHalf"}.get(
         slice_name, f"testRecord{slice_name.capitalize()}")
     env = dict(os.environ, TEST_RUNNER_ORACLE_SKIP=",".join(sorted(skip)))
     command = [
@@ -144,7 +147,9 @@ def main():
     if drift:
         wanted = {rid for rid in corpus if rid in drift_ids()}
     else:
-        wanted = {rid for rid, row in corpus.items() if row["slice"] == args.slice}
+        slice_name = args.slice.rstrip("2") if args.slice in ("carrier2", "sweep2") \
+            else args.slice
+        wanted = {rid for rid, row in corpus.items() if row["slice"] == slice_name}
     skip = {rid for rid in rows if rid in wanted}
     print(f"{args.slice}: {len(wanted)} rows, {len(skip)} already recorded")
 

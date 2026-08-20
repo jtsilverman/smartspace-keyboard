@@ -32,6 +32,17 @@ final class StockOracleTests: XCTestCase {
         try type(rows: Array(oracleCarrierProbes.dropFirst(91)), tag: "ORACLE")
     }
 
+    /// One word, one slot, every other letter of the alphabet in it. Holding
+    /// the word and the slot fixed is what lets the distance from the true key
+    /// be read off the answers, which group A could not do.
+    func testRecordSweepFirstHalf() throws {
+        try type(rows: Array(oracleSweep.prefix(75)), tag: "ORACLE")
+    }
+
+    func testRecordSweepSecondHalf() throws {
+        try type(rows: Array(oracleSweep.dropFirst(75)), tag: "ORACLE")
+    }
+
     /// The 30 held-back rows, re-typed. `record.sh --drift` runs this a day
     /// later and diffs the output against the frozen recording. Stock's engine
     /// adapts to what it has seen, so a drift slice that does not reproduce
