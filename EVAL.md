@@ -69,6 +69,29 @@ Invariant fixes (each names a class, unit-tested in `EvalV4InvariantTests.swift`
 - Completions: NONE-rows (short valid words get junk completions) and context-aware ranking need a frequency/context model.
 - {RET} scenarios (2) need a multiline practice field (Phase 4 host-app work).
 
+## Agreement with the stock recording (2026-08-20)
+
+`OracleAgreementTests` types all 400 frozen rows through our engine and compares
+what it produced with what the real stock keyboard produced. Runs under
+`swift test`, because our candidate source is pure Swift. Case and apostrophe
+style are normalized away; those belong to the autocap and smart-punctuation
+rules, not to the correction.
+
+| Slice | Agreement |
+|---|---|
+| sloppy | 150/150 (100%) |
+| names | 43/50 (86%) |
+| context | 69/100 (69%) |
+| nospace | 53/100 (53%) |
+| **total** | **315/400 (78%)** |
+
+The sloppy slice already agrees on every row, so check 3 has no headroom left to
+measure on it: the touch model cannot raise 100%. The missed-space slice is the
+weakest, and it is the one waiting on the word-pair model of unit 4a.
+
+These are agreement with a recording. The drift gate failed on 2026-08-20, so a
+row we disagree on is a lead, never a verdict.
+
 ## Missed spaces: what stock splits, and what we can (unit 3)
 
 Read off the 50 recorded missing-space rows. Stock split 48, and every split it
