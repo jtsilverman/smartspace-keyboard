@@ -121,7 +121,13 @@ def main():
     today = datetime.date.today().isoformat()
     corpus = corpus_rows()
     drift = args.slice == "drift"
-    out = ORACLE / (f"drift-{today}.tsv" if drift else f"stock-{today}.tsv")
+    # The drift file names the protocol that produced it. "warm" keeps the
+    # learned keyboard state, which is the adaptation question; "reset" starts
+    # from a cleared dynamic lexicon, which asks whether the answers reproduce
+    # at all. The two runs are different measurements and never share a file.
+    protocol = "warm" if args.no_reset else "reset"
+    out = ORACLE / (f"drift-{today}-{protocol}.tsv" if drift
+                    else f"stock-{today}.tsv")
     rows = read_existing(out)
 
     if not args.merge_only:

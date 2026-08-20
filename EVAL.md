@@ -131,7 +131,21 @@ Stock does not fix everything, and the rows it left alone are gold labels too.
 the stray-space join failed more often than it worked. A unit that "improves" on
 those rows disagrees with the oracle and fails its check.
 
-Not yet proven: the drift gate. Check 1 also requires the 30-row held-back slice
+**The drift gate failed.** The 30 held-back rows were re-typed on 2026-08-20,
+once with the learned keyboard state intact and once from a cleared dynamic
+lexicon. Both runs reproduced 28 of 30 and both moved the same two rows:
+
+| Row | Recorded 2026-08-19 | Both runs, 2026-08-20 |
+|---|---|---|
+| `tell im i said hi` | `Tell im I said hi` | `Tell I'm I said hi` |
+| `the delay occured again` | `The delay occured again` | `The delay occurred again` |
+
+Clearing the lexicon did not restore the recorded answers, so the change does
+not live in the state `eval/v4/reset-keyboard-state.sh` clears. Stock's answers
+moved over time and stayed moved. Two rows in thirty is a 6.7% instability, and
+the recorded file holds 400 rows.
+
+Superseded below: the original drift-gate note. Check 1 also requires the 30-row held-back slice
 to re-record after a full day of unrelated simulator sessions and reproduce its
 recorded output. That run cannot happen before 2026-08-20.
 

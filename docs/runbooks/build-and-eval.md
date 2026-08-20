@@ -128,13 +128,20 @@ Stock's engine adapts to what it has typed. The drift slice re-types 30 held-bac
 rows and diffs them against the frozen recording:
 
 ```
-python3 eval/oracle/record.py <udid> drift
+python3 eval/oracle/record.py <udid> drift              # from a cleared lexicon
+python3 eval/oracle/record.py <udid> drift --no-reset   # with the learned state
 ```
 
 Run it after a full day of unrelated simulator sessions, never in the same
-session as the recording. It prints `DRIFT-RESULT <same>/<total>` and exits
-non-zero on any row that moved. A row that moved means the oracle is not ground
-truth: that stops the loop and reopens vision milestone 5 with Jake.
+session as the recording. Each run writes `drift-<date>-reset.tsv` or
+`drift-<date>-warm.tsv`, prints `DRIFT-RESULT <same>/<total>`, and exits
+non-zero on any row that moved.
+
+**As of 2026-08-20 this gate fails.** Both runs reproduced 28 of 30 rows and
+both moved the same two, and clearing the lexicon did not restore the recorded
+answers (`EVAL.md`). Treat `eval/oracle/stock-2026-08-19.tsv` as a recording
+with a 6.7% instability, never as ground truth, until vision milestone 5 says
+how autocorrect is judged instead.
 
 ## Regenerate a corpus
 
