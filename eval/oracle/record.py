@@ -32,13 +32,13 @@ ROOT = Path(__file__).resolve().parents[2]
 ORACLE = ROOT / "eval" / "oracle"
 CORPUS = ORACLE / "corpus"
 DERIVED = Path.home() / ".smartspace-oracle" / "DD"
-SLICES = ["sloppy", "nospace", "context", "names", "drift"]
+SLICES = ["sloppy", "nospace", "context", "names", "probes", "carrier", "drift"]
 FIELDS = ["id", "slice", "typed", "offsets", "produced", "device", "ios", "recorded"]
 
 
 def corpus_rows():
     rows = {}
-    for name in SLICES[:4]:
+    for name in SLICES[:5]:
         with open(CORPUS / f"{name}.tsv", newline="") as f:
             for row in csv.DictReader(f, delimiter="\t"):
                 rows[row["id"]] = row
@@ -74,8 +74,9 @@ def write_rows(path: Path, rows: dict):
 
 
 def run_slice(udid: str, slice_name: str, skip: set, log: Path):
-    method = "testRecordDrift" if slice_name == "drift" else \
-        f"testRecord{slice_name.capitalize()}"
+    method = {"drift": "testRecordDrift",
+              "carrier": "testRecordCarrierProbesFirstHalf"}.get(
+        slice_name, f"testRecord{slice_name.capitalize()}")
     env = dict(os.environ, TEST_RUNNER_ORACLE_SKIP=",".join(sorted(skip)))
     command = [
         "xcodebuild", "test-without-building", "-scheme", "SmartSpace",

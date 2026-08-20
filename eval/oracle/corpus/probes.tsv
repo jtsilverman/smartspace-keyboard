@@ -1,0 +1,363 @@
+id	slice	typed	offsets	note
+A-001	probes	heklo	-	A|hello|one swap at 2, near
+A-002	probes	hejlo	-	A|hello|one swap at 2, mid
+A-003	probes	healo	-	A|hello|one swap at 2, far
+A-004	probes	wager	-	A|water|one swap at 2, near
+A-005	probes	waeer	-	A|water|one swap at 2, mid
+A-006	probes	wamer	-	A|water|one swap at 2, far
+A-007	probes	tajle	-	A|table|one swap at 2, near
+A-008	probes	taule	-	A|table|one swap at 2, mid
+A-009	probes	taple	-	A|table|one swap at 2, far
+A-010	probes	mokey	-	A|money|one swap at 2, near
+A-011	probes	moiey	-	A|money|one swap at 2, mid
+A-012	probes	moqey	-	A|money|one swap at 2, far
+A-013	probes	phine	-	A|phone|one swap at 2, near
+A-014	probes	phmne	-	A|phone|one swap at 2, mid
+A-015	probes	phfne	-	A|phone|one swap at 2, far
+A-016	probes	hoise	-	A|house|one swap at 2, near
+A-017	probes	honse	-	A|house|one swap at 2, mid
+A-018	probes	hoxse	-	A|house|one swap at 2, far
+A-019	probes	niyht	-	A|night|one swap at 2, near
+A-020	probes	nidht	-	A|night|one swap at 2, mid
+A-021	probes	nipht	-	A|night|one swap at 2, far
+A-022	probes	mofie	-	A|movie|one swap at 2, near
+A-023	probes	moyie	-	A|movie|one swap at 2, mid
+A-024	probes	molie	-	A|movie|one swap at 2, far
+A-025	probes	mueic	-	A|music|one swap at 2, near
+A-026	probes	mufic	-	A|music|one swap at 2, mid
+A-027	probes	muoic	-	A|music|one swap at 2, far
+A-028	probes	grren	-	A|green|one swap at 2, near
+A-029	probes	grten	-	A|green|one swap at 2, mid
+A-030	probes	gruen	-	A|green|one swap at 2, far
+A-031	probes	fisld	-	A|field|one swap at 2, near
+A-032	probes	fixld	-	A|field|one swap at 2, mid
+A-033	probes	fibld	-	A|field|one swap at 2, far
+A-034	probes	patty	-	A|party|one swap at 2, near
+A-035	probes	payty	-	A|party|one swap at 2, mid
+A-036	probes	panty	-	A|party|one swap at 2, far
+A-037	probes	sodry	-	A|sorry|one swap at 2, near
+A-038	probes	socry	-	A|sorry|one swap at 2, mid
+A-039	probes	soory	-	A|sorry|one swap at 2, far
+A-040	probes	haopy	-	A|happy|one swap at 2, near
+A-041	probes	haipy	-	A|happy|one swap at 2, mid
+A-042	probes	haxpy	-	A|happy|one swap at 2, far
+A-043	probes	chsck	-	A|check|one swap at 2, near
+A-044	probes	chxck	-	A|check|one swap at 2, mid
+A-045	probes	chlck	-	A|check|one swap at 2, far
+A-046	probes	stzrt	-	A|start|one swap at 2, near
+A-047	probes	stdrt	-	A|start|one swap at 2, mid
+A-048	probes	stgrt	-	A|start|one swap at 2, far
+A-049	probes	dinher	-	A|dinner|one swap at 3, near
+A-050	probes	dinuer	-	A|dinner|one swap at 3, mid
+A-051	probes	dinxer	-	A|dinner|one swap at 3, far
+A-052	probes	flihht	-	A|flight|one swap at 3, near
+A-053	probes	flijht	-	A|flight|one swap at 3, mid
+A-054	probes	flilht	-	A|flight|one swap at 3, far
+A-055	probes	coftee	-	A|coffee|one swap at 3, near
+A-056	probes	cofhee	-	A|coffee|one swap at 3, mid
+A-057	probes	cofoee	-	A|coffee|one swap at 3, far
+A-058	probes	morming	-	A|morning|one swap at 3, near
+A-059	probes	moruing	-	A|morning|one swap at 3, mid
+A-060	probes	mording	-	A|morning|one swap at 3, far
+B-061	probes	bello	-	B|hello|near swap at 0, first
+B-062	probes	heklo	-	B|hello|near swap at 2, middle
+B-063	probes	helli	-	B|hello|near swap at 4, last
+B-064	probes	eater	-	B|water|near swap at 0, first
+B-065	probes	wager	-	B|water|near swap at 2, middle
+B-066	probes	watee	-	B|water|near swap at 4, last
+B-067	probes	loney	-	B|money|near swap at 0, first
+B-068	probes	mojey	-	B|money|near swap at 2, middle
+B-069	probes	monet	-	B|money|near swap at 4, last
+B-070	probes	ohone	-	B|phone|near swap at 0, first
+B-071	probes	phpne	-	B|phone|near swap at 2, middle
+B-072	probes	phonw	-	B|phone|near swap at 4, last
+B-073	probes	uouse	-	B|house|near swap at 0, first
+B-074	probes	hohse	-	B|house|near swap at 2, middle
+B-075	probes	housd	-	B|house|near swap at 4, last
+B-076	probes	bight	-	B|night|near swap at 0, first
+B-077	probes	nivht	-	B|night|near swap at 2, middle
+B-078	probes	nighg	-	B|night|near swap at 4, last
+B-079	probes	larty	-	B|party|near swap at 0, first
+B-080	probes	pafty	-	B|party|near swap at 2, middle
+B-081	probes	partt	-	B|party|near swap at 4, last
+B-082	probes	gheck	-	B|check|near swap at 0, first
+B-083	probes	chwck	-	B|check|near swap at 2, middle
+B-084	probes	checj	-	B|check|near swap at 4, last
+B-085	probes	voffee	-	B|coffee|near swap at 0, first
+B-086	probes	cofdee	-	B|coffee|near swap at 3, middle
+B-087	probes	coffed	-	B|coffee|near swap at 5, last
+B-088	probes	korning	-	B|morning|near swap at 0, first
+B-089	probes	morming	-	B|morning|near swap at 3, middle
+B-090	probes	morninf	-	B|morning|near swap at 6, last
+C-091	probes	gello	-	C|hello|1 near swaps
+C-092	probes	geolo	-	C|hello|2 near swaps
+C-093	probes	geolp	-	C|hello|3 near swaps
+C-094	probes	qater	-	C|water|1 near swaps
+C-095	probes	qayer	-	C|water|2 near swaps
+C-096	probes	qayed	-	C|water|3 near swaps
+C-097	probes	noney	-	C|money|1 near swaps
+C-098	probes	nomey	-	C|money|2 near swaps
+C-099	probes	nomeh	-	C|money|3 near swaps
+C-100	probes	lhone	-	C|phone|1 near swaps
+C-101	probes	lhkne	-	C|phone|2 near swaps
+C-102	probes	lhkns	-	C|phone|3 near swaps
+C-103	probes	vouse	-	C|house|1 near swaps
+C-104	probes	vojse	-	C|house|2 near swaps
+C-105	probes	vojsw	-	C|house|3 near swaps
+C-106	probes	hight	-	C|night|1 near swaps
+C-107	probes	hibht	-	C|night|2 near swaps
+C-108	probes	hibhf	-	C|night|3 near swaps
+C-109	probes	oarty	-	C|party|1 near swaps
+C-110	probes	oadty	-	C|party|2 near swaps
+C-111	probes	oadth	-	C|party|3 near swaps
+C-112	probes	vheck	-	C|check|1 near swaps
+C-113	probes	vhrck	-	C|check|2 near swaps
+C-114	probes	vhrcn	-	C|check|3 near swaps
+C-115	probes	xoffee	-	C|coffee|1 near swaps
+C-116	probes	xorfee	-	C|coffee|2 near swaps
+C-117	probes	xorfwe	-	C|coffee|3 near swaps
+C-118	probes	lorning	-	C|morning|1 near swaps
+C-119	probes	lotning	-	C|morning|2 near swaps
+C-120	probes	lotnjng	-	C|morning|3 near swaps
+D-121	probes	cqt	-	D|cat|near swap at 1, length 3
+D-122	probes	dkg	-	D|dog|near swap at 1, length 3
+D-123	probes	rjn	-	D|run|near swap at 1, length 3
+D-124	probes	bys	-	D|bus|near swap at 1, length 3
+D-125	probes	plqne	-	D|plane|near swap at 2, length 5
+D-126	probes	chsir	-	D|chair|near swap at 2, length 5
+D-127	probes	brsad	-	D|bread|near swap at 2, length 5
+D-128	probes	smule	-	D|smile|near swap at 2, length 5
+D-129	probes	birtbday	-	D|birthday|near swap at 4, length 8
+D-130	probes	hospktal	-	D|hospital|near swap at 4, length 8
+D-131	probes	compjter	-	D|computer|near swap at 4, length 8
+D-132	probes	sandsich	-	D|sandwich|near swap at 4, length 8
+E-133	probes	heklo	-	E|hello|near swap
+E-134	probes	helo	-	E|hello|deleted letter
+E-135	probes	helllo	-	E|hello|doubled letter
+E-136	probes	wager	-	E|water|near swap
+E-137	probes	waetr	-	E|water|transposition
+E-138	probes	waer	-	E|water|deleted letter
+E-139	probes	watter	-	E|water|doubled letter
+E-140	probes	mojey	-	E|money|near swap
+E-141	probes	moeny	-	E|money|transposition
+E-142	probes	moey	-	E|money|deleted letter
+E-143	probes	monney	-	E|money|doubled letter
+E-144	probes	phpne	-	E|phone|near swap
+E-145	probes	phnoe	-	E|phone|transposition
+E-146	probes	phne	-	E|phone|deleted letter
+E-147	probes	phoone	-	E|phone|doubled letter
+E-148	probes	hohse	-	E|house|near swap
+E-149	probes	hosue	-	E|house|transposition
+E-150	probes	hose	-	E|house|deleted letter
+E-151	probes	houuse	-	E|house|doubled letter
+E-152	probes	nivht	-	E|night|near swap
+E-153	probes	nihgt	-	E|night|transposition
+E-154	probes	niht	-	E|night|deleted letter
+E-155	probes	nigght	-	E|night|doubled letter
+E-156	probes	pafty	-	E|party|near swap
+E-157	probes	patry	-	E|party|transposition
+E-158	probes	paty	-	E|party|deleted letter
+E-159	probes	parrty	-	E|party|doubled letter
+E-160	probes	chwck	-	E|check|near swap
+E-161	probes	chcek	-	E|check|transposition
+E-162	probes	chck	-	E|check|deleted letter
+E-163	probes	cheeck	-	E|check|doubled letter
+E-164	probes	cofdee	-	E|coffee|near swap
+E-165	probes	cofefe	-	E|coffee|transposition
+E-166	probes	cofee	-	E|coffee|deleted letter
+E-167	probes	cofffee	-	E|coffee|doubled letter
+E-168	probes	morming	-	E|morning|near swap
+E-169	probes	morinng	-	E|morning|transposition
+E-170	probes	moring	-	E|morning|deleted letter
+E-171	probes	mornning	-	E|morning|doubled letter
+F-172	probes	wafer	-	F|water|near swap, alone
+F-173	probes	can i have some wafer please	-	F|water|near swap, in a sentence
+F-174	probes	phkne	-	F|phone|near swap, alone
+F-175	probes	i left my phkne at home	-	F|phone|near swap, in a sentence
+F-176	probes	nifht	-	F|night|near swap, alone
+F-177	probes	see you tomorrow nifht then	-	F|night|near swap, in a sentence
+F-178	probes	chwck	-	F|check|near swap, alone
+F-179	probes	let me chwck the time	-	F|check|near swap, in a sentence
+F-180	probes	coftee	-	F|coffee|near swap, alone
+F-181	probes	i need more coftee now	-	F|coffee|near swap, in a sentence
+Ac-001	carrier	i said heklo to him	-	A|hello|one swap at 2, near
+Ac-002	carrier	i said hejlo to him	-	A|hello|one swap at 2, mid
+Ac-003	carrier	i said healo to him	-	A|hello|one swap at 2, far
+Ac-004	carrier	i said wager to him	-	A|water|one swap at 2, near
+Ac-005	carrier	i said waeer to him	-	A|water|one swap at 2, mid
+Ac-006	carrier	i said wamer to him	-	A|water|one swap at 2, far
+Ac-007	carrier	i said tajle to him	-	A|table|one swap at 2, near
+Ac-008	carrier	i said taule to him	-	A|table|one swap at 2, mid
+Ac-009	carrier	i said taple to him	-	A|table|one swap at 2, far
+Ac-010	carrier	i said mokey to him	-	A|money|one swap at 2, near
+Ac-011	carrier	i said moiey to him	-	A|money|one swap at 2, mid
+Ac-012	carrier	i said moqey to him	-	A|money|one swap at 2, far
+Ac-013	carrier	i said phine to him	-	A|phone|one swap at 2, near
+Ac-014	carrier	i said phmne to him	-	A|phone|one swap at 2, mid
+Ac-015	carrier	i said phfne to him	-	A|phone|one swap at 2, far
+Ac-016	carrier	i said hoise to him	-	A|house|one swap at 2, near
+Ac-017	carrier	i said honse to him	-	A|house|one swap at 2, mid
+Ac-018	carrier	i said hoxse to him	-	A|house|one swap at 2, far
+Ac-019	carrier	i said niyht to him	-	A|night|one swap at 2, near
+Ac-020	carrier	i said nidht to him	-	A|night|one swap at 2, mid
+Ac-021	carrier	i said nipht to him	-	A|night|one swap at 2, far
+Ac-022	carrier	i said mofie to him	-	A|movie|one swap at 2, near
+Ac-023	carrier	i said moyie to him	-	A|movie|one swap at 2, mid
+Ac-024	carrier	i said molie to him	-	A|movie|one swap at 2, far
+Ac-025	carrier	i said mueic to him	-	A|music|one swap at 2, near
+Ac-026	carrier	i said mufic to him	-	A|music|one swap at 2, mid
+Ac-027	carrier	i said muoic to him	-	A|music|one swap at 2, far
+Ac-028	carrier	i said grren to him	-	A|green|one swap at 2, near
+Ac-029	carrier	i said grten to him	-	A|green|one swap at 2, mid
+Ac-030	carrier	i said gruen to him	-	A|green|one swap at 2, far
+Ac-031	carrier	i said fisld to him	-	A|field|one swap at 2, near
+Ac-032	carrier	i said fixld to him	-	A|field|one swap at 2, mid
+Ac-033	carrier	i said fibld to him	-	A|field|one swap at 2, far
+Ac-034	carrier	i said patty to him	-	A|party|one swap at 2, near
+Ac-035	carrier	i said payty to him	-	A|party|one swap at 2, mid
+Ac-036	carrier	i said panty to him	-	A|party|one swap at 2, far
+Ac-037	carrier	i said sodry to him	-	A|sorry|one swap at 2, near
+Ac-038	carrier	i said socry to him	-	A|sorry|one swap at 2, mid
+Ac-039	carrier	i said soory to him	-	A|sorry|one swap at 2, far
+Ac-040	carrier	i said haopy to him	-	A|happy|one swap at 2, near
+Ac-041	carrier	i said haipy to him	-	A|happy|one swap at 2, mid
+Ac-042	carrier	i said haxpy to him	-	A|happy|one swap at 2, far
+Ac-043	carrier	i said chsck to him	-	A|check|one swap at 2, near
+Ac-044	carrier	i said chxck to him	-	A|check|one swap at 2, mid
+Ac-045	carrier	i said chlck to him	-	A|check|one swap at 2, far
+Ac-046	carrier	i said stzrt to him	-	A|start|one swap at 2, near
+Ac-047	carrier	i said stdrt to him	-	A|start|one swap at 2, mid
+Ac-048	carrier	i said stgrt to him	-	A|start|one swap at 2, far
+Ac-049	carrier	i said dinher to him	-	A|dinner|one swap at 3, near
+Ac-050	carrier	i said dinuer to him	-	A|dinner|one swap at 3, mid
+Ac-051	carrier	i said dinxer to him	-	A|dinner|one swap at 3, far
+Ac-052	carrier	i said flihht to him	-	A|flight|one swap at 3, near
+Ac-053	carrier	i said flijht to him	-	A|flight|one swap at 3, mid
+Ac-054	carrier	i said flilht to him	-	A|flight|one swap at 3, far
+Ac-055	carrier	i said coftee to him	-	A|coffee|one swap at 3, near
+Ac-056	carrier	i said cofhee to him	-	A|coffee|one swap at 3, mid
+Ac-057	carrier	i said cofoee to him	-	A|coffee|one swap at 3, far
+Ac-058	carrier	i said morming to him	-	A|morning|one swap at 3, near
+Ac-059	carrier	i said moruing to him	-	A|morning|one swap at 3, mid
+Ac-060	carrier	i said mording to him	-	A|morning|one swap at 3, far
+Bc-061	carrier	i said bello to him	-	B|hello|near swap at 0, first
+Bc-062	carrier	i said heklo to him	-	B|hello|near swap at 2, middle
+Bc-063	carrier	i said helli to him	-	B|hello|near swap at 4, last
+Bc-064	carrier	i said eater to him	-	B|water|near swap at 0, first
+Bc-065	carrier	i said wager to him	-	B|water|near swap at 2, middle
+Bc-066	carrier	i said watee to him	-	B|water|near swap at 4, last
+Bc-067	carrier	i said loney to him	-	B|money|near swap at 0, first
+Bc-068	carrier	i said mojey to him	-	B|money|near swap at 2, middle
+Bc-069	carrier	i said monet to him	-	B|money|near swap at 4, last
+Bc-070	carrier	i said ohone to him	-	B|phone|near swap at 0, first
+Bc-071	carrier	i said phpne to him	-	B|phone|near swap at 2, middle
+Bc-072	carrier	i said phonw to him	-	B|phone|near swap at 4, last
+Bc-073	carrier	i said uouse to him	-	B|house|near swap at 0, first
+Bc-074	carrier	i said hohse to him	-	B|house|near swap at 2, middle
+Bc-075	carrier	i said housd to him	-	B|house|near swap at 4, last
+Bc-076	carrier	i said bight to him	-	B|night|near swap at 0, first
+Bc-077	carrier	i said nivht to him	-	B|night|near swap at 2, middle
+Bc-078	carrier	i said nighg to him	-	B|night|near swap at 4, last
+Bc-079	carrier	i said larty to him	-	B|party|near swap at 0, first
+Bc-080	carrier	i said pafty to him	-	B|party|near swap at 2, middle
+Bc-081	carrier	i said partt to him	-	B|party|near swap at 4, last
+Bc-082	carrier	i said gheck to him	-	B|check|near swap at 0, first
+Bc-083	carrier	i said chwck to him	-	B|check|near swap at 2, middle
+Bc-084	carrier	i said checj to him	-	B|check|near swap at 4, last
+Bc-085	carrier	i said voffee to him	-	B|coffee|near swap at 0, first
+Bc-086	carrier	i said cofdee to him	-	B|coffee|near swap at 3, middle
+Bc-087	carrier	i said coffed to him	-	B|coffee|near swap at 5, last
+Bc-088	carrier	i said korning to him	-	B|morning|near swap at 0, first
+Bc-089	carrier	i said morming to him	-	B|morning|near swap at 3, middle
+Bc-090	carrier	i said morninf to him	-	B|morning|near swap at 6, last
+Cc-091	carrier	i said gello to him	-	C|hello|1 near swaps
+Cc-092	carrier	i said geolo to him	-	C|hello|2 near swaps
+Cc-093	carrier	i said geolp to him	-	C|hello|3 near swaps
+Cc-094	carrier	i said qater to him	-	C|water|1 near swaps
+Cc-095	carrier	i said qayer to him	-	C|water|2 near swaps
+Cc-096	carrier	i said qayed to him	-	C|water|3 near swaps
+Cc-097	carrier	i said noney to him	-	C|money|1 near swaps
+Cc-098	carrier	i said nomey to him	-	C|money|2 near swaps
+Cc-099	carrier	i said nomeh to him	-	C|money|3 near swaps
+Cc-100	carrier	i said lhone to him	-	C|phone|1 near swaps
+Cc-101	carrier	i said lhkne to him	-	C|phone|2 near swaps
+Cc-102	carrier	i said lhkns to him	-	C|phone|3 near swaps
+Cc-103	carrier	i said vouse to him	-	C|house|1 near swaps
+Cc-104	carrier	i said vojse to him	-	C|house|2 near swaps
+Cc-105	carrier	i said vojsw to him	-	C|house|3 near swaps
+Cc-106	carrier	i said hight to him	-	C|night|1 near swaps
+Cc-107	carrier	i said hibht to him	-	C|night|2 near swaps
+Cc-108	carrier	i said hibhf to him	-	C|night|3 near swaps
+Cc-109	carrier	i said oarty to him	-	C|party|1 near swaps
+Cc-110	carrier	i said oadty to him	-	C|party|2 near swaps
+Cc-111	carrier	i said oadth to him	-	C|party|3 near swaps
+Cc-112	carrier	i said vheck to him	-	C|check|1 near swaps
+Cc-113	carrier	i said vhrck to him	-	C|check|2 near swaps
+Cc-114	carrier	i said vhrcn to him	-	C|check|3 near swaps
+Cc-115	carrier	i said xoffee to him	-	C|coffee|1 near swaps
+Cc-116	carrier	i said xorfee to him	-	C|coffee|2 near swaps
+Cc-117	carrier	i said xorfwe to him	-	C|coffee|3 near swaps
+Cc-118	carrier	i said lorning to him	-	C|morning|1 near swaps
+Cc-119	carrier	i said lotning to him	-	C|morning|2 near swaps
+Cc-120	carrier	i said lotnjng to him	-	C|morning|3 near swaps
+Dc-121	carrier	i said cqt to him	-	D|cat|near swap at 1, length 3
+Dc-122	carrier	i said dkg to him	-	D|dog|near swap at 1, length 3
+Dc-123	carrier	i said rjn to him	-	D|run|near swap at 1, length 3
+Dc-124	carrier	i said bys to him	-	D|bus|near swap at 1, length 3
+Dc-125	carrier	i said plqne to him	-	D|plane|near swap at 2, length 5
+Dc-126	carrier	i said chsir to him	-	D|chair|near swap at 2, length 5
+Dc-127	carrier	i said brsad to him	-	D|bread|near swap at 2, length 5
+Dc-128	carrier	i said smule to him	-	D|smile|near swap at 2, length 5
+Dc-129	carrier	i said birtbday to him	-	D|birthday|near swap at 4, length 8
+Dc-130	carrier	i said hospktal to him	-	D|hospital|near swap at 4, length 8
+Dc-131	carrier	i said compjter to him	-	D|computer|near swap at 4, length 8
+Dc-132	carrier	i said sandsich to him	-	D|sandwich|near swap at 4, length 8
+Ec-133	carrier	i said heklo to him	-	E|hello|near swap
+Ec-134	carrier	i said helo to him	-	E|hello|deleted letter
+Ec-135	carrier	i said helllo to him	-	E|hello|doubled letter
+Ec-136	carrier	i said wager to him	-	E|water|near swap
+Ec-137	carrier	i said waetr to him	-	E|water|transposition
+Ec-138	carrier	i said waer to him	-	E|water|deleted letter
+Ec-139	carrier	i said watter to him	-	E|water|doubled letter
+Ec-140	carrier	i said mojey to him	-	E|money|near swap
+Ec-141	carrier	i said moeny to him	-	E|money|transposition
+Ec-142	carrier	i said moey to him	-	E|money|deleted letter
+Ec-143	carrier	i said monney to him	-	E|money|doubled letter
+Ec-144	carrier	i said phpne to him	-	E|phone|near swap
+Ec-145	carrier	i said phnoe to him	-	E|phone|transposition
+Ec-146	carrier	i said phne to him	-	E|phone|deleted letter
+Ec-147	carrier	i said phoone to him	-	E|phone|doubled letter
+Ec-148	carrier	i said hohse to him	-	E|house|near swap
+Ec-149	carrier	i said hosue to him	-	E|house|transposition
+Ec-150	carrier	i said hose to him	-	E|house|deleted letter
+Ec-151	carrier	i said houuse to him	-	E|house|doubled letter
+Ec-152	carrier	i said nivht to him	-	E|night|near swap
+Ec-153	carrier	i said nihgt to him	-	E|night|transposition
+Ec-154	carrier	i said niht to him	-	E|night|deleted letter
+Ec-155	carrier	i said nigght to him	-	E|night|doubled letter
+Ec-156	carrier	i said pafty to him	-	E|party|near swap
+Ec-157	carrier	i said patry to him	-	E|party|transposition
+Ec-158	carrier	i said paty to him	-	E|party|deleted letter
+Ec-159	carrier	i said parrty to him	-	E|party|doubled letter
+Ec-160	carrier	i said chwck to him	-	E|check|near swap
+Ec-161	carrier	i said chcek to him	-	E|check|transposition
+Ec-162	carrier	i said chck to him	-	E|check|deleted letter
+Ec-163	carrier	i said cheeck to him	-	E|check|doubled letter
+Ec-164	carrier	i said cofdee to him	-	E|coffee|near swap
+Ec-165	carrier	i said cofefe to him	-	E|coffee|transposition
+Ec-166	carrier	i said cofee to him	-	E|coffee|deleted letter
+Ec-167	carrier	i said cofffee to him	-	E|coffee|doubled letter
+Ec-168	carrier	i said morming to him	-	E|morning|near swap
+Ec-169	carrier	i said morinng to him	-	E|morning|transposition
+Ec-170	carrier	i said moring to him	-	E|morning|deleted letter
+Ec-171	carrier	i said mornning to him	-	E|morning|doubled letter
+Fc-172	carrier	i said wafer to him	-	F|water|near swap, alone
+Fc-173	carrier	i said can i have some wafer please to him	-	F|water|near swap, in a sentence
+Fc-174	carrier	i said phkne to him	-	F|phone|near swap, alone
+Fc-175	carrier	i said i left my phkne at home to him	-	F|phone|near swap, in a sentence
+Fc-176	carrier	i said nifht to him	-	F|night|near swap, alone
+Fc-177	carrier	i said see you tomorrow nifht then to him	-	F|night|near swap, in a sentence
+Fc-178	carrier	i said chwck to him	-	F|check|near swap, alone
+Fc-179	carrier	i said let me chwck the time to him	-	F|check|near swap, in a sentence
+Fc-180	carrier	i said coftee to him	-	F|coffee|near swap, alone
+Fc-181	carrier	i said i need more coftee now to him	-	F|coffee|near swap, in a sentence

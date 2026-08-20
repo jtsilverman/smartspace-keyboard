@@ -17,6 +17,21 @@ final class StockOracleTests: XCTestCase {
     func testRecordContext() throws { try record(slice: "context") }
     func testRecordNames() throws { try record(slice: "names") }
 
+    /// Controlled probes (`eval/oracle/gen-probes.py`): one variable changes
+    /// per row, so stock's answers model the rule rather than sampling it.
+    func testRecordProbes() throws { try type(rows: oracleProbes, tag: "ORACLE") }
+
+    /// The same probes inside a lowercase carrier. Alone, a probe sits at the
+    /// start of the field where autocap capitalizes it and stock protects it
+    /// as a name, so the carrier is what isolates the slip shape.
+    func testRecordCarrierProbesFirstHalf() throws {
+        try type(rows: Array(oracleCarrierProbes.prefix(91)), tag: "ORACLE")
+    }
+
+    func testRecordCarrierProbesSecondHalf() throws {
+        try type(rows: Array(oracleCarrierProbes.dropFirst(91)), tag: "ORACLE")
+    }
+
     /// The 30 held-back rows, re-typed. `record.sh --drift` runs this a day
     /// later and diffs the output against the frozen recording. Stock's engine
     /// adapts to what it has seen, so a drift slice that does not reproduce
