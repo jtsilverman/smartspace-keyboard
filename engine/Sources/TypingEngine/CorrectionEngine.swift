@@ -27,6 +27,10 @@ public struct CorrectionEngine: Sendable {
     private let checker: any SpellChecking
     private let lexicon: Set<String>
 
+    /// Key widths. A tap must have sat this close to the candidate's key for a
+    /// substitution to read as a thumb slip rather than a deliberate press.
+    private static let slipReach: Double = 0.75
+
     /// - Parameter lexicon: protected words (contact names, text
     ///   replacements) that are never corrected away, matched
     ///   case-insensitively. Phase 3 fills this from UILexicon.
@@ -123,6 +127,20 @@ public struct CorrectionEngine: Sendable {
         // best candidate is itself a proper noun. The dictionary's own casing
         // decides that, never the recased output: "Teh" -> "The" is a common
         // word wearing an autocap, and it still corrects.
+        // Where the thumb landed outranks every letter-level guess about it.
+        // A substitution is a slip only when the tap sat closer to the
+        // candidate's key than this, in key widths: a tap on the boundary
+        // between two keys is 0.7 from each, and a dead-centre tap is a full
+        // key width from its nearest neighbour and 1.41 from a diagonal one.
+        // Stock recovered 100% of off-centre wrong letters and 47% of
+        // dead-centre ones (EVAL.md, 2026-08-20).
+        if let touches, touches.count == word.count,
+           let slip = KeyNeighbors.singleSubstitution(word.lowercased(),
+                                                      top.lowercased()),
+           let reach = touches.distance(at: slip.index, to: slip.meant),
+           reach > Self.slipReach {
+            return .noChange
+        }
         if word.first?.isUppercase == true, !WordRank.isKnown(word) {
             if WordRank.isProperNoun(top) { return .noChange }
             // A far-key swap is not a thumb slip. Kylian -> Kalian trades y

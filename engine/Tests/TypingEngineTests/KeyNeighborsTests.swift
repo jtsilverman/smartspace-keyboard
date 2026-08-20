@@ -38,8 +38,11 @@ import Testing
 
     @Test func oneDifferingLetterIsASingleSubstitution() {
         let slip = KeyNeighbors.singleSubstitution("thw", "the")
+        #expect(slip?.index == 2)
         #expect(slip?.typed == "w")
         #expect(slip?.meant == "e")
+        // The changed position, not the first place the letter appears.
+        #expect(KeyNeighbors.singleSubstitution("mommy", "mommt")?.index == 4)
         #expect(KeyNeighbors.singleSubstitution("teh", "the") == nil)
     }
 }

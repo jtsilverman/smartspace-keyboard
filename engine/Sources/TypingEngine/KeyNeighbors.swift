@@ -46,13 +46,15 @@ public enum KeyNeighbors {
 
     /// The one position where two same-length words differ, or nil when they
     /// differ anywhere else. A single substitution is the fat-finger shape.
+    /// Carries the index, because a word can hold the typed letter more than
+    /// once ("nn" in "money") and only one position changed.
     static func singleSubstitution(_ word: String, _ candidate: String)
-        -> (typed: Character, meant: Character)? {
+        -> (index: Int, typed: Character, meant: Character)? {
         guard word.count == candidate.count else { return nil }
-        var found: (Character, Character)?
-        for (a, b) in zip(word, candidate) where a != b {
+        var found: (Int, Character, Character)?
+        for (index, pair) in zip(word, candidate).enumerated() where pair.0 != pair.1 {
             if found != nil { return nil }
-            found = (a, b)
+            found = (index, pair.0, pair.1)
         }
         return found
     }
