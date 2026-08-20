@@ -39,8 +39,12 @@ public struct CorrectionEngine: Sendable {
 
     /// - Parameter session: undo memory; a word the user has un-corrected
     ///   in this session is never corrected again.
+    /// - Parameter touches: where the thumb landed for each letter of the
+    ///   word being committed. Nil on every path that has no touch history,
+    ///   which is every caller until KeyTouchSurface records one.
     public func decision(
         for context: String,
+        touches: TouchTrail? = nil,
         session: CorrectionSession = CorrectionSession()
     ) -> CorrectionDecision {
         guard let word = WordBoundary.lastWord(in: context) else { return .noChange }
