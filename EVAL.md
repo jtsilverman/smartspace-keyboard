@@ -264,6 +264,11 @@ simulator and diffs the key area. iPhone 17, iOS 26.3, light mode, 2026-08-19:
 | Function key fill | 254,254,254 against stock's 255,255,255 |
 | Key area pixels differing | 2.77%, at glyph edges and the emoji key |
 
+Re-run 2026-08-20, after the dictionary, the confidence rules and the touch
+wiring landed: `pct_pixels_differing` 2.77 on iPhone 17, the same number to two
+decimals. The engine work moved no pixels, which is check 7's clause and the
+invariant that outranks every score in this file.
+
 Dark mode is not at parity and predates the 2026-08-19 work: function keys read
 36,36,36 against stock's 61,61,61, caps sit up to 1.33pt off, 11.7% of pixels differ.
 Measured with and without the backdrop change; both runs identical.

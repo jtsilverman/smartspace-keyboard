@@ -244,9 +244,10 @@ STOP when every check is true, the named check commands pass, and `agents/vision
 
 - [ ] 0 stock oracle -- 400 rows recorded from stock 2026-08-19 (EVAL.md);
       check 1 stays open until the drift slice reproduces, earliest 2026-08-20
-- [ ] 1 our own dictionary
-- [ ] 2 touch points reach the corrector
-- [ ] 3 missed spaces
+- [~] 1 our own dictionary -- AOSP LatinIME list; typos 92%/17 and completions
+      95/97 clear their gates, protection test half holds at 96 against 97
+- [x] 2 touch points reach the corrector -- TouchTrail wired and live-verified 2026-08-20
+- [~] 3 missed spaces -- splits conservatively; the bolder rule waits on 4a
 - [ ] 4a word-pair context
 - [ ] 4b trained model in Core ML
 - [ ] 5 memory and numbers
