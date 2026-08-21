@@ -92,6 +92,15 @@ weakest, and it is the one waiting on the word-pair model of unit 4a.
 These are agreement with a recording. The drift gate failed on 2026-08-20, so a
 row we disagree on is a lead, never a verdict.
 
+**The names slice is a dictionary gap, not a rule gap.** Stock left `nathen`,
+`jesica` and `danial` alone and we corrected them, which reads at first like a
+missing confidence rule. Requiring the edit to be an adjacent-key swap before a
+correction may reach a name took the slice from 43/50 down to 32/50, because
+stock does fix `sarha` to `Sarah` and `emliy` to `Emily`, both transpositions.
+What separates the two groups is that `Nathen`, `Jesica` and `Danial` are real
+name spellings, and the 2014 AOSP list does not carry them. `Venmo` is the same
+story. A wider name list closes these; a rule cannot.
+
 ## Missed spaces: what stock splits, and what we can (unit 3)
 
 Read off the 50 recorded missing-space rows. Stock split 48, and every split it
