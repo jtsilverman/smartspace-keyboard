@@ -162,6 +162,21 @@ broke `sprry` -> `sorry` into `spry`, so the model stays as is
 `allready` is a lead for the trained model of unit 4b: nothing follows `I'm`
 in the pair table, because the source splits contractions into two tokens.
 
+## Memory: the word tables are mapped, not held (2026-09-11)
+
+Physical footprint of the keyboard extension in the iPhone 17 Pro simulator with
+the keyboard up and a correction applied (`footprint -p`, sampled every 5s while
+`MissedSpaceLiveTests` drives it):
+
+| Tables | Steady | Peak | MALLOC_LARGE |
+|---|---|---|---|
+| Swift dictionaries built from string literals | 70MB | 78MB | 19MB |
+| Memory-mapped binary files (`Resources/*.bin`) | 42MB | 43MB | 304KB |
+
+The ceiling is 55MB (check 6). The simulator is a proxy: the on-device number is
+owed. In the engine test process, loading both tables grows the heap 150KB
+(`WordTableMemoryTests`), from 23MB.
+
 ## What stock's autocorrect actually keys on (probes, 2026-08-20)
 
 Two probe sets were typed into the stock keyboard through the XCUITest harness.

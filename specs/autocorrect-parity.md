@@ -257,4 +257,5 @@ STOP when every check is true, the named check commands pass, and `agents/vision
 - [x] 4a word-pair context -- Norvig bigrams at a 300k floor behind the ContextScoring
       seam; oracle agreement 315 -> 326/400, nospace 53 -> 64 (2026-09-11)
 - [ ] 4b trained model in Core ML
-- [ ] 5 memory and numbers
+- [~] 5 memory and numbers -- tables memory-mapped 2026-09-11; extension footprint
+      42MB steady / 43MB peak in the simulator (was 70 / 78); on-device number owed
