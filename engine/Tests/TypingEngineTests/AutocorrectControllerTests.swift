@@ -313,3 +313,23 @@ private func controller(
         #expect(c.barContent == .empty)
     }
 }
+
+/// Unit 3 of specs/autocorrect-parity.md, vision milestone 5: a word broken
+/// by a stray space comes back whole even though its first fragment was
+/// corrected at its own space. Stock turns "see you tomo rrow" into "See you
+/// tomorrow" (oracle row nosp-051); the keyboard corrects "tomo" to "too" at
+/// the first space, so the join has to revise that correction, not read the
+/// field as it stands.
+@Suite struct StraySpaceJoinTests {
+    @Test func aCorrectedFragmentIsRevisedIntoTheJoinedWord() {
+        var controller = AutocorrectController(checker: DictionarySpellChecker())
+        var field = ""
+        for word in ["see", "you", "tomo", "rrow"] {
+            field += (field.isEmpty ? "" : " ") + word
+            if case .replace(let original, let corrected, _) = controller.wordCommitted(context: field) {
+                field = String(field.dropLast(original.count)) + corrected
+            }
+        }
+        #expect(field == "see you tomorrow")
+    }
+}
