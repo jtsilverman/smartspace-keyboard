@@ -19,24 +19,34 @@ public struct DictionarySpellChecker: SpellChecking {
         guard !typed.isEmpty else { return [] }
         // The seam's contract: an empty list means the word is spelled
         // correctly.
-        guard WordRank.ranked[typed] == nil else { return [] }
+        guard WordRank.index(ofLower: typed) == nil else { return [] }
 
         // A short word admits one edit; two edits on four letters reaches
         // most of the vocabulary and every candidate is noise.
         let limit = typed.count <= 4 ? 1 : 2
         var scored: [(text: String, distance: Double, rank: Int)] = []
         let typedLetters = WordRank.letterMask(typed)
+        // The list is read in place as UTF-8. A byte is a character for the
+        // ASCII words, which is all but 341 of them; a pair with a non-ASCII
+        // side is decoded so an accent still counts as one edit.
+        let typedBytes = Array(typed.utf8)
+        let typedScalars = Array(typed.unicodeScalars)
+        let typedASCII = typedBytes.count == typedScalars.count
         for length in max(1, typed.count - limit)...(typed.count + limit) {
-            for entry in WordRank.byLength[length] ?? [] {
+            let run = WordRank.indices(ofLength: length)
+            for k in 0..<(run.count / 4) {
+                let i = run.u32(k)
                 // Each edit changes at most two letters of the set, so a pair
                 // whose letter sets differ by more than 2 * limit cannot be
                 // within limit edits. The xor rejects most of the list.
-                guard (typedLetters ^ entry.letters).nonzeroBitCount <= 2 * limit
+                guard (typedLetters ^ WordRank.mask(at: i)).nonzeroBitCount <= 2 * limit
                 else { continue }
-                let distance = EditDistance.damerau(typed, entry.lower, limit: limit)
+                let distance = typedASCII && WordRank.isASCII(at: i)
+                    ? EditDistance.damerau(typedBytes, WordRank.lowerBytes(at: i), limit: limit)
+                    : EditDistance.damerau(typedScalars, Array(WordRank.lower(at: i).unicodeScalars),
+                                           limit: limit)
                 guard distance <= limit else { continue }
-                scored.append((WordRank.cased[entry.lower] ?? entry.lower, Double(distance),
-                               WordRank.ranked[entry.lower] ?? .max))
+                scored.append((WordRank.cased(at: i), Double(distance), WordRank.rank(at: i)))
             }
         }
         // Every split rides along after the capped word list. Whether a split
@@ -62,9 +72,9 @@ public struct DictionarySpellChecker: SpellChecking {
         var found: [String] = []
         for cut in 1..<letters.count {
             let left = String(letters[..<cut]), right = String(letters[cut...])
-            guard let leftCased = WordRank.cased[left],
-                  let rightCased = WordRank.cased[right] else { continue }
-            found.append("\(leftCased) \(rightCased)")
+            guard let leftIndex = WordRank.index(ofLower: left),
+                  let rightIndex = WordRank.index(ofLower: right) else { continue }
+            found.append("\(WordRank.cased(at: leftIndex)) \(WordRank.cased(at: rightIndex))")
         }
         return found
     }
@@ -74,12 +84,13 @@ public struct DictionarySpellChecker: SpellChecking {
     public func completions(for prefix: String) -> [String] {
         let typed = prefix.lowercased()
         guard typed.count >= 2 else { return [] }
-        let bucket = WordRank.byPrefix[String(typed.prefix(2))] ?? []
-        return bucket
-            .filter { $0.hasPrefix(typed) && $0 != typed }
-            .sorted { (WordRank.ranked[$0] ?? .max) < (WordRank.ranked[$1] ?? .max) }
+        let itself = WordRank.index(ofLower: typed)
+        return WordRank.prefixRange(typed)
+            .map(WordRank.alphaIndex)
+            .filter { $0 != itself }
+            .sorted { WordRank.rank(at: $0) < WordRank.rank(at: $1) }
             .prefix(Self.candidateLimit)
-            .map { WordRank.cased[$0] ?? $0 }
+            .map(WordRank.cased(at:))
     }
 }
 
@@ -87,12 +98,18 @@ public struct DictionarySpellChecker: SpellChecking {
 /// Shared by the candidate scan and `CorrectionEngine`'s distance guard so the
 /// two never disagree about how far apart two words are.
 enum EditDistance {
+    static func damerau(_ a: String, _ b: String, limit: Int = .max) -> Int {
+        damerau(Array(a.unicodeScalars), Array(b.unicodeScalars), limit: limit)
+    }
+
     /// - Parameter limit: rows stop early once every cell exceeds it, so a
     ///   far-apart pair costs a fraction of the full matrix.
-    static func damerau(_ a: String, _ b: String, limit: Int = .max) -> Int {
-        let s = Array(a), t = Array(b)
+    static func damerau<S: RandomAccessCollection, T: RandomAccessCollection>(
+        _ s: S, _ t: T, limit: Int = .max
+    ) -> Int where S.Element == T.Element, S.Element: Equatable, S.Index == Int, T.Index == Int {
         if s.isEmpty { return t.count }
         if t.isEmpty { return s.count }
+        let s0 = s.startIndex, t0 = t.startIndex
         var prev2 = [Int](repeating: 0, count: t.count + 1)
         var prev = Array(0...t.count)
         var curr = [Int](repeating: 0, count: t.count + 1)
@@ -100,9 +117,9 @@ enum EditDistance {
             curr[0] = i
             var best = curr[0]
             for j in 1...t.count {
-                let cost = s[i - 1] == t[j - 1] ? 0 : 1
+                let cost = s[s0 + i - 1] == t[t0 + j - 1] ? 0 : 1
                 curr[j] = min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
-                if i > 1, j > 1, s[i - 1] == t[j - 2], s[i - 2] == t[j - 1] {
+                if i > 1, j > 1, s[s0 + i - 1] == t[t0 + j - 2], s[s0 + i - 2] == t[t0 + j - 1] {
                     curr[j] = min(curr[j], prev2[j - 2] + 1)
                 }
                 best = min(best, curr[j])

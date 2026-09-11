@@ -143,6 +143,21 @@ answers (`EVAL.md`). Treat `eval/oracle/stock-2026-08-19.tsv` as a recording
 with a 6.7% instability, never as ground truth, until vision milestone 5 says
 how autocorrect is judged instead.
 
+## Regenerate the word tables
+
+The engine's word list and word-pair table are binary files under
+`engine/Sources/TypingEngine/Resources/`, built from the vendored sources in
+`engine/tools/vendor/`. After a change to either generator or to
+`TextingLexicon.swift`, from the repo root:
+
+```
+python3 engine/tools/gen-wordrank.py
+python3 engine/tools/gen-wordpairs.py
+```
+
+Run them in that order. The pair table refers to words by their position in the
+word list. Both scripts reproduce their file byte for byte from the same inputs.
+
 ## Regenerate a corpus
 
 Corpus regeneration is its own commit and never rides along with an engine change.

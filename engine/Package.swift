@@ -11,7 +11,10 @@ let package = Package(
     targets: [
         .target(name: "PunctuationEngine"),
         .testTarget(name: "PunctuationEngineTests", dependencies: ["PunctuationEngine"]),
-        .target(name: "TypingEngine", dependencies: ["PunctuationEngine"]),
+        .target(
+            name: "TypingEngine",
+            dependencies: ["PunctuationEngine"],
+            resources: [.copy("Resources/wordrank.bin"), .copy("Resources/wordpairs.bin")]),
         .testTarget(name: "TypingEngineTests", dependencies: ["TypingEngine"])
     ]
 )

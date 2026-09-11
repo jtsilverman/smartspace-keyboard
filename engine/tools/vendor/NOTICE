@@ -9,7 +9,7 @@ The English word list from the Android Open Source Project's LatinIME keyboard.
 - Licence: Apache License 2.0, Copyright (C) The Android Open Source Project
 
 The list is vendored rather than downloaded at build time so
-`engine/tools/gen-wordrank.py` reproduces `WordRank.swift` offline.
+`engine/tools/gen-wordrank.py` reproduces `Resources/wordrank.bin` offline.
 
 The 2014 date is a known limit: the list has `iPhone` and `Mateo`, and it does
 not have `Jaxon` or `Malia`.
@@ -29,5 +29,5 @@ bigrams of the Google Web Trillion Word Corpus.
   publishes the count files openly on that page; the code beside them is MIT.
 
 The file is vendored so `engine/tools/gen-wordpairs.py` reproduces
-`WordPairs.swift` offline. Web text is the known limit: the counts hold
+`Resources/wordpairs.bin` offline. Web text is the known limit: the counts hold
 "bad ass" at 204,647 and never saw a text message.

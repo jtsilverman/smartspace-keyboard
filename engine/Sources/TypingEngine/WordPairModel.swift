@@ -18,7 +18,9 @@ public struct WordPairModel: ContextScoring {
     public init() {}
 
     public func likelihood(of word: String, after previous: [String]) -> Double? {
-        guard let before = previous.last else { return nil }
-        return WordPairs.counts["\(before.lowercased()) \(word.lowercased())"].map(Double.init)
+        guard let before = previous.last,
+              let first = WordRank.index(ofLower: before.lowercased()),
+              let second = WordRank.index(ofLower: word.lowercased()) else { return nil }
+        return WordPairs.count(first: first, second: second).map(Double.init)
     }
 }
