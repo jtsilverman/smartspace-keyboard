@@ -64,7 +64,7 @@ Three source groups plus two test targets.
 | `app/SmartSpace/` | The host app: onboarding, settings, stats |
 | `app/SmartSpaceKeyboard/` | The extension: `KeyboardViewController`, `KeyTouchSurface`, `KeyPopView`, `AlternatesCalloutView`, `DefaultsRecentsStore` |
 | `app/Shared/` | Compiled into both: `SystemSpellChecker`, `SharedStores`, `AppGroupProbe` |
-| `app/SmartSpaceTests/` | Simulator unit tests, including the typo benchmark against the real `UITextChecker` |
+| `app/SmartSpaceTests/` | Simulator unit tests: the frozen typo, protection and completion benches through the engine's own dictionary, and one probe of the real `UITextChecker` |
 | `app/SmartSpaceUITests/` | Driven UI tests: cursor drag, emoji panel, fast typing, hold behavior |
 
 The extension declares `NSExtensionPointIdentifier: com.apple.keyboard-service` with
