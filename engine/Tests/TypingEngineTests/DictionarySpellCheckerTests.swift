@@ -43,6 +43,19 @@ import Testing
         #expect(melater == "me later")
     }
 
+    /// "all ready" is a pair the table holds, and "already" is one letter
+    /// away. Typing one of a doubled pair twice ("allready") is the mirror
+    /// of dropping it ("realy"), which the engine already scores as half an
+    /// edit, so the single word wins over the split. Typo bench row
+    /// "allready", the one miscorrection the split rule added.
+    @Test func anExtraDoubledLetterOutranksAPairBackedSplit() {
+        guard case .correct(let to, _) = engine.decision(for: "im allready") else {
+            Issue.record("no correction offered")
+            return
+        }
+        #expect(to == "already")
+    }
+
     @Test func aKnownWordIsNeverSplit() {
         // Stock refused "amin" rather than offer "am in" (EVAL.md). "am in" is
         // a strong pair; what stops the split is that Amin is a name the word
