@@ -13,3 +13,21 @@ The list is vendored rather than downloaded at build time so
 
 The 2014 date is a known limit: the list has `iPhone` and `Mateo`, and it does
 not have `Jaxon` or `Malia`.
+
+# count_2w.txt.gz
+
+Peter Norvig's two-word counts, the quarter-million most frequent lowercase
+bigrams of the Google Web Trillion Word Corpus.
+
+- Source: https://norvig.com/ngrams/count_2w.txt
+- Retrieved: 2026-09-11
+- Entries: 286,358 bigrams with counts, none below 100,000. Contractions are
+  split into two tokens ("don t"), so no pair contains an apostrophe
+- Provenance, as stated at https://norvig.com/ngrams/: "Data files are derived
+  from the Google Web Trillion Word Corpus, as described by Thorsten Brants and
+  Alex Franz, and distributed by the Linguistic Data Consortium." Norvig
+  publishes the count files openly on that page; the code beside them is MIT.
+
+The file is vendored so `engine/tools/gen-wordpairs.py` reproduces
+`WordPairs.swift` offline. Web text is the known limit: the counts hold
+"bad ass" at 204,647 and never saw a text message.
