@@ -253,8 +253,8 @@ STOP when every check is true, the named check commands pass, and `agents/vision
       typos 91%/18 and completions 95/97 clear their gates, protection test half
       holds at 96 against 97
 - [x] 2 touch points reach the corrector -- TouchTrail wired and live-verified 2026-08-20
-- [~] 3 missed spaces -- a pair-backed split outranks a one-edit word since 4a;
-      joins of a token broken by a stray space are not attempted
+- [x] 3 missed spaces -- a pair-backed split outranks a one-edit word since 4a; two
+      unknown fragments join, revising the first fragment's own correction (2026-09-11)
 - [x] 4a word-pair context -- Norvig bigrams at a 300k floor behind the ContextScoring
       seam; oracle agreement 315 -> 326/400, nospace 53 -> 64 (2026-09-11)
 - [ ] 4b trained model in Core ML

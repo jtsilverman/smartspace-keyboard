@@ -162,6 +162,28 @@ broke `sprry` -> `sorry` into `spry`, so the model stays as is
 `allready` is a lead for the trained model of unit 4b: nothing follows `I'm`
 in the pair table, because the source splits contractions into two tokens.
 
+## Stray spaces: two fragments come back as one word (2026-09-11)
+
+Read off the 50 recorded stray-space rows. Stock joined 9: every one where
+both halves are unknown and two letters or more (`tomo rrow`, `cor ner`,
+`fli ght`, `rea dy`, `leav ing`) plus four with a known half (`meet ing`,
+`ear ly`, `wor ks`, `asle ep`); it left every pair with a one-letter half
+(`g o`, `u p`, `d ay`) and every other known-half pair (`com ing`, `id ea`,
+`sec ond`), and mangled 13 (`ba ck` -> `ba close`, `li nk` -> `li no`, `than
+ks` -> `Than is`). Ours joins two unknown halves of two letters or more. That
+takes the five clean rows and loses `ga te` (stock left it), and produces
+`back`, `link`, `landed`, `closes` on rows where the recording is noise.
+
+The first fragment is corrected at its own space (`tomo` -> `too`), so the join
+revises the last correction: the session remembers both sides and the join
+takes `too rrow` out of the field while an undo restores `tomo rrow`.
+
+nospace 63 -> 68/100, total 329 -> 333/400. Benches unchanged to the miss line.
+What is left in the slice, 32 rows: 13 where stock's answer is noise, 4 where a
+known half is the fragment (`meet ing`), and the rest where a known token our
+list holds blocks a split (`mein`, `isa`, `timeworks`, `iam`) or the pair is
+below the table's floor (`i fell`, `time works`).
+
 ## Names: the list carries US first names (2026-09-11)
 
 The names gap named on 2026-08-20 closes by vocabulary. Every name from the
