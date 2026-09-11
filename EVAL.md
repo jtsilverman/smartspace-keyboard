@@ -195,6 +195,13 @@ sourced brand list is the fix) and `jaje` -> `Jane` where stock said `Jake`
 (the user's contact, which reaches the engine through UILexicon on the device
 and not in this test).
 
+The trade the names carry: 65 of the added names are three letters or fewer
+(Sid, Les, Ian, Eli, Bo, Isa, Al among them) and each is one edit from a common
+word, so `sid` no longer corrects to `said` and `les` no longer to `less`. The
+typo bench holds no such row. Kept as is: a typed name the engine mangles is the
+costlier failure, and stock keeps a name it knows. A probe slice of these shapes
+against stock is the evidence that settles it; recorded here as a lead.
+
 ## Memory: the word tables are mapped, not held (2026-09-11)
 
 Physical footprint of the keyboard extension in the iPhone 17 Pro simulator with
