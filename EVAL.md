@@ -122,6 +122,46 @@ capitalized. Without those last two, `badass` became `bad ass` and `Kaius`
 became `Kai us`, which the protection corpus gates on. `thankyou` -> `thank you`
 lands; `onmy` -> `on my` waits for 4a.
 
+## The word before the typo (unit 4a, 2026-09-11)
+
+`WordPairs` is Norvig's `count_2w.txt` (web bigrams, `engine/tools/vendor/NOTICE`)
+kept where both words are in `WordRank` and the count reaches 300,000: 90,310
+pairs. `CorrectionEngine` breaks a distance tie on the pair count before word
+frequency (`more thn` -> `than`, `and thn` -> `then`), and a split whose halves
+are a pair costs 0.9 against a one-edit word, so `onmy` -> `on my` and
+`melater` -> `me later` land. An unbacked split of two short words is no
+candidate at all, which is what keeps `badass` whole: `bad ass` sits at 204,647
+in the source, and the floor was set above it and below `breakfast is` at
+346,954, the weakest split stock made that the counts hold. `a jacket` at
+228,568 is the one recorded split that trade loses.
+
+| Slice | Before | After |
+|---|---|---|
+| sloppy | 150/150 | 150/150 |
+| names | 43/50 | 43/50 |
+| context | 69/100 | 69/100 |
+| nospace | 53/100 | 64/100 |
+| **total** | **315/400 (78%)** | **326/400 (81%)** |
+
+The context slice did not move. Its misses are stock refusing corrections we
+make (`hav`, `sen`, `liv`, `ther`, `thier`, `definately` all left alone by
+stock), plus `salt nad pepper` and `alot`, where the typed token is a word our
+list holds (`nad`, `alot`) so no candidate is ever offered. Correcting a known
+word on context is what stock does (`hom` -> `him`) and is not in the pair
+table's reach. The remaining nospace misses are stray-space joins (`tomo rrow`),
+which are not attempted, and rows where stock's own answer is noise (`than ks`
+-> `Than is`, `ba ck` -> `ba close`).
+
+Frozen benches, simulator, state reset first: protection 100 dev / 96 test
+(unchanged), completions 95 / 97 (unchanged), typos 91% with 18 miscorrections
+(was 92% / 17). The one new miscorrection is `allready` -> `all ready`, a
+backed split beating a one-letter deletion. Scoring an extra doubled letter as
+half an edit, the mirror of the `realy` -> `really` rule, fixed that row and
+broke `sprry` -> `sorry` into `spry`, so the model stays as is
+(`brain/traces/2026-09-11-a-symmetric-looking-typo-rule-was-not-symmetric.md`).
+`allready` is a lead for the trained model of unit 4b: nothing follows `I'm`
+in the pair table, because the source splits contractions into two tokens.
+
 ## What stock's autocorrect actually keys on (probes, 2026-08-20)
 
 Two probe sets were typed into the stock keyboard through the XCUITest harness.
