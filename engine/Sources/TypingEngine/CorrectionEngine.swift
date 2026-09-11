@@ -25,6 +25,7 @@ public enum CorrectionDecision: Equatable, Sendable {
 /// top suggestion.
 public struct CorrectionEngine: Sendable {
     private let checker: any SpellChecking
+    private let context: any ContextScoring
     private let lexicon: Set<String>
 
     /// Key widths. A tap must have sat this close to the candidate's key for a
@@ -36,8 +37,12 @@ public struct CorrectionEngine: Sendable {
     ///   case-insensitively. Phase 3 fills this from UILexicon.
     /// The caller's lexicon (UILexicon: contacts, text replacements) unions
     /// with the shipped TextingLexicon; both are never-correct words.
-    public init(checker: any SpellChecking, lexicon: Set<String> = []) {
+    /// - Parameter context: what the words already typed say about each
+    ///   candidate. The word-pair table by default.
+    public init(checker: any SpellChecking, lexicon: Set<String> = [],
+                context: any ContextScoring = WordPairModel()) {
         self.checker = checker
+        self.context = context
         self.lexicon = TextingLexicon.words.union(lexicon.map { $0.lowercased() })
     }
 
@@ -97,17 +102,24 @@ public struct CorrectionEngine: Sendable {
         if word.count <= 2 { return .noChange }
         if hasLetterRun(word, of: 3) { return .noChange }
         var suggestions = checker.suggestions(for: word).map { recased($0, like: word) }
-        // Re-rank by edit distance, then English word frequency, then the
-        // checker's own order as the deterministic last tiebreak. The order a
-        // checker hands up is not trusted: UITextChecker returned its guesses
+        // Re-rank by edit distance, then by the word before (more thn -> than,
+        // and thn -> then), then English word frequency, then the checker's
+        // own order as the deterministic last tiebreak. The order a checker
+        // hands up is not trusted: UITextChecker returned its guesses
         // alphabetically, and DictionarySpellChecker's scan is capped at eight.
+        // A sentence start has no word before it: the last word of the
+        // previous sentence says nothing about this one.
+        let previous = sentenceStart ? []
+            : WordBoundary.lastWord(in: prefix.trimmingCharacters(in: .whitespaces)).map { [$0] } ?? []
         let lower = word.lowercased()
         suggestions = suggestions.enumerated()
             .map { (index: $0.offset, text: $0.element,
                     distance: typoDistance(from: lower, to: $0.element.lowercased()),
+                    likelihood: self.context.likelihood(of: firstWord(of: $0.element), after: previous),
                     rank: WordRank.rank($0.element)) }
             .sorted {
                 if $0.distance != $1.distance { return $0.distance < $1.distance }
+                if $0.likelihood != $1.likelihood { return $0.likelihood > $1.likelihood }
                 if $0.rank != $1.rank { return $0.rank < $1.rank }
                 return $0.index < $1.index
             }
@@ -193,6 +205,12 @@ public struct CorrectionEngine: Sendable {
             if String(trimmed) == word { return true }
         }
         return false
+    }
+
+    /// The word the text before the candidate is followed by. For a split
+    /// candidate ("on my") that is its first half.
+    private func firstWord(of candidate: String) -> String {
+        candidate.split(separator: " ").first.map(String.init) ?? candidate
     }
 
     private func hasLetterRun(_ word: String, of length: Int) -> Bool {
