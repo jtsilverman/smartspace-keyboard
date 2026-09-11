@@ -31,3 +31,20 @@ bigrams of the Google Web Trillion Word Corpus.
 The file is vendored so `engine/tools/gen-wordpairs.py` reproduces
 `Resources/wordpairs.bin` offline. Web text is the known limit: the counts hold
 "bad ass" at 204,647 and never saw a text message.
+
+# us-first-names.txt
+
+US first names: every name that reached the Social Security Administration's
+top 1,000 for a year and sex, 1880 to 2008. 6,782 names.
+
+- Source: https://raw.githubusercontent.com/hadley/data-baby-names/master/baby-names.csv
+  (a mirror of the SSA tables; ssa.gov refused the direct download on
+  2026-09-11)
+- Retrieved: 2026-09-11
+- Licence: US government data, public domain
+- Order: highest single-year share first
+
+`engine/tools/wordlist.py` appends the names the AOSP list does not carry
+(2,961 of them, Nathen, Jesica and Danial among them) after the texting
+lexicon, so a name never outranks a common word at a distance tie. Top-1000
+is the known limit: Kylian and Kaius are not in it.

@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 LEXICON = ROOT / "engine" / "Sources" / "TypingEngine" / "TextingLexicon.swift"
 SOURCE = ROOT / "engine" / "tools" / "vendor" / "en_wordlist.combined.gz"
+NAMES = ROOT / "engine" / "tools" / "vendor" / "us-first-names.txt"
 
 ENTRY = re.compile(r"^ word=([^,]+),f=(\d+)")
 
@@ -37,13 +38,25 @@ def texting_words() -> list:
     return sorted(set(re.findall(r'"([a-z0-9]+)"', LEXICON.read_text())))
 
 
+def first_names() -> list:
+    """US first names, most popular first, in their own casing."""
+    return [line.strip() for line in NAMES.read_text().splitlines()
+            if line.strip() and not line.startswith("#")]
+
+
 def build() -> list:
     """Every word in rank order, duplicates of a lowercase form included."""
     words = [word for word, _ in aosp_words()]
     seen = {w.lower() for w in words}
     # The texting lexicon is modern slang the 2014 list never had. It lands
     # last: these words are never corrected away, and rank only breaks ties.
-    return words + [w for w in texting_words() if w not in seen]
+    words += [w for w in texting_words() if w not in seen]
+    seen |= {w.lower() for w in words}
+    # First names the 2014 list does not carry (Nathen, Jesica, Danial): a
+    # name the engine reads as a typo is the most expensive miscorrection
+    # there is, and stock leaves these spellings alone. They land after the
+    # lexicon, so a name never outranks a common word at a distance tie.
+    return words + [n for n in first_names() if n.lower() not in seen]
 
 
 def records() -> list:

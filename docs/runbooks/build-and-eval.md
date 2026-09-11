@@ -147,8 +147,9 @@ how autocorrect is judged instead.
 
 The engine's word list and word-pair table are binary files under
 `engine/Sources/TypingEngine/Resources/`, built from the vendored sources in
-`engine/tools/vendor/`. After a change to either generator or to
-`TextingLexicon.swift`, from the repo root:
+`engine/tools/vendor/` (the AOSP word list, the US first names, the Norvig
+bigram counts) plus `TextingLexicon.swift`. After a change to any of those,
+to `wordlist.py`, or to either generator, from the repo root:
 
 ```
 python3 engine/tools/gen-wordrank.py
