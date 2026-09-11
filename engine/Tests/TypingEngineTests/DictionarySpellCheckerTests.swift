@@ -47,7 +47,20 @@ import Testing
         // Stock refused "amin" rather than offer "am in" (EVAL.md). "am in" is
         // a strong pair; what stops the split is that Amin is a name the word
         // list holds, so the checker offers nothing for it.
-        guard case .correct(let to, _) = engine.decision(for: "i amin") else { return }
-        #expect(to != "am in")
+        #expect(engine.decision(for: "i amin") == .noChange)
+    }
+
+    /// Protection row A063. "Kai" is a name in the list, and the capital on
+    /// "Kaius" is autocap at a sentence start, so the split guard is the only
+    /// thing between the token and "Kai us".
+    @Test func aSplitNeverMakesAProperNoun() {
+        #expect(engine.decision(for: "Kaius") == .noChange)
+    }
+
+    /// Protection row A184. "bad" and "ass" are both common, the word list
+    /// does not hold "badass", and "bad ass" sits below the pair table's
+    /// floor, so two short halves that are not a pair stay one token.
+    @Test func twoShortHalvesSplitOnlyAsAPair() {
+        #expect(engine.decision(for: "thats badass") == .noChange)
     }
 }
