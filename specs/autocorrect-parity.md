@@ -205,14 +205,17 @@ Derived, not Jake-facing. Each check cites the vision milestone it serves.
    `xcodebuild test -only-testing:SmartSpaceTests/TypoBenchmarkTests` and the protect
    set from `KeyboardEvalV4Tests`.
 3. **vision:1,5** -- with touch points feeding the corrector, agreement with the
-   oracle on the sloppy-typing slice beats the agreement measured for the current
-   engine on the same slice. Both numbers printed by the oracle comparison test.
+   oracle on the sloppy-typing slice holds at 150/150, printed by the oracle
+   comparison test. (Reworded 2026-09-11: the slice agreed on every row before
+   the touch model landed, so "beats the current engine" had no headroom.)
 4. **vision:5** -- on the missed-space slice, the engine splits and joins at an
    agreement with the oracle at or above the number unit 0 measures for stock's own
    repeat run, and the count of rows in that slice is asserted, not sampled.
-5. **vision:5** -- context re-ranking changes the winner: a corpus row where the same
-   typed token corrects two ways in two sentences passes, and overall oracle agreement
-   rises against unit 3's number.
+5. **vision:5** -- context re-ranking changes the winner: `ContextRerankTests` corrects
+   the same typed token two ways in two sentences, and overall oracle agreement rises
+   against unit 3's number (315). (Reworded 2026-09-11: across the 50 recorded
+   sentence pairs stock never corrected one token to two different words, so no
+   corpus row can carry this check.)
 6. **vision:1** -- the extension's resident memory stays under 55MB with the
    dictionary and the Core ML model loaded, measured on device and recorded in
    `EVAL.md`.
@@ -242,8 +245,10 @@ STOP when every check is true, the named check commands pass, and `agents/vision
 
 ## Progress
 
-- [ ] 0 stock oracle -- 400 rows recorded from stock 2026-08-19 (EVAL.md);
-      check 1 stays open until the drift slice reproduces, earliest 2026-08-20
+- [~] 0 stock oracle -- 400 rows recorded from stock 2026-08-19 (EVAL.md); the drift
+      slice reproduced 28/30 on 2026-08-20 and check 1 fails as written. Jake's call
+      2026-09-11 ("just loop and build the best autocorrect engine you can like
+      Apple's"): keep building against the recording as a lead, never a verdict
 - [~] 1 our own dictionary -- AOSP LatinIME list; typos 92%/17 and completions
       95/97 clear their gates, protection test half holds at 96 against 97
 - [x] 2 touch points reach the corrector -- TouchTrail wired and live-verified 2026-08-20
