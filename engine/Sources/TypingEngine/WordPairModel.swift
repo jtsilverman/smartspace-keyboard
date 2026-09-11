@@ -6,9 +6,10 @@
 public protocol ContextScoring: Sendable {
     /// How likely `word` is to follow `previous`, most recent word last.
     /// Higher is likelier, and the scale is only comparable between
-    /// candidates scored against the same `previous`. Zero means the model
-    /// has no opinion, so the caller falls through to its next tiebreak.
-    func likelihood(of word: String, after previous: [String]) -> Double
+    /// candidates scored against the same `previous`. Nil means the model
+    /// has no evidence for this sequence: the caller falls through to its
+    /// next tiebreak, and a split whose halves draw nil is not a pair.
+    func likelihood(of word: String, after previous: [String]) -> Double?
 }
 
 /// Reads the word before a candidate off `WordPairs`. It sees one word back:
@@ -16,8 +17,8 @@ public protocol ContextScoring: Sendable {
 public struct WordPairModel: ContextScoring {
     public init() {}
 
-    public func likelihood(of word: String, after previous: [String]) -> Double {
-        guard let before = previous.last else { return 0 }
-        return Double(WordPairs.counts["\(before.lowercased()) \(word.lowercased())"] ?? 0)
+    public func likelihood(of word: String, after previous: [String]) -> Double? {
+        guard let before = previous.last else { return nil }
+        return WordPairs.counts["\(before.lowercased()) \(word.lowercased())"].map(Double.init)
     }
 }

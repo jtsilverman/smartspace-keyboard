@@ -25,7 +25,7 @@ public enum CorrectionDecision: Equatable, Sendable {
 /// top suggestion.
 public struct CorrectionEngine: Sendable {
     private let checker: any SpellChecking
-    private let context: any ContextScoring
+    private let contextModel: any ContextScoring
     private let lexicon: Set<String>
 
     /// Key widths. A tap must have sat this close to the candidate's key for a
@@ -44,18 +44,24 @@ public struct CorrectionEngine: Sendable {
     /// "woke" 90). Whether the two words go together can, and that is the
     /// word-pair table.
     private static let splitCost: Double = 1.1
+    /// Rank cutoff for a split half. Every split stock made in the recorded
+    /// missed-space slice had both halves at 90 or better on the AOSP 0-255
+    /// frequency scale, over 45 splits (EVAL.md); it refused "amin" rather
+    /// than offer "am in". 20,308 words sit at or above that frequency, and
+    /// the list is ordered by it.
+    private static let commonEnough = 20_308
 
     /// - Parameter lexicon: protected words (contact names, text
     ///   replacements) that are never corrected away, matched
     ///   case-insensitively. Phase 3 fills this from UILexicon.
     /// The caller's lexicon (UILexicon: contacts, text replacements) unions
     /// with the shipped TextingLexicon; both are never-correct words.
-    /// - Parameter context: what the words already typed say about each
-    ///   candidate. The word-pair table by default.
+    /// - Parameter contextModel: what the words already typed say about
+    ///   each candidate. The word-pair table by default.
     public init(checker: any SpellChecking, lexicon: Set<String> = [],
-                context: any ContextScoring = WordPairModel()) {
+                contextModel: any ContextScoring = WordPairModel()) {
         self.checker = checker
-        self.context = context
+        self.contextModel = contextModel
         self.lexicon = TextingLexicon.words.union(lexicon.map { $0.lowercased() })
     }
 
@@ -114,7 +120,13 @@ public struct CorrectionEngine: Sendable {
         // checker's guesses for both mangle intended text.
         if word.count <= 2 { return .noChange }
         if hasLetterRun(word, of: 3) { return .noChange }
-        var suggestions = checker.suggestions(for: word).map { recased($0, like: word) }
+        var suggestions = checker.suggestions(for: word)
+            .filter { !$0.contains(" ") || takesSplit(halves(of: $0)) }
+            .map { recased($0, like: word) }
+        // Most committed words are spelled right and the list is empty; the
+        // walk back through the text for the word before is only paid when
+        // there is something to rank.
+        guard !suggestions.isEmpty else { return .noChange }
         // Re-rank by edit distance, then by the word before (more thn -> than,
         // and thn -> then), then English word frequency, then the checker's
         // own order as the deterministic last tiebreak. The order a checker
@@ -128,12 +140,11 @@ public struct CorrectionEngine: Sendable {
         suggestions = suggestions.enumerated()
             .map { (index: $0.offset, text: $0.element,
                     distance: typoDistance(from: lower, to: $0.element.lowercased()),
-                    likelihood: self.context.likelihood(of: firstWord(of: $0.element), after: previous),
+                    likelihood: contextModel.likelihood(of: halves(of: $0.element)[0], after: previous),
                     rank: WordRank.rank($0.element)) }
-            .filter { $0.distance.isFinite }
             .sorted {
                 if $0.distance != $1.distance { return $0.distance < $1.distance }
-                if $0.likelihood != $1.likelihood { return $0.likelihood > $1.likelihood }
+                if $0.likelihood != $1.likelihood { return $0.likelihood ?? 0 > $1.likelihood ?? 0 }
                 if $0.rank != $1.rank { return $0.rank < $1.rank }
                 return $0.index < $1.index
             }
@@ -208,17 +219,26 @@ public struct CorrectionEngine: Sendable {
         return 1.5
     }
 
-    /// A split's cost turns on whether its halves go together. An unbacked
-    /// split of two short words is no candidate at all: that shape produced
-    /// "bad ass" for "badass", "din net" for "dinnet" and "go ID" for "goid",
-    /// and "badass" is a protection row the word list does not know.
+    /// True when the halves are a pair the context model has evidence for.
+    private func isPair(_ halves: [String]) -> Bool {
+        contextModel.likelihood(of: halves[1], after: [halves[0]]) != nil
+    }
+
+    /// A split's cost turns on whether its halves go together.
     private func splitCost(of candidate: String) -> Double {
-        let halves = candidate.split(separator: " ").map(String.init)
-        if self.context.likelihood(of: halves[1], after: [halves[0]]) > 0 {
-            return Self.backedSplitCost
-        }
-        guard halves.contains(where: { $0.count >= 4 }) else { return .infinity }
-        return Self.splitCost
+        isPair(halves(of: candidate)) ? Self.backedSplitCost : Self.splitCost
+    }
+
+    /// Which splits are candidates at all. Both halves common, because stock
+    /// refused "amin" for "am in". Neither half a proper noun: "Kaius" became
+    /// "Kai us", a protection row. And a split of two short words only when
+    /// they are a pair: that shape produced "bad ass" for "badass", "din net"
+    /// for "dinnet" and "go ID" for "goid", and "badass" is a protection row
+    /// the word list does not know.
+    private func takesSplit(_ halves: [String]) -> Bool {
+        guard halves.allSatisfy({ WordRank.rank($0) <= Self.commonEnough }),
+              !halves.contains(where: WordRank.isProperNoun) else { return false }
+        return halves.contains(where: { $0.count >= 4 }) || isPair(halves)
     }
 
     /// True when removing one of a doubled pair in the candidate yields the
@@ -234,10 +254,10 @@ public struct CorrectionEngine: Sendable {
         return false
     }
 
-    /// The word the text before the candidate is followed by. For a split
-    /// candidate ("on my") that is its first half.
-    private func firstWord(of candidate: String) -> String {
-        candidate.split(separator: " ").first.map(String.init) ?? candidate
+    /// A candidate's words. One for a dictionary word, two for a split
+    /// ("on my"); the first is what follows the text before the candidate.
+    private func halves(of candidate: String) -> [String] {
+        candidate.split(separator: " ").map(String.init)
     }
 
     private func hasLetterRun(_ word: String, of length: Int) -> Bool {

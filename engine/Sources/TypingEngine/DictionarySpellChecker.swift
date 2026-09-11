@@ -39,10 +39,10 @@ public struct DictionarySpellChecker: SpellChecking {
                                WordRank.ranked[entry.lower] ?? .max))
             }
         }
-        // Every split rides along after the capped word list. What a split
-        // costs against a one-edit word is `CorrectionEngine`'s call, and a
-        // split it would take must not be cut here because eight words sat
-        // one edit away.
+        // Every split rides along after the capped word list. Whether a split
+        // is taken, and what it costs against a one-edit word, is
+        // `CorrectionEngine`'s call, and a split it would take must not be cut
+        // here because eight words sat one edit away.
         return scored
             .sorted {
                 $0.distance != $1.distance ? $0.distance < $1.distance
@@ -53,33 +53,17 @@ public struct DictionarySpellChecker: SpellChecking {
             + splits(of: typed)
     }
 
-    /// Rank cutoff for a split half. Every split stock made in the recorded
-    /// missed-space slice had both halves at 90 or better on the AOSP 0-255
-    /// frequency scale, over 45 splits (EVAL.md). 20,308 words sit at or above
-    /// that frequency, and the list is ordered by it.
-    private static let commonEnough = 20_308
-
-    /// A run-together token read as two words. Stock splits "onmy" into "on
-    /// my" and "thankyou" into "thank you", which `UITextChecker` could not
-    /// propose at all, and it only does so when both halves are common.
+    /// A run-together token read as two words, every cut where both halves
+    /// are in the list. Stock splits "onmy" into "on my" and "thankyou" into
+    /// "thank you", which `UITextChecker` could not propose at all. Which
+    /// splits are worth taking is `CorrectionEngine`'s call.
     private func splits(of typed: String) -> [String] {
-        guard typed.count >= 4 else { return [] }
         let letters = Array(typed)
         var found: [String] = []
-        // A one-letter half is "a" or "i" and nothing else, so the scan starts
-        // where a half can carry a word.
         for cut in 1..<letters.count {
             let left = String(letters[..<cut]), right = String(letters[cut...])
-            guard let leftRank = WordRank.ranked[left],
-                  let rightRank = WordRank.ranked[right],
-                  leftRank <= Self.commonEnough, rightRank <= Self.commonEnough
-            else { continue }
-            let leftCased = WordRank.cased[left] ?? left
-            let rightCased = WordRank.cased[right] ?? right
-            // A capitalized token is a name or a sentence start; splitting one
-            // gives "Kai us" for "Kaius" and is never what the thumb meant.
-            guard leftCased.first?.isUppercase != true,
-                  rightCased.first?.isUppercase != true else { continue }
+            guard let leftCased = WordRank.cased[left],
+                  let rightCased = WordRank.cased[right] else { continue }
             found.append("\(leftCased) \(rightCased)")
         }
         return found
