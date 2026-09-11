@@ -27,12 +27,20 @@ import Testing
         #expect(to == "thank you")
     }
 
-    /// Stock reads "onmy" as "on my" over "only". Ours picks "only" until the
-    /// word-pair model of unit 4a can tell "on my" from "din net"; scoring
-    /// splits below substitutions without it cost 8 points of the typo bench.
-    @Test func aSplitLosesToANearSingleWordForNow() {
-        guard case .correct(let to, _) = engine.decision(for: "im onmy") else { return }
-        #expect(to == "only")
+    /// Stock reads "onmy" as "on my" over "only" and "melater" as "me later"
+    /// over "melter" (oracle rows nosp-001 and nosp-005). Unit 4a: a split
+    /// whose halves are a known word pair outranks a word one edit away. The
+    /// word-pair table is what tells "on my" from "din net", which scoring
+    /// every split below a substitution could not; that cost 8 points of the
+    /// typo bench.
+    @Test func aPairBackedSplitOutranksANearSingleWord() {
+        guard case .correct(let onmy, _) = engine.decision(for: "im onmy"),
+              case .correct(let melater, _) = engine.decision(for: "call melater") else {
+            Issue.record("no correction offered")
+            return
+        }
+        #expect(onmy == "on my")
+        #expect(melater == "me later")
     }
 
     @Test func bothHalvesMustBeCommon() {
