@@ -114,13 +114,14 @@ public struct AutocorrectController: Sendable {
                 return .keep
             }
             let capped = Array(alternatives.prefix(Self.maxAlternatives))
-            session.recordCorrection(original: original)
+            session.recordCorrection(original: original, corrected: to)
             state = .correction(original: original, corrected: to, alternatives: capped)
             return .replace(original: original, corrected: to, alternatives: capped)
-        case .join(let to, let replacing):
-            // A join replaces two tokens; the undo slot restores both.
-            session.recordCorrection(original: replacing)
-            state = .correction(original: replacing, corrected: to, alternatives: [])
+        case .join(let to, let replacing, let typed):
+            // A join takes two tokens out of the field; the undo slot
+            // restores both as they were typed.
+            session.recordCorrection(original: typed, corrected: to)
+            state = .correction(original: typed, corrected: to, alternatives: [])
             return .replace(original: replacing, corrected: to, alternatives: [])
         }
     }

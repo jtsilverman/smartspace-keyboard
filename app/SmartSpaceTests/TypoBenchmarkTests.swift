@@ -43,7 +43,7 @@ final class TypoBenchmarkTests: XCTestCase {
             switch engine.decision(for: pair.typo) {
             case .correct(let to, _) where to.lowercased() == pair.intended.lowercased():
                 corrected += 1; slot.ok += 1
-            case .correct(let to, _):
+            case .correct(let to, _), .join(let to, _, _):
                 miscorrected += 1; slot.mis += 1
                 print("TYPO-MISCORRECT [\(pair.category)] \(pair.typo) -> \(to) wanted \(pair.intended)")
             case .noChange:

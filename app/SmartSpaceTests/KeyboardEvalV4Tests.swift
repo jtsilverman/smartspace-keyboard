@@ -26,7 +26,7 @@ final class ProtectionEvalTests: XCTestCase {
             switch engine.decision(for: field) {
             case .noChange:
                 ok += 1
-            case .correct(let to, _):
+            case .correct(let to, _), .join(let to, _, _):
                 missesBySub[r.sub, default: []].append("\(r.id):\(r.typed)->\(to)")
             }
         }
@@ -74,7 +74,7 @@ final class TypoBenchmarkV4Tests: XCTestCase {
             switch engine.decision(for: pair.typo) {
             case .correct(let to, _) where normalized(to) == normalized(pair.intended):
                 corrected += 1; slot.ok += 1
-            case .correct(let to, _):
+            case .correct(let to, _), .join(let to, _, _):
                 miscorrected += 1; slot.mis += 1
                 print("TYPO4-MISCORRECT [\(pair.category)] \(pair.typo) -> \(to) wanted \(pair.intended)")
             case .noChange:

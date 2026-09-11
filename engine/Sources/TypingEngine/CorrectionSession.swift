@@ -3,24 +3,27 @@
 /// auto-corrected again (the correction-loop guard).
 public struct CorrectionSession: Sendable {
     private var protectedWords: Set<String> = []
-    private var lastCorrection: String?
+    private var last: (original: String, corrected: String)?
 
     public init() {
     }
 
-    /// Records an applied correction so a later undo-tap can revert it.
-    /// Only the original word is needed: the keyboard restoring it already
-    /// knows what text it inserted.
-    public mutating func recordCorrection(original: String) {
-        lastCorrection = original
+    /// Records an applied correction so a later undo-tap can revert it, and
+    /// so the next word can revise it: a fragment corrected at its own space
+    /// ("tomo" -> "too") is still the fragment when "rrow" follows.
+    public mutating func recordCorrection(original: String, corrected: String) {
+        last = (original, corrected)
     }
+
+    /// The most recent correction, until it is undone.
+    public var lastCorrection: (original: String, corrected: String)? { last }
 
     /// Undoes the most recent correction: returns the original word the
     /// keyboard should restore and protects it from re-correction for the
     /// rest of the session. Nil when there is nothing to undo.
     public mutating func undoLast() -> String? {
-        guard let original = lastCorrection else { return nil }
-        lastCorrection = nil
+        guard let original = last?.original else { return nil }
+        last = nil
         protectedWords.insert(original.lowercased())
         return original
     }

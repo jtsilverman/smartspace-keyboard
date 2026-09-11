@@ -98,7 +98,7 @@ let checker = FakeChecker(misspellings: [
 
 @Test func protectionAndLexiconOutrankTheContractionFix() {
     var session = CorrectionSession()
-    session.recordCorrection(original: "dont")
+    session.recordCorrection(original: "dont", corrected: "don\u{2019}t")
     _ = session.undoLast()
     let engine = CorrectionEngine(checker: checker)
     #expect(engine.decision(for: "ok dont", session: session) == .noChange)

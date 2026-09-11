@@ -50,7 +50,7 @@ import Testing
     /// and the space, so the keyboard can take exactly that out of the field.
     @Test func twoUnknownTokensThatMakeAWordAreJoined() {
         #expect(engine.decision(for: "see you tomo rrow")
-                == .join(to: "tomorrow", replacing: "tomo rrow"))
+                == .join(to: "tomorrow", replacing: "tomo rrow", typed: "tomo rrow"))
     }
 
     /// Stock left "g o", "d ay", "ga te" and "u p" alone (nosp-061, 065,

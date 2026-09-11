@@ -21,8 +21,11 @@ public enum CorrectionDecision: Equatable, Sendable {
     case correct(to: String, alternatives: [String])
     /// The word just committed and the word before it were one word broken
     /// by a stray space ("tomo rrow"). `replacing` is the exact tail of the
-    /// text to take out, both tokens and the space between.
-    case join(to: String, replacing: String)
+    /// text to take out, both tokens and the space between, as the field
+    /// holds it now; `typed` is what the user typed there, which an undo
+    /// restores. The two differ when the first fragment was corrected at
+    /// its own space ("too rrow" in the field, "tomo rrow" typed).
+    case join(to: String, replacing: String, typed: String)
 }
 
 /// Decides whether the word just committed gets replaced with the checker's
@@ -82,6 +85,7 @@ public struct CorrectionEngine: Sendable {
         guard let word = WordBoundary.lastWord(in: context) else { return .noChange }
         guard !lexicon.contains(word.lowercased()) else { return .noChange }
         guard !session.isProtected(word) else { return .noChange }
+        if let join = join(word, in: context, session: session) { return join }
         // A capitalized word mid-sentence is a proper noun (names, brands,
         // Professor Cant); its capital came from the user, not autocap, so
         // no rewrite of any kind -- contraction fixes included. At a
@@ -221,6 +225,41 @@ public struct CorrectionEngine: Sendable {
         guard let slip = KeyNeighbors.singleSubstitution(word, candidate),
               !KeyNeighbors.areAdjacent(slip.typed, slip.meant) else { return base }
         return 1.5
+    }
+
+    /// A word broken by a stray space: the word just committed and the one
+    /// before it are both unknown, both two letters or more, and one word
+    /// together ("tomo rrow"). Stock joins that shape and leaves a one-letter
+    /// fragment alone ("g o", "u p"). A known token on either side is a word
+    /// the user meant ("com ing", "id ea"), and stock left those too. The
+    /// tail must be exactly the two tokens and one space, so the keyboard
+    /// takes out precisely that.
+    private func join(_ word: String, in context: String,
+                      session: CorrectionSession) -> CorrectionDecision? {
+        let tail = " " + word
+        guard context.hasSuffix(tail), word.count >= 2, !WordRank.isKnown(word),
+              !hasLetterRun(word, of: 3) else { return nil }
+        let prefix = String(context.dropLast(tail.count))
+        guard let before = WordBoundary.lastWord(in: prefix), prefix.hasSuffix(before),
+              !session.isProtected(before) else { return nil }
+        // The fragment as typed: the word before, or what it was before the
+        // keyboard corrected it at its own space.
+        let fragment: String
+        if let last = session.lastCorrection, last.corrected == before {
+            fragment = last.original
+        } else {
+            fragment = before
+        }
+        guard fragment.count >= 2, !WordRank.isKnown(fragment),
+              !lexicon.contains(fragment.lowercased()), !hasLetterRun(fragment, of: 3),
+              let index = WordRank.index(ofLower: (fragment + word).lowercased()) else { return nil }
+        // A capital on the first token mid-sentence is a name; at a sentence
+        // start it is autocap and the joined word keeps it.
+        let start = String(prefix.dropLast(before.count))
+        if fragment.first?.isUppercase == true,
+           !CapitalizationRule.shouldCapitalize(before: start) { return nil }
+        return .join(to: recased(WordRank.cased(at: index), like: fragment),
+                     replacing: before + tail, typed: fragment + tail)
     }
 
     /// True when the halves are a pair the context model has evidence for.

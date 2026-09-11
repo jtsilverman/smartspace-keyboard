@@ -13,19 +13,15 @@ import Foundation
 @Suite struct OracleAgreementTests {
 
     /// Types a row the way the keyboard does: each space commits the word
-    /// before it, and the correction rewrites what is already in the field.
+    /// before it through the bar controller, which owns the session memory a
+    /// join reads, and the replace it hands back rewrites the field.
     private func run(_ typed: String) -> String {
-        let engine = CorrectionEngine(checker: DictionarySpellChecker())
+        var controller = AutocorrectController(checker: DictionarySpellChecker())
         var field = ""
         for word in typed.split(separator: " ", omittingEmptySubsequences: true) {
             field += (field.isEmpty ? "" : " ") + word
-            switch engine.decision(for: field) {
-            case .correct(let to, _):
-                field = String(field.dropLast(word.count)) + to
-            case .join(let to, let replacing):
-                field = String(field.dropLast(replacing.count)) + to
-            case .noChange:
-                break
+            if case .replace(let original, let corrected, _) = controller.wordCommitted(context: field) {
+                field = String(field.dropLast(original.count)) + corrected
             }
         }
         return field
