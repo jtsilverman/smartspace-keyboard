@@ -249,8 +249,9 @@ STOP when every check is true, the named check commands pass, and `agents/vision
       slice reproduced 28/30 on 2026-08-20 and check 1 fails as written. Jake's call
       2026-09-11 ("just loop and build the best autocorrect engine you can like
       Apple's"): keep building against the recording as a lead, never a verdict
-- [~] 1 our own dictionary -- AOSP LatinIME list; typos 92%/17 and completions
-      95/97 clear their gates, protection test half holds at 96 against 97
+- [~] 1 our own dictionary -- AOSP LatinIME list plus US first names, memory-mapped;
+      typos 91%/18 and completions 95/97 clear their gates, protection test half
+      holds at 96 against 97
 - [x] 2 touch points reach the corrector -- TouchTrail wired and live-verified 2026-08-20
 - [~] 3 missed spaces -- a pair-backed split outranks a one-edit word since 4a;
       joins of a token broken by a stray space are not attempted

@@ -162,6 +162,17 @@ broke `sprry` -> `sorry` into `spry`, so the model stays as is
 `allready` is a lead for the trained model of unit 4b: nothing follows `I'm`
 in the pair table, because the source splits contractions into two tokens.
 
+## Names: the list carries US first names (2026-09-11)
+
+The names gap named on 2026-08-20 closes by vocabulary. Every name from the
+Social Security Administration's top-1000 tables that the AOSP list lacks
+(2,961) lands after the texting lexicon. Names slice 43 -> 46/50, total
+326 -> 329/400, benches unchanged to the miss line. What is left in the slice:
+`venmo` -> `venom` and `airbnd` -> `airbed` (post-2014 brands the list lacks; a
+sourced brand list is the fix) and `jaje` -> `Jane` where stock said `Jake`
+(the user's contact, which reaches the engine through UILexicon on the device
+and not in this test).
+
 ## Memory: the word tables are mapped, not held (2026-09-11)
 
 Physical footprint of the keyboard extension in the iPhone 17 Pro simulator with
