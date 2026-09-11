@@ -48,8 +48,12 @@ contractions, the layout and key geometry (`KeyboardLayout`, `KeyZoneMap`, `Bias
 `CalloutGeometry`, `KeyTheme`), the suggestion bar (`SmartSpaceBar`, `NextWordPredictor`), gestures
 (`SpacebarCursorDrag`, `BackspaceRepeater`, `FunctionKeySlide`), and the emoji catalog.
 
-Every `UITextChecker` call sits behind a seam, stubbed in the package tests and bound to the real
-checker in `app/Shared/SystemSpellChecker.swift`.
+Autocorrect has two seams, both protocols in the engine. `SpellChecking` is the candidate source:
+`DictionarySpellChecker` is the default and draws candidates from `WordRank`, the engine's own word
+list; `app/Shared/SystemSpellChecker.swift` binds the same seam to `UITextChecker`. `ContextScoring`
+is the sentence context: `WordPairModel` reads `WordPairs`, a table of how often one word follows
+another, and `CorrectionEngine` breaks a distance tie on its answer. Both data files are generated
+by scripts in `engine/tools/` from the vendored sources named in `engine/tools/vendor/NOTICE`.
 
 ## Layer two: `app/`
 

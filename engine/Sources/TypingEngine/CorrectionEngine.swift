@@ -32,6 +32,19 @@ public struct CorrectionEngine: Sendable {
     /// substitution to read as a thumb slip rather than a deliberate press.
     private static let slipReach: Double = 0.75
 
+    /// What a split whose halves are a known word pair ("on my", "me later")
+    /// costs against a one-edit word. Below 1: stock reads "onmy" as "on my"
+    /// over "only" and "melater" as "me later" over "melter".
+    private static let backedSplitCost: Double = 0.9
+    /// What any other split costs. Above 1, so it wins only when no single
+    /// word sits one edit away. Scoring every split below a substitution cost
+    /// 8 points of the typo bench and took miscorrections from 17 to 41: the
+    /// winners were "din net", "go ID" and "GT eat", and frequency cannot
+    /// separate those from real splits ("din" scores 94 on the AOSP scale,
+    /// "woke" 90). Whether the two words go together can, and that is the
+    /// word-pair table.
+    private static let splitCost: Double = 1.1
+
     /// - Parameter lexicon: protected words (contact names, text
     ///   replacements) that are never corrected away, matched
     ///   case-insensitively. Phase 3 fills this from UILexicon.
@@ -117,6 +130,7 @@ public struct CorrectionEngine: Sendable {
                     distance: typoDistance(from: lower, to: $0.element.lowercased()),
                     likelihood: self.context.likelihood(of: firstWord(of: $0.element), after: previous),
                     rank: WordRank.rank($0.element)) }
+            .filter { $0.distance.isFinite }
             .sorted {
                 if $0.distance != $1.distance { return $0.distance < $1.distance }
                 if $0.likelihood != $1.likelihood { return $0.likelihood > $1.likelihood }
@@ -180,7 +194,7 @@ public struct CorrectionEngine: Sendable {
     private func typoDistance(from word: String, to candidate: String) -> Double {
         // A candidate carrying a space is a missed-space split, and it keeps
         // every letter the thumb typed.
-        if candidate.contains(" ") { return EditDistance.splitCost }
+        if candidate.contains(" ") { return splitCost(of: candidate) }
         let base = Double(EditDistance.damerau(word, candidate))
         guard base == 1 else { return base }
         if restoresDoubledLetter(word: word, candidate: candidate) { return 0.5 }
@@ -192,6 +206,19 @@ public struct CorrectionEngine: Sendable {
         guard let slip = KeyNeighbors.singleSubstitution(word, candidate),
               !KeyNeighbors.areAdjacent(slip.typed, slip.meant) else { return base }
         return 1.5
+    }
+
+    /// A split's cost turns on whether its halves go together. An unbacked
+    /// split of two short words is no candidate at all: that shape produced
+    /// "bad ass" for "badass", "din net" for "dinnet" and "go ID" for "goid",
+    /// and "badass" is a protection row the word list does not know.
+    private func splitCost(of candidate: String) -> Double {
+        let halves = candidate.split(separator: " ").map(String.init)
+        if self.context.likelihood(of: halves[1], after: [halves[0]]) > 0 {
+            return Self.backedSplitCost
+        }
+        guard halves.contains(where: { $0.count >= 4 }) else { return .infinity }
+        return Self.splitCost
     }
 
     /// True when removing one of a doubled pair in the candidate yields the

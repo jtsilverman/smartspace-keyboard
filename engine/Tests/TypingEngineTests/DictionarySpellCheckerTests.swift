@@ -43,9 +43,10 @@ import Testing
         #expect(melater == "me later")
     }
 
-    @Test func bothHalvesMustBeCommon() {
-        // Stock refused "amin" rather than offer "am in" (EVAL.md); "amin" is
-        // not a word and neither half clears the frequency floor together.
+    @Test func aKnownWordIsNeverSplit() {
+        // Stock refused "amin" rather than offer "am in" (EVAL.md). "am in" is
+        // a strong pair; what stops the split is that Amin is a name the word
+        // list holds, so the checker offers nothing for it.
         guard case .correct(let to, _) = engine.decision(for: "i amin") else { return }
         #expect(to != "am in")
     }

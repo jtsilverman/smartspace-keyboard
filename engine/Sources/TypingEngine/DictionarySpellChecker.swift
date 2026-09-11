@@ -39,9 +39,10 @@ public struct DictionarySpellChecker: SpellChecking {
                                WordRank.ranked[entry.lower] ?? .max))
             }
         }
-        for split in splits(of: typed) {
-            scored.append((split.text, EditDistance.splitCost, split.rank))
-        }
+        // Every split rides along after the capped word list. What a split
+        // costs against a one-edit word is `CorrectionEngine`'s call, and a
+        // split it would take must not be cut here because eight words sat
+        // one edit away.
         return scored
             .sorted {
                 $0.distance != $1.distance ? $0.distance < $1.distance
@@ -49,6 +50,7 @@ public struct DictionarySpellChecker: SpellChecking {
             }
             .prefix(Self.candidateLimit)
             .map(\.text)
+            + splits(of: typed)
     }
 
     /// Rank cutoff for a split half. Every split stock made in the recorded
@@ -59,16 +61,11 @@ public struct DictionarySpellChecker: SpellChecking {
 
     /// A run-together token read as two words. Stock splits "onmy" into "on
     /// my" and "thankyou" into "thank you", which `UITextChecker` could not
-    /// propose at all, and it only does so when both halves are common: it
-    /// refused "amin" rather than offer "am in".
-    private func splits(of typed: String) -> [(text: String, rank: Int)] {
+    /// propose at all, and it only does so when both halves are common.
+    private func splits(of typed: String) -> [String] {
         guard typed.count >= 4 else { return [] }
-        // A split needs at least one substantial word in it. Two short common
-        // words are what produced "bad ass" for "badass", "din net" for
-        // "dinnet" and "go ID" for "goid".
-        let substantial = 4
         let letters = Array(typed)
-        var found: [(text: String, rank: Int)] = []
+        var found: [String] = []
         // A one-letter half is "a" or "i" and nothing else, so the scan starts
         // where a half can carry a word.
         for cut in 1..<letters.count {
@@ -77,15 +74,13 @@ public struct DictionarySpellChecker: SpellChecking {
                   let rightRank = WordRank.ranked[right],
                   leftRank <= Self.commonEnough, rightRank <= Self.commonEnough
             else { continue }
-            guard max(left.count, right.count) >= substantial else { continue }
             let leftCased = WordRank.cased[left] ?? left
             let rightCased = WordRank.cased[right] ?? right
             // A capitalized token is a name or a sentence start; splitting one
             // gives "Kai us" for "Kaius" and is never what the thumb meant.
             guard leftCased.first?.isUppercase != true,
                   rightCased.first?.isUppercase != true else { continue }
-            // A split is as likely as its weaker half.
-            found.append(("\(leftCased) \(rightCased)", max(leftRank, rightRank)))
+            found.append("\(leftCased) \(rightCased)")
         }
         return found
     }
@@ -108,20 +103,6 @@ public struct DictionarySpellChecker: SpellChecking {
 /// Shared by the candidate scan and `CorrectionEngine`'s distance guard so the
 /// two never disagree about how far apart two words are.
 enum EditDistance {
-    /// What a split candidate ("on my" for "onmy") costs against a one-edit
-    /// candidate. Above 1, so a split wins only when no single word sits one
-    /// edit away.
-    ///
-    /// Stock is bolder: it read "onmy" as "on my" over "only". Scoring a split
-    /// below a substitution to match that cost 8 points of the typo bench and
-    /// took miscorrections from 17 to 41, because the winners were "din net"
-    /// for "dinnet", "go ID" for "goid" and "GT eat" for "gteat". Frequency
-    /// cannot separate those from the real splits: "din" scores 94 on the AOSP
-    /// scale and "woke", "parked" and "thank" score 90, 99 and 100. What
-    /// separates them is whether the two words go together, which is the
-    /// word-pair model of unit 4a. This stays conservative until that lands.
-    static let splitCost: Double = 1.1
-
     /// - Parameter limit: rows stop early once every cell exceeds it, so a
     ///   far-apart pair costs a fraction of the full matrix.
     static func damerau(_ a: String, _ b: String, limit: Int = .max) -> Int {
