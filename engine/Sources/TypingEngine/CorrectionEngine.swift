@@ -19,6 +19,10 @@ extension SpellChecking {
 public enum CorrectionDecision: Equatable, Sendable {
     case noChange
     case correct(to: String, alternatives: [String])
+    /// The word just committed and the word before it were one word broken
+    /// by a stray space ("tomo rrow"). `replacing` is the exact tail of the
+    /// text to take out, both tokens and the space between.
+    case join(to: String, replacing: String)
 }
 
 /// Decides whether the word just committed gets replaced with the checker's

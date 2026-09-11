@@ -19,8 +19,13 @@ import Foundation
         var field = ""
         for word in typed.split(separator: " ", omittingEmptySubsequences: true) {
             field += (field.isEmpty ? "" : " ") + word
-            if case .correct(let to, _) = engine.decision(for: field) {
+            switch engine.decision(for: field) {
+            case .correct(let to, _):
                 field = String(field.dropLast(word.count)) + to
+            case .join(let to, let replacing):
+                field = String(field.dropLast(replacing.count)) + to
+            case .noChange:
+                break
             }
         }
         return field

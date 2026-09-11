@@ -43,6 +43,22 @@ import Testing
         #expect(melater == "me later")
     }
 
+    /// Unit 3's other half: "join a token broken by a stray space". Stock
+    /// joined "tomo rrow", "cor ner", "fli ght", "rea dy" and "leav ing"
+    /// (oracle rows nosp-051, 069, 091, 097, 098): two tokens the list does
+    /// not know that make a word together. The replaced text is both tokens
+    /// and the space, so the keyboard can take exactly that out of the field.
+    @Test func twoUnknownTokensThatMakeAWordAreJoined() {
+        #expect(engine.decision(for: "see you tomo rrow")
+                == .join(to: "tomorrow", replacing: "tomo rrow"))
+    }
+
+    /// Stock left "g o", "d ay", "ga te" and "u p" alone (nosp-061, 065,
+    /// 094, 096): a one-letter fragment is not evidence of a broken word.
+    @Test func aOneLetterFragmentIsNeverJoined() {
+        #expect(engine.decision(for: "we should g o") == .noChange)
+    }
+
     @Test func aKnownWordIsNeverSplit() {
         // Stock refused "amin" rather than offer "am in" (EVAL.md). "am in" is
         // a strong pair; what stops the split is that Amin is a name the word

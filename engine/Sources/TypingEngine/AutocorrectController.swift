@@ -117,6 +117,11 @@ public struct AutocorrectController: Sendable {
             session.recordCorrection(original: original)
             state = .correction(original: original, corrected: to, alternatives: capped)
             return .replace(original: original, corrected: to, alternatives: capped)
+        case .join(let to, let replacing):
+            // A join replaces two tokens; the undo slot restores both.
+            session.recordCorrection(original: replacing)
+            state = .correction(original: replacing, corrected: to, alternatives: [])
+            return .replace(original: replacing, corrected: to, alternatives: [])
         }
     }
 
