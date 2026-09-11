@@ -17,16 +17,19 @@ import Darwin
 
     /// Loading both tables must not grow the heap: the budget leaves them no
     /// room to be heap copies. 165,804 words in four dictionaries and 90,310
-    /// pairs in one measured 23MB here and about 50MB in the extension. In a
-    /// full run another suite may have loaded them first, in which case the
-    /// delta is zero and the number that carries the check is the one this
-    /// test prints when run alone.
+    /// pairs in one measured 23MB here and about 50MB in the extension.
+    ///
+    /// Run alone, this is the proof. In a full run another suite may have
+    /// loaded the tables first, which zeroes the delta, and the process heap
+    /// carries 19MB of corpora either way, so no absolute bound separates the
+    /// two. The gate that holds in every order is the extension footprint
+    /// recorded in EVAL.md.
     @Test func loadedWordTablesLeaveTheHeapSmall() {
         let before = heapInUse()
         #expect(WordRank.isKnown("the"))
         #expect(WordPairModel().likelihood(of: "the", after: ["of"]) != nil)
         let grown = heapInUse() - before
-        print("HEAP-GROWN by loading word tables: \(grown / 1024)KB")
+        print("HEAP grown by loading word tables: \(grown / 1024)KB")
         #expect(grown < 4 * 1_048_576, "heap grew \(grown / 1024)KB")
     }
 }

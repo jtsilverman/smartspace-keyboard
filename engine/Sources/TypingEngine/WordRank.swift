@@ -14,24 +14,24 @@
 /// accessor below reads that record's bytes without building a String unless
 /// the caller asked for one.
 public enum WordRank {
-    private static let file = MappedFile.resource("wordrank")
+    private static let file = MappedFile.resource("wordrank", magic: "SSWR", version: 2)
 
     // Header fields, by offset; see gen-wordrank.py.
-    static let count = file.u32(at: 8)
+    private static let count = file.u32(at: 8)
     private static let maxLength = file.u32(at: 12)
     private static let recordsOffset = file.u32(at: 16)
     private static let alphaOffset = file.u32(at: 20)
     private static let lengthStartsOffset = file.u32(at: 24)
     private static let lengthListOffset = file.u32(at: 28)
     private static let stringsOffset = file.u32(at: 32)
-    private static let recordSize = 20
+    private static let recordSize = 19
 
     private static func record(_ i: Int) -> Int { recordsOffset + recordSize * i }
 
     /// The lowercase form's bytes, UTF-8.
     static func lowerBytes(at i: Int) -> UnsafeBufferPointer<UInt8> {
         let r = record(i)
-        return file.bytes(at: stringsOffset + file.u32(at: r), count: file.u8(at: r + 17))
+        return file.bytes(at: stringsOffset + file.u32(at: r), count: file.u8(at: r + 16))
     }
 
     static func lower(at i: Int) -> String {
@@ -42,7 +42,7 @@ public enum WordRank {
     static func cased(at i: Int) -> String {
         let r = record(i)
         return String(decoding: file.bytes(at: stringsOffset + file.u32(at: r + 4),
-                                           count: file.u8(at: r + 18)), as: UTF8.self)
+                                           count: file.u8(at: r + 17)), as: UTF8.self)
     }
 
     /// Position in the full frequency-ordered list, duplicates included.
@@ -53,14 +53,18 @@ public enum WordRank {
 
     /// True when the lowercase form is plain ASCII, so its bytes are its
     /// characters.
-    static func isASCII(at i: Int) -> Bool { file.u8(at: record(i) + 19) & 1 == 0 }
+    static func isASCII(at i: Int) -> Bool { file.u8(at: record(i) + 18) & 1 == 0 }
 
-    /// Record indices of every word with this many characters, in rank order.
-    static func indices(ofLength length: Int) -> UnsafeRawBufferPointer {
+    /// Every word with this many characters, in rank order, as a run of
+    /// (record index, letter mask) pairs: `run.u32(2 * k)` is the index and
+    /// `run.u32(2 * k + 1)` the mask, for `k` in `0..<run.count / 8`. The mask
+    /// rides beside the index so a scan rejects most of the run without
+    /// touching a record.
+    static func lengthRun(_ length: Int) -> UnsafeRawBufferPointer {
         guard length >= 0, length <= maxLength else { return file.u32s(at: lengthListOffset, count: 0) }
         let start = file.u32(at: lengthStartsOffset + 4 * length)
         let end = file.u32(at: lengthStartsOffset + 4 * (length + 1))
-        return file.u32s(at: lengthListOffset + 4 * start, count: end - start)
+        return file.u32s(at: lengthListOffset + 8 * start, count: 2 * (end - start))
     }
 
     /// The record at position `k` of the alphabetical order.
@@ -80,12 +84,7 @@ public enum WordRank {
     /// First alphabetical position whose record does not satisfy `before`,
     /// given that `before` holds for a prefix of the order and then fails.
     private static func partition(_ before: (Int) -> Bool) -> Int {
-        var low = 0, high = count
-        while low < high {
-            let mid = (low + high) / 2
-            if before(alphaIndex(mid)) { low = mid + 1 } else { high = mid }
-        }
-        return low
+        MappedFile.partition(count: count) { before(alphaIndex($0)) }
     }
 
     /// The record of a lowercase word, or nil when the list does not hold it.

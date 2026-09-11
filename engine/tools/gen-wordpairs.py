@@ -14,35 +14,33 @@ and "bad ass" sits at 204,647: a floor between them keeps "badass", a
 protection row the 2014 word list does not know, from splitting.
 
 The output is a binary file the engine maps read-only (`WordPairs.swift`).
-Layout, little-endian: 4s magic "SSWP", u32 version, u32 count, u32 zero,
-then count x 12 bytes of u32 first, u32 second, u32 count, sorted by
-(first, second), where first and second are record indices in wordrank.bin.
+Layout, little-endian: 4s magic "SSWP", u32 version, u32 count, then
+count x 12 bytes of u32 first, u32 second, u32 count, sorted by
+(first, second), where first and second are record indices in wordrank.bin
+(`wordlist.records()`, which both generators share).
 
 Run from the repo root, after gen-wordrank.py:
 
     python3 engine/tools/gen-wordpairs.py
 """
 import gzip
-import importlib.util
 import struct
 import sys
 from pathlib import Path
+
+from wordlist import records
 
 ROOT = Path(__file__).resolve().parents[2]
 TARGET = ROOT / "engine" / "Sources" / "TypingEngine" / "Resources" / "wordpairs.bin"
 SOURCE = ROOT / "engine" / "tools" / "vendor" / "count_2w.txt.gz"
 FLOOR = 300_000
 MAGIC = b"SSWP"
-VERSION = 1
+VERSION = 2
 
 
 def record_index() -> dict:
     """Lowercase word -> record index in wordrank.bin."""
-    spec = importlib.util.spec_from_file_location(
-        "gen_wordrank", Path(__file__).with_name("gen-wordrank.py"))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return {lower: i for i, (lower, _, _) in enumerate(module.records())}
+    return {lower: i for i, (lower, _, _) in enumerate(records())}
 
 
 def pairs(index: dict) -> list:
@@ -68,7 +66,7 @@ def main():
         sys.exit(f"{SOURCE} is missing; see engine/tools/vendor/NOTICE")
     rows = pairs(record_index())
     body = b"".join(struct.pack("<III", *row) for row in rows)
-    TARGET.write_bytes(struct.pack("<4sIII", MAGIC, VERSION, len(rows), 0) + body)
+    TARGET.write_bytes(struct.pack("<4sII", MAGIC, VERSION, len(rows)) + body)
     print(f"wordpairs.bin: {len(rows)} pairs at or above {FLOOR:,}, "
           f"{TARGET.stat().st_size} bytes")
 

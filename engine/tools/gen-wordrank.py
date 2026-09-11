@@ -6,6 +6,7 @@ The list is the Android Open Source Project's LatinIME English dictionary
 (`engine/tools/vendor/en_wordlist.combined.gz`, Apache-2.0, 165,544 words).
 Each entry carries its own casing and a 0-255 frequency, so one file answers
 both questions the engine asks: "is this a word" and "how common is it".
+`wordlist.py` assembles the list; this script packs it.
 
 The list this replaced was Norvig's `count_1w.txt` top 20k, scraped from web
 text, which held `teh` at rank 19395 and `definately` at 19107. A vocabulary
@@ -19,83 +20,35 @@ Layout, little-endian, offsets from the start of the file:
 
     header   4s magic "SSWR", u32 version, u32 count, u32 maxLen,
              u32 recordsOff, u32 alphaOff, u32 lengthStartsOff,
-             u32 lengthListOff, u32 stringsOff, u32 stringsLen
-    records  count x 20 bytes: u32 lowerOff, u32 casedOff, u32 rank,
-             u32 letterMask, u8 charCount, u8 lowerBytes, u8 casedBytes,
+             u32 lengthListOff, u32 stringsOff
+    records  count x 19 bytes: u32 lowerOff, u32 casedOff, u32 rank,
+             u32 letterMask, u8 lowerBytes, u8 casedBytes,
              u8 flags (bit 0: the lowercase form is not ASCII)
     alpha    count x u32 record indices, sorted by the lowercase bytes
     lengthStarts (maxLen + 2) x u32: for each character count, where its
              run starts in lengthList; the last entry is the list's end
-    lengthList count x u32 record indices grouped by character count,
-             rank order inside a group
+    lengthList count x (u32 record index, u32 letterMask), grouped by
+             character count, rank order inside a group. The mask rides
+             beside the index so the candidate scan reads one run
+             sequentially and touches a record only when the mask admits it
     strings  the lowercase and cased bytes of every record, no separators
-
-One record per distinct lowercase form, the first occurrence in frequency
-order winning. `rank` is the word's position in the full list, duplicates
-included, so the rank cutoffs the engine holds keep their meaning.
 
 Run from the repo root:
 
     python3 engine/tools/gen-wordrank.py
 """
-import gzip
-import re
 import struct
-import sys
 from pathlib import Path
+
+from wordlist import build, records
 
 ROOT = Path(__file__).resolve().parents[2]
 TARGET = ROOT / "engine" / "Sources" / "TypingEngine" / "Resources" / "wordrank.bin"
-LEXICON = ROOT / "engine" / "Sources" / "TypingEngine" / "TextingLexicon.swift"
-SOURCE = ROOT / "engine" / "tools" / "vendor" / "en_wordlist.combined.gz"
 
-ENTRY = re.compile(r"^ word=([^,]+),f=(\d+)")
 MAGIC = b"SSWR"
-VERSION = 1
-RECORD = struct.Struct("<IIIIBBBB")
-HEADER = struct.Struct("<4sIIIIIIIII")
-
-
-def aosp_words() -> list:
-    """(word, frequency) in the list's own casing, most frequent first."""
-    entries = []
-    with gzip.open(SOURCE, "rt", encoding="utf-8") as handle:
-        for line in handle:
-            match = ENTRY.match(line)
-            if match:
-                entries.append((match.group(1), int(match.group(2))))
-    if not entries:
-        sys.exit(f"{SOURCE} held no word entries")
-    # Frequency first, then alphabetical, so the order is total and a
-    # regeneration reproduces the file byte for byte.
-    entries.sort(key=lambda pair: (-pair[1], pair[0]))
-    return entries
-
-
-def texting_words() -> list:
-    return sorted(set(re.findall(r'"([a-z0-9]+)"', LEXICON.read_text())))
-
-
-def build() -> list:
-    """Every word in rank order, duplicates of a lowercase form included."""
-    words = [word for word, _ in aosp_words()]
-    seen = {w.lower() for w in words}
-    # The texting lexicon is modern slang the 2014 list never had. It lands
-    # last: these words are never corrected away, and rank only breaks ties.
-    return words + [w for w in texting_words() if w not in seen]
-
-
-def records() -> list:
-    """(lower, cased, rank), one per distinct lowercase form, rank order."""
-    seen = set()
-    out = []
-    for position, word in enumerate(build()):
-        lower = word.lower()
-        if lower in seen:
-            continue
-        seen.add(lower)
-        out.append((lower, word, position + 1))
-    return out
+VERSION = 2
+RECORD = struct.Struct("<IIIIBBB")
+HEADER = struct.Struct("<4sIIIIIIII")
 
 
 def letter_mask(lower: str) -> int:
@@ -107,11 +60,10 @@ def letter_mask(lower: str) -> int:
 
 
 def main():
-    if not SOURCE.exists():
-        sys.exit(f"{SOURCE} is missing; see engine/tools/vendor/NOTICE")
     recs = records()
     strings = bytearray()
     record_bytes = bytearray()
+    masks = []
     for lower, cased, rank in recs:
         lower_bytes, cased_bytes = lower.encode(), cased.encode()
         lower_off = len(strings)
@@ -119,8 +71,9 @@ def main():
         cased_off = len(strings)
         strings += cased_bytes
         flags = 0 if lower_bytes.isascii() else 1
-        record_bytes += RECORD.pack(lower_off, cased_off, rank, letter_mask(lower),
-                                    len(lower), len(lower_bytes), len(cased_bytes), flags)
+        masks.append(letter_mask(lower))
+        record_bytes += RECORD.pack(lower_off, cased_off, rank, masks[-1],
+                                    len(lower_bytes), len(cased_bytes), flags)
     alpha = sorted(range(len(recs)), key=lambda i: recs[i][0].encode())
     max_len = max(len(lower) for lower, _, _ in recs)
     by_length = [[] for _ in range(max_len + 1)]
@@ -129,8 +82,11 @@ def main():
     length_starts, length_list = [], []
     for run in by_length:
         length_starts.append(len(length_list))
-        length_list += run
+        for i in run:
+            length_list += [i, masks[i]]
     length_starts.append(len(length_list))
+    # Starts count entries, and an entry is two u32s.
+    length_starts = [start // 2 for start in length_starts]
 
     records_off = HEADER.size
     alpha_off = records_off + len(record_bytes)
@@ -138,7 +94,7 @@ def main():
     length_list_off = length_starts_off + 4 * len(length_starts)
     strings_off = length_list_off + 4 * len(length_list)
     header = HEADER.pack(MAGIC, VERSION, len(recs), max_len, records_off, alpha_off,
-                         length_starts_off, length_list_off, strings_off, len(strings))
+                         length_starts_off, length_list_off, strings_off)
     TARGET.parent.mkdir(exist_ok=True)
     TARGET.write_bytes(header + bytes(record_bytes)
                        + struct.pack(f"<{len(alpha)}I", *alpha)
