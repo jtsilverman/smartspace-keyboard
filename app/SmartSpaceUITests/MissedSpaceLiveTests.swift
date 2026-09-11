@@ -33,6 +33,30 @@ final class MissedSpaceLiveTests: XCTestCase {
                 + "\(quote(afterMelater)); after `call ` it held \(quote(afterCall))")
     }
 
+    /// Unit 3's other half on the real keyboard: a word broken by a stray
+    /// space comes back whole (oracle row nosp-051, "See you tomorrow"). The
+    /// keyboard corrects "tomo" to "too" at its own space, so the join at
+    /// "rrow" must take "too rrow" out of the field, not "tomo rrow".
+    func testAStraySpaceIsJoinedBackIntoTheWord() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let field = focusSmartSpaceKeyboard(app)
+
+        clear(app, field)
+        typeWord(app, field, "see")
+        _ = commitSpace(app, field, label: "see")
+        typeWord(app, field, "you")
+        _ = commitSpace(app, field, label: "see you")
+        typeWord(app, field, "tomo")
+        let afterTomo = commitSpace(app, field, label: "see you tomo")
+        typeWord(app, field, "rrow")
+        let afterRrow = commitSpace(app, field, label: "see you tomo rrow")
+        XCTAssertTrue(
+            matches(afterRrow, anyOf: ["see you tomorrow"]),
+            "after `see you tomo rrow ` expected `See you tomorrow `, field holds "
+                + "\(quote(afterRrow)); after `see you tomo ` it held \(quote(afterTomo))")
+    }
+
     /// Taps the space key, waits for the field to settle, and records what it
     /// holds. Polls until the field stops changing: the split lands as a
     /// deleteBackward burst plus an insertText, and reading between the two
