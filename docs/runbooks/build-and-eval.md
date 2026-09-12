@@ -200,7 +200,8 @@ list, the tables regenerate, the scorer runs, and the judge keeps the batch when
 number drops. The recording lands as one commit and the accepted words as another,
 both authored `autocorrect-loop`; `eval/loop/results.tsv` holds one line per batch.
 The UI test bundle must be built (`xcodebuild build-for-testing`, above) after any
-change to `StockOracleTests.swift`; the batch itself needs no rebuild.
+change to `StockOracleTests.swift`; the batch itself needs no rebuild. The loop
+generates the worktree's Xcode project itself when it is missing.
 
 ## Write teacher text
 

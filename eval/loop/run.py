@@ -139,6 +139,10 @@ def words_loop(udid: str, batches: int, size: int) -> int:
     import score
     if changed_files():
         sys.exit("the working tree is not clean; the loop commits and reverts in it")
+    # The Xcode project is generated and never tracked, so a fresh worktree
+    # has none and the recorder's xcodebuild call fails on it (2026-09-12).
+    if not (ROOT / "app" / "SmartSpace.xcodeproj").exists():
+        sh("xcodegen", "generate", cwd=ROOT / "app")
     best = score.score(ROOT)
     for batch in range(1, batches + 1):
         before = best
