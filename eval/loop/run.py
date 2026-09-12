@@ -88,3 +88,106 @@ def verdict(before: dict, after: dict, changed: list, loop: str = "rules") -> tu
     elif dev_a <= dev_b:
         return False, f"dev half did not rise {dev_b}->{dev_a}"
     return True, f"dev {dev_b}->{dev_a}, test {test_b}->{test_a}"
+
+
+# --------------------------------------------------------------------------
+# The words loop: ask stock about a batch, take what it accepted, rebuild the
+# tables, score, keep or revert, log, repeat.
+# --------------------------------------------------------------------------
+
+import argparse
+import datetime
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+RESULTS = ROOT / "eval" / "loop" / "results.tsv"
+WORDS_FILES = ["engine/tools/vendor/accepted-words.tsv",
+               "engine/Sources/TypingEngine/Resources/wordrank.bin",
+               "engine/Sources/TypingEngine/Resources/wordpairs.bin"]
+AUTHOR = "autocorrect-loop <autocorrect-loop@local>"
+
+
+def sh(*cmd, cwd=ROOT, check=True):
+    return subprocess.run(list(cmd), cwd=cwd, capture_output=True, text=True, check=check)
+
+
+def changed_files() -> list:
+    out = sh("git", "status", "--short", "--untracked-files=all").stdout
+    return sorted(line[3:] for line in out.splitlines() if line.strip())
+
+
+def log_result(loop: str, batch: int, kept: bool, reason: str, before: dict, after: dict, note: str):
+    new = not RESULTS.exists()
+    with open(RESULTS, "a") as f:
+        if new:
+            f.write("when\tloop\tbatch\tverdict\treason\tdev\ttest\ttypo_mis\tprotect_test\tnote\n")
+        f.write("\t".join([
+            datetime.datetime.now().isoformat(timespec="seconds"), loop, str(batch),
+            "kept" if kept else "reverted", reason,
+            f"{before['oracle']['total/dev'][0]}->{after['oracle']['total/dev'][0]}",
+            f"{before['oracle']['total/test'][0]}->{after['oracle']['total/test'][0]}",
+            f"{before['typo']['miscorrected']}->{after['typo']['miscorrected']}",
+            f"{before['protect']['test'][0]}->{after['protect']['test'][0]}",
+            note.replace("\t", " ").replace("\n", " "),
+        ]) + "\n")
+
+
+def words_loop(udid: str, batches: int, size: int) -> int:
+    sys.path.insert(0, str(ROOT / "eval" / "loop"))
+    import score
+    if changed_files():
+        sys.exit("the working tree is not clean; the loop commits and reverts in it")
+    best = score.score(ROOT)
+    for batch in range(1, batches + 1):
+        before = best
+        record = subprocess.run(
+            [sys.executable, str(ROOT / "eval/oracle/record.py"), udid, "words", "--size", str(size)],
+            cwd=ROOT, capture_output=True, text=True)
+        print(record.stdout.strip().splitlines()[-1] if record.stdout.strip() else record.stderr[-300:])
+        if record.returncode != 0:
+            log_result("words", batch, False, "recorder failed", before, before, record.stderr[-200:])
+            return 1
+        accepted = sh(sys.executable, str(ROOT / "eval/words/candidates.py"), "--accepted").stderr.strip()
+        sh(sys.executable, str(ROOT / "engine/tools/gen-wordrank.py"))
+        sh(sys.executable, str(ROOT / "engine/tools/gen-wordpairs.py"))
+        # The recording itself is evidence, never a judged change.
+        recordings = [f for f in changed_files() if f.startswith("eval/oracle/")]
+        for path in recordings:
+            sh("git", "add", path)
+        sh("git", "commit", "-q", "--author", AUTHOR, "-m",
+           f"Loop: stock answered a batch of {size} candidate words\n\n{accepted}")
+        after = score.score(ROOT)
+        changed = changed_files()
+        kept, reason = verdict(best, after, changed, loop="words")
+        if kept:
+            for path in changed:
+                sh("git", "add", path)
+            sh("git", "commit", "-q", "--author", AUTHOR, "-m",
+               f"Loop: the words stock accepted enter the list\n\n{accepted}\n"
+               f"oracle dev {best['oracle']['total/dev'][0]}->{after['oracle']['total/dev'][0]}, "
+               f"test {best['oracle']['total/test'][0]}->{after['oracle']['total/test'][0]}; "
+               f"typo miscorrected {best['typo']['miscorrected']}->{after['typo']['miscorrected']}; "
+               f"protection test {best['protect']['test'][0]}->{after['protect']['test'][0]}")
+            best = after
+        else:
+            for path in changed:
+                sh("git", "checkout", "--", path)
+        log_result("words", batch, kept, reason, before, after, accepted)
+        print(f"batch {batch}: {'kept' if kept else 'reverted'} ({reason}) {accepted}")
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="the dictionary loop (specs/autocorrect-loop.md)")
+    ap.add_argument("--loop", choices=["words"], required=True)
+    ap.add_argument("--udid", required=True)
+    ap.add_argument("--batches", type=int, default=1)
+    ap.add_argument("--size", type=int, default=150)
+    args = ap.parse_args()
+    return words_loop(args.udid, args.batches, args.size)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

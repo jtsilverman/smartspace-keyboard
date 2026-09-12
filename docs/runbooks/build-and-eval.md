@@ -187,6 +187,21 @@ python3 eval/words/candidates.py --aggregate <dir of SSA yobYYYY.txt>   # rebuil
 At the default floor of 200 births since 1980 there are 17,726 candidates, about
 118 batches of 150.
 
+The loop runs the batches unattended, in its own worktree so a session can keep
+working in the main checkout:
+
+```
+git worktree add ../smartspace-words -b loop/words
+cd ../smartspace-words && python3 eval/loop/run.py --loop words --udid <udid> --batches 20
+```
+
+Each batch: the recorder asks stock, `candidates.py --accepted` rewrites the accepted
+list, the tables regenerate, the scorer runs, and the judge keeps the batch when no
+number drops. The recording lands as one commit and the accepted words as another,
+both authored `autocorrect-loop`; `eval/loop/results.tsv` holds one line per batch.
+The UI test bundle must be built (`xcodebuild build-for-testing`, above) after any
+change to `StockOracleTests.swift`; the batch itself needs no rebuild.
+
 ## Regenerate a corpus
 
 Corpus regeneration is its own commit and never rides along with an engine change.
