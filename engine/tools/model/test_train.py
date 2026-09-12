@@ -21,13 +21,11 @@ VOCAB = ["the", "to", "you", "and", "more", "than", "then", "see", "later"]
 class EncodeTests(unittest.TestCase):
     def test_a_sentence_becomes_start_then_ids_with_unknown_for_words_off_the_list(self):
         ids = train.encode("See you LATER, xylophone!", VOCAB)
-        self.assertEqual(ids, [train.START, 7, 2, 8, train.UNK])
+        self.assertEqual(ids, [train.START, 7 + 3, 2 + 3, 8 + 3, train.UNK])
 
-    def test_ids_are_the_words_position_in_the_list_offset_by_the_specials(self):
-        self.assertEqual(train.encode("the", VOCAB), [train.START, 0])
-        self.assertEqual(train.UNK, len(VOCAB) if False else train.UNK)
-        self.assertLess(train.START, 2)
-        self.assertLess(train.UNK, 2)
+    def test_ids_are_the_words_position_in_the_list_after_three_specials(self):
+        self.assertEqual((train.PAD, train.START, train.UNK), (0, 1, 2))
+        self.assertEqual(train.encode("the", VOCAB), [train.START, 3])
 
 
 class WindowTests(unittest.TestCase):
