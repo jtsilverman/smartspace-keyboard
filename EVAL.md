@@ -101,6 +101,26 @@ What separates the two groups is that `Nathen`, `Jesica` and `Danial` are real
 name spellings, and the 2014 AOSP list does not carry them. `Venmo` is the same
 story. A wider name list closes these; a rule cannot.
 
+## One-key slips, and the student pilot (autocorrect-loop, 2026-09-12)
+
+`eval/slips/gen_slips.py` writes every single slip of the 3,000 commonest words from
+the stock key geometry: 158,251 rows of five kinds. `SlipBenchTests` types every
+256th row in the suite and all of them with `SLIP_BENCH_ROWS=all` (release build,
+175s): corrected 135,730/158,251 (85%), miscorrected 17,032. Per kind: double 96%,
+swap 94%, neighbor 93%, drop 86%, split 23% (8,664 miscorrected).
+
+A 150-row kind-stratified sample was recorded from stock and joins the oracle as
+the `slips` slice: agreement 110/150. double 29/30, swap 28/30, neighbor 25/30,
+drop 15/30, split 13/30. The drop and split kinds are the work list.
+
+The student (`ContextModel`, 1.74M parameters, LSTM 384 over a 10k word vocabulary,
+3.4MB float16 mapped) was trained on 16,926 sentences (NUS SMS plus the first
+teacher text) to dev perplexity 132. Behind `ContextScoring` it ties the pair table
+on the pilot: context/dev 35/50 and nospace/dev 32/50 for both, with 2 of the 200
+rows deciding differently. The model reaches only distance ties and split
+decisions; most context misses are stock leaving a typo alone. Rerun at 200k
+sentences.
+
 ## Missed spaces: what stock splits, and what we can (unit 3)
 
 Read off the 50 recorded missing-space rows. Stock split 48, and every split it
