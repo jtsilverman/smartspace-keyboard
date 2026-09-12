@@ -149,3 +149,31 @@ class VerdictTests(unittest.TestCase):
     def test_no_change_is_reverted(self):
         kept, reason = run.verdict(BASE, after(oracle__total_dev=[170, 200]), [])
         self.assertFalse(kept)
+
+
+class WordsLoopVerdictTests(unittest.TestCase):
+    """The dictionary loop is coverage-bound: a batch of accepted words is kept
+    when nothing drops, even though the 400-row oracle rarely moves."""
+    WORDS = ["engine/tools/vendor/accepted-words.tsv",
+             "engine/Sources/TypingEngine/Resources/wordrank.bin",
+             "engine/Sources/TypingEngine/Resources/wordpairs.bin"]
+
+    def test_a_flat_oracle_is_kept_in_the_words_loop(self):
+        kept, reason = run.verdict(BASE, after(), self.WORDS, loop="words")
+        self.assertTrue(kept, reason)
+
+    def test_a_dropped_dev_half_is_still_reverted(self):
+        kept, reason = run.verdict(BASE, after(oracle__total_dev=[160, 200]), self.WORDS, loop="words")
+        self.assertFalse(kept)
+
+    def test_a_guard_drop_is_still_reverted(self):
+        worse = after()
+        worse["protect"]["test"] = [90, 95]
+        kept, reason = run.verdict(BASE, worse, self.WORDS, loop="words")
+        self.assertFalse(kept)
+        self.assertIn("protect", reason)
+
+    def test_the_words_loop_may_not_touch_the_rules(self):
+        kept, reason = run.verdict(BASE, after(), self.WORDS + [ENGINE], loop="words")
+        self.assertFalse(kept)
+        self.assertIn("CorrectionEngine", reason)

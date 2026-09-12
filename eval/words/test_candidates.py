@@ -56,7 +56,28 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(row["typed"], "i said kylian today")
         self.assertEqual(row["offsets"], "-")
         self.assertEqual(row["note"], "name|Kylian|400")
-        self.assertTrue(row["id"].startswith("word-"))
+        self.assertEqual(row["id"], "word-kylian")
+
+
+class AcceptedTests(unittest.TestCase):
+    stock = [
+        {"slice": "words", "typed": "i said venmo today", "produced": "I said Venmo today "},
+        {"slice": "words", "typed": "i said jaje today", "produced": "I said Jake today "},
+        {"slice": "words", "typed": "i said kylian today", "produced": "I said kylian today "},
+        {"slice": "names", "typed": "tell jaje i said hi", "produced": "Tell Jake I said hi "},
+    ]
+    rows = [{"word": "Venmo", "source": "brand", "weight": 40},
+            {"word": "Jaje", "source": "name", "weight": 300},
+            {"word": "Kylian", "source": "name", "weight": 400}]
+
+    def test_a_word_stock_leaves_as_typed_is_accepted_with_its_own_casing(self):
+        got = candidates.accepted(self.rows, self.stock)
+        self.assertEqual([(r["word"], r["source"]) for r in got],
+                         [("Venmo", "brand"), ("Kylian", "name")])
+
+    def test_a_word_stock_changes_is_dropped(self):
+        got = candidates.accepted(self.rows, self.stock)
+        self.assertNotIn("Jaje", [r["word"] for r in got])
 
 
 if __name__ == "__main__":
