@@ -174,9 +174,11 @@ and `git log --author=autocorrect-loop`.
 
 ## Progress
 
-- [ ] 0 judge (RED committed 2026-09-12)
+- [x] 0 judge -- verdict and allowed green, 13 tests (2026-09-12)
 - [ ] 1 word sources
 - [ ] 2 stock membership
-- [ ] 3 slip corpus
+- [~] 3 slip corpus -- 158k slips generated, bench in the suite (88% corrected,
+      splits 26%), adjacency pinned; the 150-row sample is not yet recorded
+      from stock. Lead: an unknown word costs the engine 46ms in a debug build
 - [ ] 4 teacher text
 - [ ] 5 student pilot
