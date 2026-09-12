@@ -347,4 +347,18 @@ private func controller(
         }
         #expect(field.hasPrefix("see you too yeah ok fine too "), "\(field)")
     }
+
+    /// Shouted text is deliberate; the single-word path already refuses to
+    /// touch an all-caps word, and the join must refuse the same shape.
+    @Test func twoShoutedFragmentsAreNotJoined() {
+        var controller = AutocorrectController(checker: DictionarySpellChecker())
+        var field = ""
+        for word in ["TOMO", "RROW", "WE", "MEET"] {
+            field += (field.isEmpty ? "" : " ") + word
+            if case .replace(let original, let corrected, _) = controller.wordCommitted(context: field) {
+                field = String(field.dropLast(original.count)) + corrected
+            }
+        }
+        #expect(field == "TOMO RROW WE MEET")
+    }
 }
