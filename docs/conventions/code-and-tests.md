@@ -19,6 +19,7 @@ bound to `app/Shared/SystemSpellChecker.swift` in the app.
 |---|---|
 | Punctuation rules and cycling | `engine/Tests/PunctuationEngineTests/` |
 | Typing, layout, autocorrect, gestures | `engine/Tests/TypingEngineTests/` |
+| The typo, protection and completion benches and their corpora | `engine/Tests/TypingEngineTests/` |
 | Anything needing a real `UITextChecker` or the touch surface | `app/SmartSpaceTests/` |
 | Driven UI behavior | `app/SmartSpaceUITests/` |
 
@@ -53,9 +54,10 @@ write the general rule. Never one patch per sentence.
 ## The checker-state protocol
 
 `UITextChecker` rankings adapt to text already typed. An XCUITest session shifted typo
-miscorrections from 4 to 18 on a rerun. Checker-dependent benchmarks (protect, typos, completions,
-scenarios) run **solo**, after `eval/v4/reset-keyboard-state.sh <udid>`, never alongside another
-`xcodebuild` session on the same simulator.
+miscorrections from 4 to 18 on a rerun. The checker-dependent suites left are the scenario corpus
+and `SystemSpellCheckerTests`; they run **solo**, after `eval/v4/reset-keyboard-state.sh <udid>`,
+never alongside another `xcodebuild` session on the same simulator. The typo, protection and
+completion benches score `DictionarySpellChecker` and run under `swift test`.
 
 That script resets two kinds of learned state, not one. The system's dynamic lexicon, and the
 extension's own `UserDefaults`, because the outcome log trains `PersonalRanking`: five smoke-test

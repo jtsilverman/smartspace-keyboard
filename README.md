@@ -76,7 +76,7 @@ user population.
 
 One protocol note worth stating, because it invalidates naive runs: `UITextChecker` rankings adapt
 to text already typed. An XCUITest session shifted typo miscorrections from 4 to 18 on a rerun.
-Checker-dependent benchmarks run solo after `eval/v4/reset-lexicon.sh <udid>`, never alongside
+The checker-dependent suites run solo after `eval/v4/reset-keyboard-state.sh <udid>`, never alongside
 another `xcodebuild` session.
 
 ## Run it

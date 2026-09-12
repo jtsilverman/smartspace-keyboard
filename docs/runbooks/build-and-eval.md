@@ -71,7 +71,8 @@ rankings adapt to typed text, and the outcome log trains `PersonalRanking`.
 Then run the benchmark **solo**. Never alongside another `xcodebuild` session on the same simulator.
 An XCUITest session running in parallel shifted typo miscorrections from 4 to 18.
 
-The checker-dependent sets are protect, typos, completions, and scenarios.
+The checker-dependent sets are the scenario corpus and `SystemSpellCheckerTests`. The typo,
+protection and completion benches score the engine's own dictionary and run under `swift test`.
 
 ## Score a corpus
 
@@ -83,6 +84,11 @@ The accuracy suites are ordinary tests; `swift test --filter` runs them and prin
 | Real-SMS v3, 638 rows | `RealCorpusV3AccuracyTests` | The reality check |
 | Real-SMS v2.1 | `RealCorpusAccuracyTests` | Retired from reporting, kept as provenance |
 | Rule regression | `CorpusAccuracyTests` | A tripwire, not a benchmark. Gates at top-1 90%, top-2 97% |
+| Typo bench, 320 pairs | `TypoBenchmarkTests` | Gates at 90% corrected, 23 miscorrections (`specs/autocorrect-parity.md` check 2) |
+| Protection, typo v4, completions | `KeyboardEvalV4Tests` | Protection gates at 100 dev / 97 test with every name and brand row untouched |
+| Stock oracle, 400 rows | `OracleAgreementTests` | Agreement with the stock recording per slice, dev and test halves, every dev miss |
+
+The loop scores all of them in one run: `python3 eval/loop/score.py` (`specs/autocorrect-loop.md`).
 
 Top-1 is right on the first guess. Top-2 is right within one cycle tap, which is the product-truth
 metric.

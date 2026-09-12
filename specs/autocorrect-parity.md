@@ -200,10 +200,10 @@ Derived, not Jake-facing. Each check cites the vision milestone it serves.
    miscorrections (`EVAL.md`, the current number after the distance-guard trade, not
    the 30 of the original baseline), and the frozen protection corpus holds at or
    above 100/97 with its 25 name rows and 20 brand rows all passing.
-   `TypoBenchmarkTests` prints those numbers today and asserts only that the counts
-   sum; unit 1 adds the threshold assertions, so the check can fail.
-   `xcodebuild test -only-testing:SmartSpaceTests/TypoBenchmarkTests` and the protect
-   set from `KeyboardEvalV4Tests`.
+   `TypoBenchmarkTests` and `ProtectionEvalTests` assert those thresholds, so the
+   check can fail. Both run under `swift test` since 2026-09-12 (the benches score the
+   engine's own dictionary): `cd engine && swift test --filter
+   'TypoBenchmarkTests|ProtectionEvalTests'`.
 3. **vision:1,5** -- with touch points feeding the corrector, agreement with the
    oracle on the sloppy-typing slice holds at 150/150, printed by the oracle
    comparison test. (Reworded 2026-09-11: the slice agreed on every row before

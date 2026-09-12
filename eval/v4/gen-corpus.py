@@ -102,7 +102,7 @@ def main():
         for r in rows
     ]
     emit(
-        ROOT / "app/SmartSpaceTests/ProtectCorpus.swift",
+        ROOT / "engine/Tests/TypingEngineTests/ProtectCorpus.swift",
         "protect.tsv",
         "struct ProtectCase { let id: String; let sub: String; let context: String; let typed: String; let half: String }\n\n"
         "let protectCorpus: [ProtectCase] = [\n" + ",\n".join(lines) + ",\n]\n",
@@ -114,7 +114,7 @@ def main():
         for r in rows
     ]
     emit(
-        ROOT / "app/SmartSpaceTests/TypoCorpusV4.swift",
+        ROOT / "engine/Tests/TypingEngineTests/TypoCorpusV4.swift",
         "typos.tsv",
         "struct TypoPairV4 { let category: String; let typo: String; let intended: String }\n\n"
         "let typoCorpusV4: [TypoPairV4] = [\n" + ",\n".join(lines) + ",\n]\n",
@@ -128,7 +128,7 @@ def main():
         for r in rows
     ]
     emit(
-        ROOT / "app/SmartSpaceTests/CompletionCorpus.swift",
+        ROOT / "engine/Tests/TypingEngineTests/CompletionCorpus.swift",
         "completions.tsv",
         "struct CompletionCase { let id: String; let sub: String; let context: String; let prefix: String; let acceptable: [String]; let half: String }\n\n"
         "// acceptable == [\"NONE\"] means offering nothing (or only the typed prefix) passes.\n"
