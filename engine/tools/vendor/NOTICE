@@ -86,3 +86,22 @@ sitelink count.
 Feeds the dictionary loop the same way: a brand enters the word list only after
 stock leaves it as typed. The noise a class query carries ("email" is an
 instance of online service) is what the stock filter is for.
+
+# NUS SMS Corpus (eval/corpus/nus-sms-en.txt)
+
+The English half of the National University of Singapore SMS Corpus, release
+2015-03-09: 55,835 messages, of which 16,265 with three or more tokens and
+95% or more of them in the engine's word list are kept, one per line
+(`python3 eval/corpus/nus.py <xml>`).
+
+- Source: https://github.com/kite1988/nus-sms-corpus
+- Terms: the authors ask for a citation and a note of use. Jake wrote to the
+  authors and they said the corpus is fine to use for SmartSpace (relayed
+  2026-09-12). Cite: Tao Chen and Min-Yen Kan (2013), "Creating a Live,
+  Public Short Message Service Corpus: The NUS SMS Corpus", Language
+  Resources and Evaluation 47(2), 299-355.
+- Known limit: the messages are Singaporean English; the in-vocabulary filter
+  drops the Singlish-heavy rows, not all of them.
+
+Training text for the context model (`specs/autocorrect-loop.md` units 4
+and 5). Never an eval row.
