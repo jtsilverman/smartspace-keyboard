@@ -32,7 +32,7 @@ class WindowTests(unittest.TestCase):
     def test_sequences_pad_to_one_length_and_the_target_is_the_next_word(self):
         x, y = train.batch([[1, 5, 6], [1, 7]], length=4)
         self.assertEqual(x.tolist(), [[1, 5, 6, 0], [1, 7, 0, 0]])
-        self.assertEqual(y.tolist(), [[5, 6, train.PAD, train.PAD], [7, train.PAD, train.PAD]])
+        self.assertEqual(y.tolist(), [[5, 6, train.PAD, train.PAD], [7, train.PAD, train.PAD, train.PAD]])
 
 
 class ExportTests(unittest.TestCase):
