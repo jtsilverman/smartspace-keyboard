@@ -15,8 +15,15 @@ public struct CorrectionSession: Sendable {
         last = (original, corrected)
     }
 
-    /// The most recent correction, until it is undone.
+    /// The most recent correction, until it is undone or a later word is
+    /// committed as typed. A fragment is revised only by the very next word.
     public var lastCorrection: (original: String, corrected: String)? { last }
+
+    /// A word committed as typed ends the last correction's reach: the
+    /// join must never take a later, genuine word for that fragment.
+    public mutating func wordKept() {
+        last = nil
+    }
 
     /// Undoes the most recent correction: returns the original word the
     /// keyboard should restore and protects it from re-correction for the

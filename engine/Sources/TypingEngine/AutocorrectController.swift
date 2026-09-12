@@ -106,6 +106,7 @@ public struct AutocorrectController: Sendable {
                                        touches: TouchTrail? = nil) -> Commit {
         switch engine.decision(for: context, touches: touches, session: session) {
         case .noChange:
+            session.wordKept()
             state = .idle
             return .keep
         case .correct(let to, let alternatives):
