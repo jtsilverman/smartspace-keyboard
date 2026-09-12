@@ -119,10 +119,7 @@ public struct CorrectionEngine: Sendable {
         if let fixed = CalendarRule.transform(word) {
             return .correct(to: fixed, alternatives: [])
         }
-        // All-caps words are acronyms more often than typos; correcting
-        // them mangles deliberate input.
-        let letters = word.filter(\.isLetter)
-        if letters.count >= 2, letters.allSatisfy(\.isUppercase) { return .noChange }
+        if isShouted(word) { return .noChange }
         // Two-letter tokens are texting shortforms (gn, rn, ty, np) and
         // letter runs of 3+ are deliberate elongation (sooo, plsss); the
         // checker's guesses for both mangle intended text.
@@ -238,7 +235,7 @@ public struct CorrectionEngine: Sendable {
                       session: CorrectionSession) -> CorrectionDecision? {
         let tail = " " + word
         guard context.hasSuffix(tail), word.count >= 2, !WordRank.isKnown(word),
-              !hasLetterRun(word, of: 3) else { return nil }
+              !hasLetterRun(word, of: 3), !isShouted(word) else { return nil }
         let prefix = String(context.dropLast(tail.count))
         guard let before = WordBoundary.lastWord(in: prefix), prefix.hasSuffix(before),
               !session.isProtected(before) else { return nil }
@@ -301,6 +298,13 @@ public struct CorrectionEngine: Sendable {
     /// ("on my"); the first is what follows the text before the candidate.
     private func halves(of candidate: String) -> [String] {
         candidate.split(separator: " ").map(String.init)
+    }
+
+    /// All-caps words are acronyms or shouting more often than typos;
+    /// correcting them mangles deliberate input.
+    private func isShouted(_ word: String) -> Bool {
+        let letters = word.filter(\.isLetter)
+        return letters.count >= 2 && letters.allSatisfy(\.isUppercase)
     }
 
     private func hasLetterRun(_ word: String, of length: Int) -> Bool {
