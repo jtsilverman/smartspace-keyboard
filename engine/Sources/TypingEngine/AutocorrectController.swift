@@ -60,20 +60,25 @@ public struct AutocorrectController: Sendable {
     }
 
     private let checker: any SpellChecking
+    private let contextModel: any ContextScoring
     private var engine: CorrectionEngine
     private var session = CorrectionSession()
     private var state: State = .idle
 
-    public init(checker: any SpellChecking, lexicon: Set<String> = []) {
+    /// - Parameter contextModel: what the words already typed say about a
+    ///   candidate; the pair table by default, the student in its pilot.
+    public init(checker: any SpellChecking, lexicon: Set<String> = [],
+                contextModel: any ContextScoring = WordPairModel()) {
         self.checker = checker
-        engine = CorrectionEngine(checker: checker, lexicon: lexicon)
+        self.contextModel = contextModel
+        engine = CorrectionEngine(checker: checker, lexicon: lexicon, contextModel: contextModel)
     }
 
     /// Adopts a lexicon that arrived after init (UILexicon is async).
     /// Only the decision engine changes; session protection and the active
     /// bar survive.
     public mutating func updateLexicon(_ lexicon: Set<String>) {
-        engine = CorrectionEngine(checker: checker, lexicon: lexicon)
+        engine = CorrectionEngine(checker: checker, lexicon: lexicon, contextModel: contextModel)
     }
 
     public var barContent: BarContent {

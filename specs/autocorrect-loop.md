@@ -183,11 +183,15 @@ and `git log --author=autocorrect-loop`.
       driver built; first batch not yet recorded (simulator busy with the slips slice)
 - [~] 2 stock membership -- recorder words slice, accepted-words.tsv, the words loop
       driver built; first batch not yet recorded (simulator busy with the slips slice)
-- [~] 3 slip corpus -- 158k slips generated, bench in the suite (88% corrected,
-      splits 26%), adjacency pinned; the 150-row sample is not yet recorded
-      from stock. The full 158k bench takes 175s in a release build (1.1ms a row;
+- [x] 3 slip corpus -- 158k slips generated, bench in the suite (88% corrected,
+      splits 26%), adjacency pinned; the 150-row sample recorded from stock
+      2026-09-12: agreement 110/150 (drop 15/30, split 13/30 are the work list). The full 158k bench takes 175s in a release build (1.1ms a row;
       the 46ms was debug overhead). Split slips: 23% corrected, 8,664 miscorrected
 - [~] 4 teacher text -- NUS SMS 16,265 messages in; teach.py writes about two
       messages a second from qwen2.5:7b on the Studio; the 200k run started
       2026-09-12
-- [ ] 5 student pilot
+- [~] 5 student pilot -- ContextModel (1.74M parameters, float16, mapped) behind
+      ContextScoring; trained on 16,926 sentences the pilot ties the pair table
+      (context/dev 35/50, nospace/dev 32/50, 2 of 200 rows differ). Rerun when the
+      teacher run reaches 200k sentences; the model only reaches distance ties and
+      split decisions, and most context misses are stock leaving a typo alone

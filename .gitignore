@@ -5,3 +5,4 @@ xcuserdata/
 DerivedData/
 eval/oracle/*.log
 eval/corpus/teacher/*.log
+__pycache__/
