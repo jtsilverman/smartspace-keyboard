@@ -6,3 +6,4 @@ DerivedData/
 eval/oracle/*.log
 eval/corpus/teacher/*.log
 __pycache__/
+eval/loop/*.log
