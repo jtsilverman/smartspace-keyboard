@@ -24,8 +24,8 @@ FORBIDDEN_SUFFIXES = ("Corpus.swift", "CorpusV4.swift")
 # swaps the context model. Neither edits the rules.
 ALLOWED = {
     "rules": ("engine/Sources/TypingEngine/", "engine/Tests/TypingEngineTests/"),
-    "words": ("engine/tools/", "engine/Sources/TypingEngine/Resources/",
-              "engine/Sources/TypingEngine/TextingLexicon.swift"),
+    "words": ("engine/tools/vendor/accepted-words.tsv",
+              "engine/Sources/TypingEngine/Resources/"),
     "model": ("engine/Sources/TypingEngine/Resources/",
               "engine/Sources/TypingEngine/ContextModel", "engine/tools/model/",
               "engine/Tests/TypingEngineTests/ContextModelTests.swift"),
@@ -81,6 +81,10 @@ def verdict(before: dict, after: dict, changed: list, loop: str = "rules") -> tu
     test_b, test_a = before["oracle"]["total/test"][0], after["oracle"]["total/test"][0]
     if test_a < test_b:
         return False, f"test half dropped {test_b}->{test_a}"
-    if dev_a <= dev_b:
+    if loop == "words":
+        # Coverage-bound: the batch is the gain, the oracle must only hold.
+        if dev_a < dev_b:
+            return False, f"dev half dropped {dev_b}->{dev_a}"
+    elif dev_a <= dev_b:
         return False, f"dev half did not rise {dev_b}->{dev_a}"
     return True, f"dev {dev_b}->{dev_a}, test {test_b}->{test_a}"

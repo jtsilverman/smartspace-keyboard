@@ -7,6 +7,9 @@ about them (specs/autocorrect-loop.md, unit 1).
     python3 eval/words/candidates.py [--floor 200] [--size 150]
         prints the next batch, as oracle rows, of candidates stock has not
         answered (eval/oracle/stock-*.tsv, slice `words`)
+    python3 eval/words/candidates.py --accepted
+        rewrites engine/tools/vendor/accepted-words.tsv: every candidate stock
+        left as typed, in probe order
 
 Brands first, by Wikidata sitelinks: there are under two thousand and a
 mangled brand is the miscorrection Jake named. Then first names by births
@@ -27,6 +30,7 @@ sys.path.insert(0, str(ROOT / "engine" / "tools"))
 VENDOR = ROOT / "engine" / "tools" / "vendor"
 SSA = VENDOR / "ssa-names.tsv"
 BRANDS = VENDOR / "wikidata-brands.tsv"
+ACCEPTED = VENDOR / "accepted-words.tsv"
 ORACLE = ROOT / "eval" / "oracle"
 RECENT_FROM = 1980
 CARRIER = "i said {} today"
@@ -93,21 +97,43 @@ def next_batch(rows: list, recorded: set, size: int) -> list:
 
 
 def oracle_rows(rows: list) -> list:
-    return [{"id": f"word-{i + 1:06d}", "slice": "words",
+    return [{"id": f"word-{r['word'].lower()}", "slice": "words",
              "typed": CARRIER.format(r["word"].lower()), "offsets": "-",
              "note": f"{r['source']}|{r['word']}|{r['weight']}"}
-            for i, r in enumerate(rows)]
+            for r in rows]
+
+
+def stock_rows() -> list:
+    """Every `words` row stock has answered, from every recording."""
+    rows = []
+    for path in sorted(ORACLE.glob("stock-*.tsv")):
+        with open(path, newline="") as f:
+            rows += [row for row in csv.DictReader(f, delimiter="\t") if row["slice"] == "words"]
+    return rows
 
 
 def recorded_words() -> set:
-    """Lowercase words stock has answered, from every recording."""
-    words = set()
-    for path in ORACLE.glob("stock-*.tsv"):
-        with open(path, newline="") as f:
-            for row in csv.DictReader(f, delimiter="\t"):
-                if row["slice"] == "words":
-                    words.add(row["typed"].split()[2])
-    return words
+    """Lowercase words stock has answered."""
+    return {row["typed"].split()[2] for row in stock_rows()}
+
+
+def accepted(rows: list, stock: list) -> list:
+    """The candidates stock left as typed, with the vendor's casing. Case is
+    stock's autocap and name capitalization, not a verdict on the letters."""
+    left_alone = {row["typed"].split()[2] for row in stock
+                  if row["slice"] == "words"
+                  and row["produced"].strip().lower() == row["typed"].strip().lower()}
+    return [r for r in rows if r["word"].lower() in left_alone]
+
+
+def write_accepted(rows: list, path: Path = ACCEPTED):
+    with open(path, "w", newline="") as f:
+        f.write("# Words the stock keyboard left as typed inside the carrier, written by\n"
+                "# eval/words/candidates.py --accepted from eval/oracle/stock-*.tsv. The\n"
+                "# engine's word list appends these after the first names (wordlist.py).\n")
+        f.write("word\tsource\tweight\n")
+        for r in rows:
+            f.write(f"{r['word']}\t{r['source']}\t{r['weight']}\n")
 
 
 def main() -> int:
@@ -115,6 +141,8 @@ def main() -> int:
     ap.add_argument("--aggregate", type=Path, help="directory of SSA yobYYYY.txt files")
     ap.add_argument("--floor", type=int, default=200, help="births since 1980 a name needs")
     ap.add_argument("--size", type=int, default=150)
+    ap.add_argument("--accepted", action="store_true",
+                    help="rewrite engine/tools/vendor/accepted-words.tsv from the recordings")
     args = ap.parse_args()
     if args.aggregate:
         rows = aggregate_ssa(args.aggregate)
@@ -122,8 +150,13 @@ def main() -> int:
         print(f"ssa: {len(rows)} names", file=sys.stderr)
         return 0
     import wordlist
-    known = {lower for lower, _, _ in wordlist.records()}
+    known = {lower for lower, _, _ in wordlist.records(accepted=False)}
     rows = build(read_ssa(), read_brands(), known, args.floor)
+    if args.accepted:
+        kept = accepted(rows, stock_rows())
+        write_accepted(kept)
+        print(f"accepted: {len(kept)} of {len(recorded_words())} answered", file=sys.stderr)
+        return 0
     batch = next_batch(rows, recorded_words(), args.size)
     print(f"candidates: {len(rows)} ({sum(r['source'] == 'brand' for r in rows)} brands), "
           f"batch of {len(batch)}", file=sys.stderr)

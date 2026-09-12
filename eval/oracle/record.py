@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ORACLE = ROOT / "eval" / "oracle"
 CORPUS = ORACLE / "corpus"
 DERIVED = Path.home() / ".smartspace-oracle" / "DD"
-SLICES = ["sloppy", "nospace", "context", "names", "slips", "probes", "carrier", "carrier2", "sweep", "sweep2", "drift"]
+SLICES = ["sloppy", "nospace", "context", "names", "slips", "words", "probes", "carrier", "carrier2", "sweep", "sweep2", "drift"]
 FIELDS = ["id", "slice", "typed", "offsets", "produced", "device", "ios", "recorded"]
 
 
@@ -75,7 +75,21 @@ def write_rows(path: Path, rows: dict):
             writer.writerow(rows[key])
 
 
-def run_slice(udid: str, slice_name: str, skip: set, log: Path):
+def words_batch(size: int) -> dict:
+    """The next batch of dictionary candidates (eval/words/candidates.py),
+    keyed like corpus rows. It never touches the corpus directory: the
+    batch is whatever stock has not answered yet."""
+    sys.path.insert(0, str(ROOT / "eval" / "words"))
+    sys.path.insert(0, str(ROOT / "engine" / "tools"))
+    import candidates
+    import wordlist
+    known = {lower for lower, _, _ in wordlist.records(accepted=False)}
+    rows = candidates.build(candidates.read_ssa(), candidates.read_brands(), known, 200)
+    batch = candidates.next_batch(rows, candidates.recorded_words(), size)
+    return {row["id"]: row for row in candidates.oracle_rows(batch)}
+
+
+def run_slice(udid: str, slice_name: str, skip: set, log: Path, words: dict = None):
     method = {"drift": "testRecordDrift",
               "carrier": "testRecordCarrierProbesFirstHalf",
               "carrier2": "testRecordCarrierProbesSecondHalf",
@@ -83,6 +97,9 @@ def run_slice(udid: str, slice_name: str, skip: set, log: Path):
               "sweep2": "testRecordSweepSecondHalf"}.get(
         slice_name, f"testRecord{slice_name.capitalize()}")
     env = dict(os.environ, TEST_RUNNER_ORACLE_SKIP=",".join(sorted(skip)))
+    if words:
+        env["TEST_RUNNER_ORACLE_WORDS"] = ",".join(
+            f"{rid}|{row['typed']}" for rid, row in sorted(words.items()))
     command = [
         "xcodebuild", "test-without-building", "-scheme", "SmartSpace",
         "-project", str(ROOT / "app" / "SmartSpace.xcodeproj"),
@@ -117,6 +134,8 @@ def main():
     parser.add_argument("slice", choices=SLICES)
     parser.add_argument("--merge-only", action="store_true",
                         help="merge an existing run's log without retyping it")
+    parser.add_argument("--size", type=int, default=150,
+                        help="words: how many candidates one run asks stock about")
     parser.add_argument("--no-reset", action="store_true",
                         help="keep the learned keyboard state; the drift slice "
                              "runs this way first, because a reset would wipe "
@@ -126,6 +145,9 @@ def main():
     device, ios = device_info(args.udid)
     today = datetime.date.today().isoformat()
     corpus = corpus_rows()
+    words = words_batch(args.size) if args.slice == "words" else None
+    if words:
+        corpus.update(words)
     drift = args.slice == "drift"
     # The drift file names the protocol that produced it. "warm" keeps the
     # learned keyboard state, which is the adaptation question; "reset" starts
@@ -148,6 +170,8 @@ def main():
 
     if drift:
         wanted = {rid for rid in corpus if rid in drift_ids()}
+    elif words is not None:
+        wanted = set(words)
     else:
         slice_name = args.slice.rstrip("2") if args.slice in ("carrier2", "sweep2") \
             else args.slice
@@ -159,7 +183,7 @@ def main():
     tag = "ORACLE-DRIFT" if drift else "ORACLE"
     # A killed run leaves its rows in the log. Merging from the log alone
     # keeps those rows: one 17-minute slice was killed mid-run on 2026-08-19.
-    output = log.read_text() if args.merge_only else run_slice(args.udid, args.slice, skip, log)
+    output = log.read_text() if args.merge_only else run_slice(args.udid, args.slice, skip, log, words)
     produced = parse(output, tag)
     if not produced:
         sys.exit(f"no rows recorded; read {log}")
