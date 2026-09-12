@@ -16,6 +16,8 @@ final class StockOracleTests: XCTestCase {
     func testRecordNospace() throws { try record(slice: "nospace") }
     func testRecordContext() throws { try record(slice: "context") }
     func testRecordNames() throws { try record(slice: "names") }
+    /// 150 one-key slips of common words, kind-stratified (eval/slips).
+    func testRecordSlips() throws { try record(slice: "slips") }
 
     /// Controlled probes (`eval/oracle/gen-probes.py`): one variable changes
     /// per row, so stock's answers model the rule rather than sampling it.

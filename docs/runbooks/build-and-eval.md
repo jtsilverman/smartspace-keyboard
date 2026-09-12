@@ -87,6 +87,7 @@ The accuracy suites are ordinary tests; `swift test --filter` runs them and prin
 | Typo bench, 320 pairs | `TypoBenchmarkTests` | Gates at 90% corrected, 23 miscorrections (`specs/autocorrect-parity.md` check 2) |
 | Protection, typo v4, completions | `KeyboardEvalV4Tests` | Protection gates at 100 dev / 97 test with every name and brand row untouched |
 | Stock oracle, 400 rows | `OracleAgreementTests` | Agreement with the stock recording per slice, dev and test halves, every dev miss |
+| Slip bench, 158k one-key slips | `SlipBenchTests` | Corrected / left alone / miscorrected per slip kind. The suite scores every 256th row (about 30s); `SLIP_BENCH_ROWS=all swift test -c release --filter SlipBenchTests` scores all of them |
 
 The loop scores all of them in one run: `python3 eval/loop/score.py` (`specs/autocorrect-loop.md`).
 
@@ -122,7 +123,13 @@ python3 eval/oracle/record.py <udid> names
 python3 eval/oracle/record.py <udid> nospace
 python3 eval/oracle/record.py <udid> context
 python3 eval/oracle/record.py <udid> sloppy
+python3 eval/oracle/record.py <udid> slips
 ```
+
+The `slips` slice is 150 one-key slips of common words, kind-stratified, written
+by `python3 eval/slips/gen_slips.py` from the stock key geometry
+(`specs/autocorrect-loop.md` unit 3). Rerun `gen-corpus.py` after it so the slice
+reaches `OracleCorpus.swift`.
 
 Rows land in `eval/oracle/stock-<date>.tsv`. Rerunning a slice resumes: ids
 already in the file are skipped, so a run killed at row 90 costs 90 rows, not

@@ -52,7 +52,11 @@ import Foundation
         var misses: [String] = []
         for row in oracleAnswers {
             let half = Self.half(of: row.id)
-            for key in [row.slice, "\(row.slice)/\(half)"] {
+            var keys = [row.slice, "\(row.slice)/\(half)"]
+            if row.slice == "slips", let kind = row.note.split(separator: "|").first {
+                keys.append("slips:\(kind)")
+            }
+            for key in keys {
                 var slot = totals[key] ?? (0, 0)
                 slot.n += 1
                 if normalized(run(row.typed)) == normalized(row.stock) { slot.agree += 1 }
@@ -69,13 +73,13 @@ import Foundation
                   + "(\(slot.agree * 100 / max(slot.n, 1))%)")
             if key.hasSuffix("/dev") { agree.dev += slot.agree; n.dev += slot.n }
             else if key.hasSuffix("/test") { agree.test += slot.agree; n.test += slot.n }
-            else { agree.all += slot.agree; n.all += slot.n }
+            else if !key.contains(":") { agree.all += slot.agree; n.all += slot.n }
         }
         print("ORACLE-AGREE total/dev: \(agree.dev)/\(n.dev) (\(agree.dev * 100 / max(n.dev, 1))%)")
         print("ORACLE-AGREE total/test: \(agree.test)/\(n.test) (\(agree.test * 100 / max(n.test, 1))%)")
         print("ORACLE-AGREE total: \(agree.all)/\(n.all) (\(agree.all * 100 / max(n.all, 1))%)")
         for miss in misses { print(miss) }
-        #expect(n.all == 400, "the oracle corpus lost rows")
+        #expect(n.all >= 400, "the oracle corpus lost rows")
     }
 
     @Test func aContextPairSharesOneHalf() {

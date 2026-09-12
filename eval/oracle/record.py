@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ORACLE = ROOT / "eval" / "oracle"
 CORPUS = ORACLE / "corpus"
 DERIVED = Path.home() / ".smartspace-oracle" / "DD"
-SLICES = ["sloppy", "nospace", "context", "names", "probes", "carrier", "carrier2", "sweep", "sweep2", "drift"]
+SLICES = ["sloppy", "nospace", "context", "names", "slips", "probes", "carrier", "carrier2", "sweep", "sweep2", "drift"]
 FIELDS = ["id", "slice", "typed", "offsets", "produced", "device", "ios", "recorded"]
 
 

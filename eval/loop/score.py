@@ -24,7 +24,7 @@ def parse(text: str) -> dict:
         "build_ok": False,
         "oracle": {},
         "misses": [],
-        "typo": {}, "typo4": {},
+        "typo": {}, "typo4": {}, "slips": {},
         "protect": {}, "completions": {},
         "failed": [],
         "tests_total": 0,
@@ -43,6 +43,11 @@ def parse(text: str) -> dict:
             a, n = map(int, FRACTION.search(line).groups())
             mis = int(re.search(r"miscorrected (\d+)", line).group(1))
             out[slot] = {"corrected": a, "n": n, "miscorrected": mis}
+        elif line.startswith("SLIP-BENCH "):
+            kind, rest = line[len("SLIP-BENCH "):].split(":", 1)
+            a, n = map(int, FRACTION.search(rest).groups())
+            mis = int(re.search(r"miscorrected (\d+)", rest).group(1))
+            out["slips"][kind.strip()] = {"corrected": a, "n": n, "miscorrected": mis}
         elif line.startswith("[PROTECT ") or line.startswith("[COMPLETIONS "):
             name = line[1:line.index("]")]
             slot = "protect" if name.startswith("PROTECT") else "completions"
