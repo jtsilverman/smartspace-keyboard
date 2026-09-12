@@ -48,3 +48,41 @@ top 1,000 for a year and sex, 1880 to 2008. 6,782 names.
 (2,961 of them, Nathen, Jesica and Danial among them) after the texting
 lexicon, so a name never outranks a common word at a distance tie. Top-1000
 is the known limit: Kylian and Kaius are not in it.
+
+# ssa-names.tsv
+
+Every US first name in the Social Security Administration's national baby
+names files (`yobYYYY.txt`, 1880 to 2024), both sexes summed: births since
+1980 and births all time. 104,819 names.
+
+- Source: the SSA files at https://www.ssa.gov/oact/babynames/names.zip
+  (ssa.gov refuses non-browser downloads; retrieved through the mirror
+  https://github.com/dcadata/name-finder, `data/names/`, on 2026-09-12)
+- Licence: US government work, public domain (17 U.S.C. 105); CC0 on
+  https://catalog.data.gov/dataset/baby-names-from-social-security-card-applications-national-data
+- Aggregated by `python3 eval/words/candidates.py --aggregate <dir>`
+
+Feeds the dictionary loop (`specs/autocorrect-loop.md` units 1 and 2): a name
+enters the word list only after the stock keyboard leaves it as typed.
+`us-first-names.txt` (top-1000 per year to 2008) stays as the list the engine
+already ships; this file is the wider candidate pool.
+
+# wikidata-brands.tsv
+
+English labels of Wikidata items that are a business (Q4830453), brand
+(Q431289), public company (Q891723), online service (Q7094076), franchise
+(Q1668024) or software (Q7889), with 15 or more sitelinks, kept where the label
+is one ASCII token of three or more characters. 1,841 labels with their
+sitelink count.
+
+- Source: https://query.wikidata.org/sparql, retrieved 2026-09-12. Query:
+  `SELECT DISTINCT ?label (MAX(?links) AS ?n) WHERE { VALUES ?cls { wd:Q4830453
+  wd:Q431289 wd:Q891723 wd:Q7094076 wd:Q1668024 wd:Q7889 } ?item wdt:P31 ?cls ;
+  wikibase:sitelinks ?links ; rdfs:label ?label . FILTER(LANG(?label)="en")
+  FILTER(?links >= 15) } GROUP BY ?label ORDER BY DESC(?n) LIMIT 20000`
+- Licence: CC0 (https://www.wikidata.org/wiki/Wikidata:Licensing). CC0 waives
+  copyright, not trademark; the list names brands, it does not use them.
+
+Feeds the dictionary loop the same way: a brand enters the word list only after
+stock leaves it as typed. The noise a class query carries ("email" is an
+instance of online service) is what the stock filter is for.

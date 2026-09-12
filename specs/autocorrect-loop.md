@@ -175,10 +175,15 @@ and `git log --author=autocorrect-loop`.
 ## Progress
 
 - [x] 0 judge -- verdict and allowed green, 13 tests (2026-09-12)
-- [ ] 1 word sources
+- [x] 1 word sources -- ssa-names.tsv (104,819 names, 1880-2024) and
+      wikidata-brands.tsv (1,841 single-token labels) vendored CC0;
+      candidates.py orders 17,726 candidates at floor 200, brands first. SCOWL
+      deferred: the AOSP list is wider and the hunspell form needs affix expansion
+- [ ] 2 stock membership
 - [ ] 2 stock membership
 - [~] 3 slip corpus -- 158k slips generated, bench in the suite (88% corrected,
       splits 26%), adjacency pinned; the 150-row sample is not yet recorded
-      from stock. Lead: an unknown word costs the engine 46ms in a debug build
+      from stock. The full 158k bench takes 175s in a release build (1.1ms a row;
+      the 46ms was debug overhead). Split slips: 23% corrected, 8,664 miscorrected
 - [ ] 4 teacher text
 - [ ] 5 student pilot

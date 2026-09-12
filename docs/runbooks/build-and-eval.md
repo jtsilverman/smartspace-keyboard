@@ -172,6 +172,21 @@ python3 engine/tools/gen-wordpairs.py
 Run them in that order. The pair table refers to words by their position in the
 word list. Both scripts reproduce their file byte for byte from the same inputs.
 
+## Ask stock about new words
+
+The dictionary loop (`specs/autocorrect-loop.md` units 1 and 2) widens the word list
+from `engine/tools/vendor/ssa-names.tsv` and `wikidata-brands.tsv`, brands first, then
+names by births since 1980. A word enters the list only after the stock keyboard
+leaves it as typed.
+
+```
+python3 eval/words/candidates.py --size 150      # the next batch, as oracle rows
+python3 eval/words/candidates.py --aggregate <dir of SSA yobYYYY.txt>   # rebuild ssa-names.tsv
+```
+
+At the default floor of 200 births since 1980 there are 17,726 candidates, about
+118 batches of 150.
+
 ## Regenerate a corpus
 
 Corpus regeneration is its own commit and never rides along with an engine change.
