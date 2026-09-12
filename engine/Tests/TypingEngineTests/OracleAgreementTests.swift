@@ -10,7 +10,19 @@ import Foundation
 /// the corpus is the wrong size, because the recording is a recording. Its
 /// drift gate failed on 2026-08-20 with two rows in thirty moving, so a row we
 /// disagree on is a lead, never a verdict.
+///
+/// The rows fall into two halves by row number (specs/autocorrect-loop.md):
+/// even rows are dev and every dev miss prints; odd rows are test and only
+/// the count prints. A context pair shares its number, so both sentences of
+/// a pair sit in one half. The loop's proposer reads dev and is scored on
+/// both, and a test half that drops while dev rises is the overfit signal.
 @Suite struct OracleAgreementTests {
+
+    /// "dev" for an even row number, "test" for an odd one.
+    static func half(of id: String) -> String {
+        let digits = id.drop(while: { !$0.isNumber }).prefix(while: \.isNumber)
+        return (Int(digits) ?? 0) % 2 == 0 ? "dev" : "test"
+    }
 
     /// Types a row the way the keyboard does: each space commits the word
     /// before it through the bar controller, which owns the session memory a
@@ -37,28 +49,38 @@ import Foundation
 
     @Test func agreementWithStockPerSlice() {
         var totals: [String: (agree: Int, n: Int)] = [:]
-        var misses: [String: [String]] = [:]
+        var misses: [String] = []
         for row in oracleAnswers {
-            var slot = totals[row.slice] ?? (0, 0)
-            slot.n += 1
-            if normalized(run(row.typed)) == normalized(row.stock) {
-                slot.agree += 1
-            } else if (misses[row.slice]?.count ?? 0) < 5 {
-                misses[row.slice, default: []].append(
-                    "\(row.id) \(row.typed.debugDescription) -> "
+            let half = Self.half(of: row.id)
+            for key in [row.slice, "\(row.slice)/\(half)"] {
+                var slot = totals[key] ?? (0, 0)
+                slot.n += 1
+                if normalized(run(row.typed)) == normalized(row.stock) { slot.agree += 1 }
+                totals[key] = slot
+            }
+            if half == "dev", normalized(run(row.typed)) != normalized(row.stock) {
+                misses.append("ORACLE-MISS \(row.id) \(row.typed.debugDescription) -> "
                     + "\(run(row.typed).debugDescription) stock \(row.stock.debugDescription)")
             }
-            totals[row.slice] = slot
         }
-        var agree = 0, n = 0
-        for (slice, slot) in totals.sorted(by: { $0.key < $1.key }) {
-            print("ORACLE-AGREE \(slice): \(slot.agree)/\(slot.n) "
+        var agree = (all: 0, dev: 0, test: 0), n = (all: 0, dev: 0, test: 0)
+        for (key, slot) in totals.sorted(by: { $0.key < $1.key }) {
+            print("ORACLE-AGREE \(key): \(slot.agree)/\(slot.n) "
                   + "(\(slot.agree * 100 / max(slot.n, 1))%)")
-            for miss in misses[slice] ?? [] { print("  \(miss)") }
-            agree += slot.agree
-            n += slot.n
+            if key.hasSuffix("/dev") { agree.dev += slot.agree; n.dev += slot.n }
+            else if key.hasSuffix("/test") { agree.test += slot.agree; n.test += slot.n }
+            else { agree.all += slot.agree; n.all += slot.n }
         }
-        print("ORACLE-AGREE total: \(agree)/\(n) (\(agree * 100 / max(n, 1))%)")
-        #expect(n == 400, "the oracle corpus lost rows")
+        print("ORACLE-AGREE total/dev: \(agree.dev)/\(n.dev) (\(agree.dev * 100 / max(n.dev, 1))%)")
+        print("ORACLE-AGREE total/test: \(agree.test)/\(n.test) (\(agree.test * 100 / max(n.test, 1))%)")
+        print("ORACLE-AGREE total: \(agree.all)/\(n.all) (\(agree.all * 100 / max(n.all, 1))%)")
+        for miss in misses { print(miss) }
+        #expect(n.all == 400, "the oracle corpus lost rows")
+    }
+
+    @Test func aContextPairSharesOneHalf() {
+        #expect(Self.half(of: "ctx-003a") == Self.half(of: "ctx-003b"))
+        #expect(Self.half(of: "ctx-003a") == "test")
+        #expect(Self.half(of: "nosp-018") == "dev")
     }
 }
