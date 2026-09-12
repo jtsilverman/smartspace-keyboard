@@ -179,10 +179,14 @@ and `git log --author=autocorrect-loop`.
       wikidata-brands.tsv (1,841 single-token labels) vendored CC0;
       candidates.py orders 17,726 candidates at floor 200, brands first. SCOWL
       deferred: the AOSP list is wider and the hunspell form needs affix expansion
-- [~] 2 stock membership -- recorder words slice, accepted-words.tsv, the words loop
-      driver built; first batch not yet recorded (simulator busy with the slips slice)
-- [~] 2 stock membership -- recorder words slice, accepted-words.tsv, the words loop
-      driver built; first batch not yet recorded (simulator busy with the slips slice)
+- [x] 2 stock membership -- live 2026-09-12: batch 1 of 150 brands asked stock,
+      88 accepted (SpaceX, Uber, GitHub; dropped a24, arxiv, BlackRock), kept by the
+      judge with every number flat, two commits authored autocorrect-loop on
+      loop/words. The loop runs on in ../smartspace-words, 9 batches queued
+- [x] 2 stock membership -- live 2026-09-12: batch 1 of 150 brands asked stock,
+      88 accepted (SpaceX, Uber, GitHub; dropped a24, arxiv, BlackRock), kept by the
+      judge with every number flat, two commits authored autocorrect-loop on
+      loop/words. The loop runs on in ../smartspace-words, 9 batches queued
 - [x] 3 slip corpus -- 158k slips generated, bench in the suite (88% corrected,
       splits 26%), adjacency pinned; the 150-row sample recorded from stock
       2026-09-12: agreement 110/150 (drop 15/30, split 13/30 are the work list). The full 158k bench takes 175s in a release build (1.1ms a row;
