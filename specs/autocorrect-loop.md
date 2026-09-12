@@ -179,11 +179,15 @@ and `git log --author=autocorrect-loop`.
       wikidata-brands.tsv (1,841 single-token labels) vendored CC0;
       candidates.py orders 17,726 candidates at floor 200, brands first. SCOWL
       deferred: the AOSP list is wider and the hunspell form needs affix expansion
-- [ ] 2 stock membership
-- [ ] 2 stock membership
+- [~] 2 stock membership -- recorder words slice, accepted-words.tsv, the words loop
+      driver built; first batch not yet recorded (simulator busy with the slips slice)
+- [~] 2 stock membership -- recorder words slice, accepted-words.tsv, the words loop
+      driver built; first batch not yet recorded (simulator busy with the slips slice)
 - [~] 3 slip corpus -- 158k slips generated, bench in the suite (88% corrected,
       splits 26%), adjacency pinned; the 150-row sample is not yet recorded
       from stock. The full 158k bench takes 175s in a release build (1.1ms a row;
       the 46ms was debug overhead). Split slips: 23% corrected, 8,664 miscorrected
-- [ ] 4 teacher text
+- [~] 4 teacher text -- NUS SMS 16,265 messages in; teach.py writes about two
+      messages a second from qwen2.5:7b on the Studio; the 200k run started
+      2026-09-12
 - [ ] 5 student pilot

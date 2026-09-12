@@ -202,6 +202,21 @@ both authored `autocorrect-loop`; `eval/loop/results.tsv` holds one line per bat
 The UI test bundle must be built (`xcodebuild build-for-testing`, above) after any
 change to `StockOracleTests.swift`; the batch itself needs no rebuild.
 
+## Write teacher text
+
+The context model's training text (`specs/autocorrect-loop.md` unit 4) is the NUS SMS
+corpus plus messages a local model writes on the Studio. Open a tunnel to the Studio's
+ollama once, then run the teacher; it appends to `eval/corpus/teacher/<model>-seed<n>.txt`
+and deduplicates against every file already there.
+
+```
+ssh -f -N -L 11435:localhost:11434 studio
+python3 eval/corpus/teach.py --url http://localhost:11435 --model qwen2.5:7b --count 200000 --seed 1
+```
+
+One stream writes about two messages a second (measured 2026-09-12: 63 in 30s).
+ollama on the Studio lives in `~/ollama` (`~/ollama/ollama serve`).
+
 ## Regenerate a corpus
 
 Corpus regeneration is its own commit and never rides along with an engine change.
