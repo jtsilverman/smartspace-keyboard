@@ -60,3 +60,92 @@ class ParseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+import copy  # noqa: E402
+
+import run  # noqa: E402
+
+BASE = score.parse(TRANSCRIPT)
+ENGINE = "engine/Sources/TypingEngine/CorrectionEngine.swift"
+
+
+def after(**edits):
+    """A copy of BASE with dotted keys overwritten: oracle.total/dev=[170, 200]."""
+    s = copy.deepcopy(BASE)
+    for key, value in edits.items():
+        head, _, tail = key.partition("__")
+        if tail:
+            s[head][tail.replace("_", "/")] = value
+        else:
+            s[head] = value
+    return s
+
+
+class AllowlistTests(unittest.TestCase):
+    def test_engine_sources_and_tests_are_the_loops_to_edit(self):
+        self.assertTrue(run.allowed(ENGINE))
+        self.assertTrue(run.allowed("engine/Tests/TypingEngineTests/ContextRerankTests.swift"))
+
+    def test_word_tables_corpora_oracle_and_benches_are_not(self):
+        for path in [
+            "engine/Sources/TypingEngine/Resources/wordrank.bin",
+            "engine/Tests/TypingEngineTests/OracleAnswers.swift",
+            "engine/Tests/TypingEngineTests/OracleAgreementTests.swift",
+            "engine/Tests/TypingEngineTests/ProtectCorpus.swift",
+            "engine/Tests/TypingEngineTests/TypoBenchmarkTests.swift",
+            "engine/Tests/TypingEngineTests/KeyboardEvalV4Tests.swift",
+            "engine/tools/gen-wordrank.py",
+            "EVAL.md",
+            "app/Shared/SystemSpellChecker.swift",
+        ]:
+            self.assertFalse(run.allowed(path), path)
+
+
+class VerdictTests(unittest.TestCase):
+    def test_dev_up_and_test_flat_is_kept(self):
+        kept, reason = run.verdict(BASE, after(oracle__total_dev=[170, 200]), [ENGINE])
+        self.assertTrue(kept, reason)
+        self.assertIn("dev 164->170", reason)
+
+    def test_dev_flat_is_reverted(self):
+        kept, reason = run.verdict(BASE, after(), [ENGINE])
+        self.assertFalse(kept)
+        self.assertIn("dev", reason)
+
+    def test_test_half_down_is_reverted_even_when_dev_rises(self):
+        kept, reason = run.verdict(
+            BASE, after(oracle__total_dev=[170, 200], oracle__total_test=[168, 200]), [ENGINE])
+        self.assertFalse(kept)
+        self.assertIn("test", reason)
+
+    def test_a_guard_drop_is_reverted(self):
+        worse = after(oracle__total_dev=[170, 200])
+        worse["typo"]["miscorrected"] = 19
+        kept, reason = run.verdict(BASE, worse, [ENGINE])
+        self.assertFalse(kept)
+        self.assertIn("miscorrected", reason)
+
+    def test_a_new_failing_test_is_reverted_and_an_old_one_is_not(self):
+        s = after(oracle__total_dev=[170, 200])
+        self.assertTrue(run.verdict(BASE, s, [ENGINE])[0])
+        s["failed"] = ["protectionTestReport", "splitGuard"]
+        kept, reason = run.verdict(BASE, s, [ENGINE])
+        self.assertFalse(kept)
+        self.assertIn("splitGuard", reason)
+
+    def test_a_file_outside_the_allowlist_is_reverted(self):
+        kept, reason = run.verdict(
+            BASE, after(oracle__total_dev=[170, 200]),
+            [ENGINE, "engine/Tests/TypingEngineTests/OracleAnswers.swift"])
+        self.assertFalse(kept)
+        self.assertIn("OracleAnswers.swift", reason)
+
+    def test_a_broken_build_is_reverted(self):
+        kept, reason = run.verdict(BASE, score.parse("error: x\n"), [ENGINE])
+        self.assertFalse(kept)
+        self.assertIn("build", reason)
+
+    def test_no_change_is_reverted(self):
+        kept, reason = run.verdict(BASE, after(oracle__total_dev=[170, 200]), [])
+        self.assertFalse(kept)
