@@ -332,4 +332,19 @@ private func controller(
         }
         #expect(field == "see you tomorrow")
     }
+
+    /// A word the user genuinely typed later is never mistaken for the
+    /// fragment of a correction made words ago. "tomo" -> "too" happened
+    /// five words back; the "too" before "rrow" is the real word.
+    @Test func aCorrectionMadeWordsAgoDoesNotReviseALaterWord() {
+        var controller = AutocorrectController(checker: DictionarySpellChecker())
+        var field = ""
+        for word in ["see", "you", "tomo", "yeah", "ok", "fine", "too", "rrow"] {
+            field += (field.isEmpty ? "" : " ") + word
+            if case .replace(let original, let corrected, _) = controller.wordCommitted(context: field) {
+                field = String(field.dropLast(original.count)) + corrected
+            }
+        }
+        #expect(field.hasPrefix("see you too yeah ok fine too "), "\(field)")
+    }
 }
