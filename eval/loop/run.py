@@ -113,9 +113,18 @@ def sh(*cmd, cwd=ROOT, check=True):
     return subprocess.run(list(cmd), cwd=cwd, capture_output=True, text=True, check=check)
 
 
+def is_loop_output(path: str) -> bool:
+    """The loop's own record, never a judged change: results.tsv, and the
+    recorder log a failed batch leaves behind (a kept batch commits its log
+    with the recording)."""
+    return path == "eval/loop/results.tsv" or (
+        path.startswith("eval/oracle/record-words-") and path.endswith(".log"))
+
+
 def changed_files() -> list:
     out = sh("git", "status", "--short", "--untracked-files=all").stdout
-    return sorted(line[3:] for line in out.splitlines() if line.strip())
+    return sorted(line[3:] for line in out.splitlines()
+                  if line.strip() and not is_loop_output(line[3:]))
 
 
 def log_result(loop: str, batch: int, kept: bool, reason: str, before: dict, after: dict, note: str):
@@ -156,8 +165,10 @@ def words_loop(udid: str, batches: int, size: int) -> int:
         accepted = sh(sys.executable, str(ROOT / "eval/words/candidates.py"), "--accepted").stderr.strip()
         sh(sys.executable, str(ROOT / "engine/tools/gen-wordrank.py"))
         sh(sys.executable, str(ROOT / "engine/tools/gen-wordpairs.py"))
-        # The recording itself is evidence, never a judged change.
-        recordings = [f for f in changed_files() if f.startswith("eval/oracle/")]
+        # The recording and its log are evidence, never a judged change.
+        status = sh("git", "status", "--short", "--untracked-files=all").stdout
+        recordings = [line[3:] for line in status.splitlines()
+                      if line[3:].startswith("eval/oracle/")]
         for path in recordings:
             sh("git", "add", path)
         sh("git", "commit", "-q", "--author", AUTHOR, "-m",

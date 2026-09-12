@@ -177,3 +177,11 @@ class WordsLoopVerdictTests(unittest.TestCase):
         kept, reason = run.verdict(BASE, after(), self.WORDS + [ENGINE], loop="words")
         self.assertFalse(kept)
         self.assertIn("CorrectionEngine", reason)
+
+
+class LoopOutputTests(unittest.TestCase):
+    def test_the_results_log_and_a_failed_batch_log_are_never_judged(self):
+        self.assertTrue(run.is_loop_output("eval/loop/results.tsv"))
+        self.assertTrue(run.is_loop_output("eval/oracle/record-words-2026-09-12.log"))
+        self.assertFalse(run.is_loop_output("eval/oracle/stock-2026-09-12.tsv"))
+        self.assertFalse(run.is_loop_output("engine/tools/vendor/accepted-words.tsv"))
