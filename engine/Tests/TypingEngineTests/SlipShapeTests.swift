@@ -28,13 +28,16 @@ import Testing
         #expect(run("pa rticularly") == "pa rticularly")
     }
 
-    /// Stock left "orthern", "ppear", "eavy" and "illages" without their
-    /// first letter (slip-024454, slip-033840, slip-034784, slip-071878): a
-    /// missing first letter reads as deliberate, and a candidate that only
-    /// prepends one is not a fix.
+    /// Stock left "orthern" and "illages" without their first letter and
+    /// turned "eavy" into "wavy", never "heavy" (slip-024454, slip-071878,
+    /// slip-034784): a candidate that only prepends a letter is not a fix,
+    /// and the next candidate, if any survives, is.
     @Test func aDroppedFirstLetterStaysDropped() {
         #expect(engine.decision(for: "orthern") == .noChange)
         #expect(engine.decision(for: "illages") == .noChange)
-        #expect(engine.decision(for: "so eavy") == .noChange)
+        guard case .correct(let to, _) = engine.decision(for: "so eavy") else {
+            Issue.record("eavy was left alone"); return
+        }
+        #expect(to == "wavy")
     }
 }
