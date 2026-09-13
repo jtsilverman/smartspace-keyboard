@@ -194,8 +194,10 @@ and `git log --author=autocorrect-loop`.
 - [~] 4 teacher text -- NUS SMS 16,265 messages in; teach.py writes about two
       messages a second from qwen2.5:7b on the Studio; the 200k run started
       2026-09-12
-- [~] 5 student pilot -- ContextModel (1.74M parameters, float16, mapped) behind
-      ContextScoring; trained on 16,926 sentences the pilot ties the pair table
-      (context/dev 35/50, nospace/dev 32/50, 2 of 200 rows differ). Rerun when the
-      teacher run reaches 200k sentences; the model only reaches distance ties and
-      split decisions, and most context misses are stock leaving a typo alone
+- [!] 5 student pilot -- STOPPED, reopened with Jake 2026-09-13. Retrained on
+      216,928 sentences (NUS plus 200k teacher messages) the student reaches dev
+      perplexity 53 (was 132) and still ties the pair table on the pilot:
+      context/dev 35/50, nospace/dev 32/50 for both. The seam is the limit, not
+      the model: ContextScoring is consulted only at a distance tie and in the
+      split decision, and most context misses are stock leaving a typo alone,
+      which no ranking can reach. Check 6 cannot close as written

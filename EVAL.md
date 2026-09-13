@@ -118,8 +118,12 @@ The student (`ContextModel`, 1.74M parameters, LSTM 384 over a 10k word vocabula
 teacher text) to dev perplexity 132. Behind `ContextScoring` it ties the pair table
 on the pilot: context/dev 35/50 and nospace/dev 32/50 for both, with 2 of the 200
 rows deciding differently. The model reaches only distance ties and split
-decisions; most context misses are stock leaving a typo alone. Rerun at 200k
-sentences.
+decisions; most context misses are stock leaving a typo alone.
+
+Rerun 2026-09-13 on 216,928 sentences (NUS plus 200k teacher messages, four
+epochs, 117s an epoch on the mini): dev perplexity 53.1. The pilot still ties,
+35/50 and 32/50 for both models. The unit stopped and reopened with Jake: the
+seam, not the model, is the limit.
 
 ## Missed spaces: what stock splits, and what we can (unit 3)
 
