@@ -28,6 +28,13 @@ import Testing
         #expect(run("pa rticularly") == "pa rticularly")
     }
 
+    /// The trade the re-add rule makes, pinned: "a lready" has "ready" one
+    /// edit away, and it still stays as typed, because the recorded rows say
+    /// stock leaves a fragment pair whole rather than fixing its second half.
+    @Test func theReaddRuleLeavesTheWholeWordEvenWhenAnotherFixExists() {
+        #expect(run("a lready") == "a lready")
+    }
+
     /// Stock left "orthern" and "illages" without their first letter and
     /// turned "eavy" into "wavy", never "heavy" (slip-024454, slip-071878,
     /// slip-034784): a candidate that only prepends a letter is not a fix,

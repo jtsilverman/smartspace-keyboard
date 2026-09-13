@@ -129,7 +129,11 @@ public struct CorrectionEngine: Sendable {
         let lower = word.lowercased()
         // The join refuses a one-letter fragment on purpose ("t ournament");
         // a candidate that puts that fragment back onto the next token is
-        // the same join in disguise, and stock left those rows as typed.
+        // the same join in disguise, and stock left those rows as typed:
+        // the whole word stays, not just that candidate. Dropping only the
+        // join-shaped candidate gave "t ornament" and "c parity", which
+        // stock never produced, and costs "a lready" -> "a ready", a fix
+        // stock was never recorded making either (reviewer, 2026-09-13).
         if let before = WordBoundary.lastWord(in: prefix.trimmingCharacters(in: .whitespaces)),
            raw.contains(where: { $0.lowercased() == before.lowercased() + lower }) {
             return .noChange
