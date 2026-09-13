@@ -1,13 +1,16 @@
-import XCTest
-import TypingEngine
+import Testing
+import Foundation
+@testable import TypingEngine
 
-/// Keyboard-wide blind eval v4 (specs/keyboard-eval.md): the checker-dependent
-/// sets, scored through the real CorrectionEngine + DictionarySpellChecker
-/// like the v3 typo benchmark. Dev misses may be studied; test halves aggregate only.
+/// Keyboard-wide blind eval v4 (specs/keyboard-eval.md): the sets that used to
+/// need the simulator's UITextChecker, scored through the real CorrectionEngine
+/// and DictionarySpellChecker. Dev misses may be studied; test halves aggregate
+/// only. Pure Swift since unit 1 of specs/autocorrect-parity.md, so they run
+/// under swift test.
 
 /// Protection set: strings autocorrect must leave untouched. Any .correct
-/// decision is a failure (the expensive kind -- mangling intended text).
-final class ProtectionEvalTests: XCTestCase {
+/// decision is a failure (the expensive kind: mangling intended text).
+@Suite struct ProtectionEvalTests {
     /// Check 2 of specs/autocorrect-parity.md: the frozen protection corpus
     /// holds where UITextChecker left it (EVAL.md, 100 dev / 97 test), and
     /// every name and brand row passes. A mangled name is the most expensive
@@ -36,30 +39,29 @@ final class ProtectionEvalTests: XCTestCase {
                 print("  touched \(sub): \(ids.count) \(ids.joined(separator: " "))")
             }
         }
-        XCTAssertEqual(ok + missesBySub.values.map(\.count).reduce(0, +), rows.count)
-        XCTAssertGreaterThanOrEqual(ok * 100 / max(rows.count, 1), floor,
-                                    "left alone \(ok)/\(rows.count)")
+        #expect(ok + missesBySub.values.map(\.count).reduce(0, +) == rows.count)
+        #expect(ok * 100 / max(rows.count, 1) >= floor, "left alone \(ok)/\(rows.count)")
         for sub in ["name", "brand"] {
-            XCTAssertEqual(missesBySub[sub]?.count ?? 0, 0,
-                           "\(sub) rows touched: \(missesBySub[sub] ?? [])")
+            #expect((missesBySub[sub]?.count ?? 0) == 0,
+                    "\(sub) rows touched: \(missesBySub[sub] ?? [])")
         }
     }
 
-    func testProtectionDevReport() {
+    @Test func protectionDevReport() {
         score(protectCorpus.filter { $0.half == "dev" }, name: "PROTECT DEV",
               printMisses: true, floor: 100)
     }
 
-    func testProtectionTestReport() {
+    @Test func protectionTestReport() {
         score(protectCorpus.filter { $0.half == "test" }, name: "PROTECT TEST",
               printMisses: false, floor: 97)
     }
 }
 
-/// v4 typo pairs (casual register, modern vocabulary) -- same scoring as the
+/// v4 typo pairs (casual register, modern vocabulary): same scoring as the
 /// frozen v3 typo benchmark, separate corpus.
-final class TypoBenchmarkV4Tests: XCTestCase {
-    func testTypoV4Report() {
+@Suite struct TypoBenchmarkV4Tests {
+    @Test func typoV4Report() {
         let engine = CorrectionEngine(checker: DictionarySpellChecker())
         var corrected = 0, leftAlone = 0, miscorrected = 0
         var byCategory: [String: (n: Int, ok: Int, mis: Int)] = [:]
@@ -88,26 +90,19 @@ final class TypoBenchmarkV4Tests: XCTestCase {
         for (cat, s) in byCategory.sorted(by: { $0.key < $1.key }) {
             print("  \(cat): corrected \(s.ok)/\(s.n)  miscorrected \(s.mis)")
         }
-        XCTAssertEqual(corrected + leftAlone + miscorrected, n)
+        #expect(corrected + leftAlone + miscorrected == n)
     }
 }
 
 /// Completions: prefix -> any acceptable completion in the top 3 offered.
 /// acceptable == ["NONE"] passes when nothing (or only the prefix) is offered.
-final class CompletionEvalTests: XCTestCase {
+@Suite struct CompletionEvalTests {
     private func score(_ rows: [CompletionCase], name: String, printMisses: Bool) {
         let checker = DictionarySpellChecker()
         var ok = 0
         var missesBySub: [String: [String]] = [:]
         for r in rows {
-            // First dictionary call after process start can return [] once
-            // (v3 benchmark observation); retry briefly.
-            var offered: [String] = []
-            for _ in 0..<3 {
-                offered = Array(checker.completions(for: r.prefix).prefix(3))
-                if !offered.isEmpty { break }
-                Thread.sleep(forTimeInterval: 0.2)
-            }
+            let offered = Array(checker.completions(for: r.prefix).prefix(3))
             let pass: Bool
             if r.acceptable == ["NONE"] {
                 pass = offered.allSatisfy { $0.lowercased() == r.prefix.lowercased() }
@@ -128,14 +123,14 @@ final class CompletionEvalTests: XCTestCase {
                 print("  miss \(sub): \(ids.count) \(ids.joined(separator: " "))")
             }
         }
-        XCTAssertGreaterThan(ok, 0)
+        #expect(ok > 0)
     }
 
-    func testCompletionsDevReport() {
+    @Test func completionsDevReport() {
         score(completionCorpus.filter { $0.half == "dev" }, name: "COMPLETIONS DEV", printMisses: true)
     }
 
-    func testCompletionsTestReport() {
+    @Test func completionsTestReport() {
         score(completionCorpus.filter { $0.half == "test" }, name: "COMPLETIONS TEST", printMisses: false)
     }
 }

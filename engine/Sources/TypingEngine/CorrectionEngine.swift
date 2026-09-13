@@ -125,7 +125,24 @@ public struct CorrectionEngine: Sendable {
         // checker's guesses for both mangle intended text.
         if word.count <= 2 { return .noChange }
         if hasLetterRun(word, of: 3) { return .noChange }
-        var suggestions = checker.suggestions(for: word)
+        let raw = checker.suggestions(for: word)
+        let lower = word.lowercased()
+        // The join refuses a one-letter fragment on purpose ("t ournament");
+        // a candidate that puts that fragment back onto the next token is
+        // the same join in disguise, and stock left those rows as typed.
+        if let before = WordBoundary.lastWord(in: prefix.trimmingCharacters(in: .whitespaces)),
+           raw.contains(where: { $0.lowercased() == before.lowercased() + lower }) {
+            return .noChange
+        }
+        // A candidate that only puts a letter in front of the word is not a
+        // fix: stock left "orthern" and "illages" as typed and took "eavy" to
+        // "wavy", never "heavy" (the recorded slips slice, 2026-09-12). A
+        // missing first letter reads as deliberate, so the word is not split
+        // either; a one-letter swap may still land.
+        let prepends = { (c: String) in c.count == word.count + 1 && c.lowercased().dropFirst() == lower }
+        let deliberate = raw.contains(where: prepends)
+        var suggestions = raw
+            .filter { !prepends($0) && !(deliberate && $0.contains(" ")) }
             .filter { !$0.contains(" ") || takesSplit(halves(of: $0)) }
             .map { recased($0, like: word) }
         // Most committed words are spelled right and the list is empty; the
@@ -141,7 +158,6 @@ public struct CorrectionEngine: Sendable {
         // previous sentence says nothing about this one.
         let previous = sentenceStart ? []
             : WordBoundary.lastWord(in: prefix.trimmingCharacters(in: .whitespaces)).map { [$0] } ?? []
-        let lower = word.lowercased()
         suggestions = suggestions.enumerated()
             .map { (index: $0.offset, text: $0.element,
                     distance: typoDistance(from: lower, to: $0.element.lowercased()),

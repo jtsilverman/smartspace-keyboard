@@ -16,6 +16,23 @@ final class StockOracleTests: XCTestCase {
     func testRecordNospace() throws { try record(slice: "nospace") }
     func testRecordContext() throws { try record(slice: "context") }
     func testRecordNames() throws { try record(slice: "names") }
+    /// 150 one-key slips of common words, kind-stratified (eval/slips).
+    func testRecordSlips() throws { try record(slice: "slips") }
+
+    /// Dictionary candidates (eval/words/candidates.py) inside a lowercase
+    /// carrier. The batch rides in ORACLE_WORDS as `id|typed,id|typed`, so
+    /// no corpus file and no rebuild per batch: the loop asks stock about
+    /// thousands of words over days.
+    func testRecordWords() throws {
+        let rows = (ProcessInfo.processInfo.environment["ORACLE_WORDS"] ?? "")
+            .split(separator: ",").compactMap { entry -> OracleRow? in
+                let parts = entry.split(separator: "|", maxSplits: 1).map(String.init)
+                guard parts.count == 2 else { return nil }
+                return OracleRow(id: parts[0], slice: "words", typed: parts[1], offsets: [])
+            }
+        XCTAssertFalse(rows.isEmpty, "ORACLE_WORDS carried no rows")
+        try type(rows: rows, tag: "ORACLE")
+    }
 
     /// Controlled probes (`eval/oracle/gen-probes.py`): one variable changes
     /// per row, so stock's answers model the rule rather than sampling it.

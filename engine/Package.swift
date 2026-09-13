@@ -14,7 +14,8 @@ let package = Package(
         .target(
             name: "TypingEngine",
             dependencies: ["PunctuationEngine"],
-            resources: [.copy("Resources/wordrank.bin"), .copy("Resources/wordpairs.bin")]),
+            resources: [.copy("Resources/wordrank.bin"), .copy("Resources/wordpairs.bin"),
+                        .copy("Resources/contextmodel.bin")]),
         .testTarget(name: "TypingEngineTests", dependencies: ["TypingEngine"])
     ]
 )

@@ -24,14 +24,25 @@ ORACLE = ROOT / "eval" / "oracle"
 OUT = ROOT / "engine" / "Tests" / "TypingEngineTests" / "OracleAnswers.swift"
 # The four realistic slices. The probes and the sweep are experiments on stock,
 # not a corpus we hold ourselves to.
-SLICES = {"sloppy", "nospace", "context", "names"}
+SLICES = {"sloppy", "nospace", "context", "names", "slips"}
 
 
 def swift_str(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def corpus_notes() -> dict:
+    """id -> note from the corpus files, so a slip's kind reaches the test."""
+    notes = {}
+    for path in (ORACLE / "corpus").glob("*.tsv"):
+        with open(path, newline="") as f:
+            for row in csv.DictReader(f, delimiter="\t"):
+                notes[row["id"]] = row.get("note", "")
+    return notes
+
+
 def main():
+    notes = corpus_notes()
     rows = []
     for path in sorted(ORACLE.glob("stock-*.tsv")):
         with open(path, newline="") as f:
@@ -54,6 +65,8 @@ def main():
         "    let typed: String",
         "    /// What stock put in the field, trailing space trimmed.",
         "    let stock: String",
+        "    /// The corpus row's note: for a slip, `kind|intended`.",
+        "    let note: String",
         "}",
         "",
         "let oracleAnswers: [OracleAnswer] = [",
@@ -63,7 +76,8 @@ def main():
             f"    OracleAnswer(id: {swift_str(row['id'])}, "
             f"slice: {swift_str(row['slice'])}, "
             f"typed: {swift_str(row['typed'])}, "
-            f"stock: {swift_str(row['produced'].strip())}),")
+            f"stock: {swift_str(row['produced'].strip())}, "
+            f"note: {swift_str(notes.get(row['id'], ''))}),")
     lines += ["]", ""]
     OUT.write_text("\n".join(lines))
     print(f"oracle answers: {len(rows)} rows")

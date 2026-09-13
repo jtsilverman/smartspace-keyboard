@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 LEXICON = ROOT / "engine" / "Sources" / "TypingEngine" / "TextingLexicon.swift"
 SOURCE = ROOT / "engine" / "tools" / "vendor" / "en_wordlist.combined.gz"
 NAMES = ROOT / "engine" / "tools" / "vendor" / "us-first-names.txt"
+ACCEPTED = ROOT / "engine" / "tools" / "vendor" / "accepted-words.tsv"
 
 ENTRY = re.compile(r"^ word=([^,]+),f=(\d+)")
 
@@ -44,7 +45,16 @@ def first_names() -> list:
             if line.strip() and not line.startswith("#")]
 
 
-def build() -> list:
+def accepted_words() -> list:
+    """Names and brands the stock keyboard left as typed (the dictionary loop,
+    specs/autocorrect-loop.md unit 2), in probe order, in their own casing."""
+    if not ACCEPTED.exists():
+        return []
+    return [line.split("\t")[0] for line in ACCEPTED.read_text().splitlines()
+            if line and not line.startswith("#") and not line.startswith("word\t")]
+
+
+def build(accepted: bool = True) -> list:
     """Every word in rank order, duplicates of a lowercase form included."""
     words = [word for word, _ in aosp_words()]
     seen = {w.lower() for w in words}
@@ -56,16 +66,23 @@ def build() -> list:
     # name the engine reads as a typo is the most expensive miscorrection
     # there is, and stock leaves these spellings alone. They land after the
     # lexicon, so a name never outranks a common word at a distance tie.
-    return words + [n for n in first_names() if n.lower() not in seen]
+    words += [n for n in first_names() if n.lower() not in seen]
+    seen |= {w.lower() for w in words}
+    # Words stock accepted land last: a brand or a rare name never outranks a
+    # common word at a distance tie, and the loop's candidates are built
+    # against the list without them (accepted=False).
+    if accepted:
+        words += [w for w in accepted_words() if w.lower() not in seen]
+    return words
 
 
-def records() -> list:
+def records(accepted: bool = True) -> list:
     """(lower, cased, rank), one per distinct lowercase form, rank order.
     `rank` is the position in the full list, duplicates included, so the rank
     cutoffs the engine holds keep their meaning."""
     seen = set()
     out = []
-    for position, word in enumerate(build()):
+    for position, word in enumerate(build(accepted)):
         lower = word.lower()
         if lower in seen:
             continue

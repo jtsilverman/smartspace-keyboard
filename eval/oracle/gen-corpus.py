@@ -345,7 +345,7 @@ def write_swift(slices):
         "}",
         "",
     ]
-    for name in ("sloppy", "nospace", "context", "names"):
+    for name in ("sloppy", "nospace", "context", "names", "slips"):
         rows = slices[name]
         lines.append(f"let oracle{name.capitalize()}: [OracleRow] = [")
         for rid, slice_name, typed, offsets, _note in rows:
@@ -366,11 +366,21 @@ def write_swift(slices):
     lines.append(f"let oracleDriftIDs: Set<String> = [{drift_ids}]")
     lines.append("")
     lines.append("let oracleSlices: [String: [OracleRow]] = [")
-    for name in ("sloppy", "nospace", "context", "names"):
+    for name in ("sloppy", "nospace", "context", "names", "slips"):
         lines.append(f"    \"{name}\": oracle{name.capitalize()},")
     lines.append("]")
     lines.append("")
     SWIFT.write_text("\n".join(lines))
+
+
+def read_slips():
+    """The slip sample eval/slips/gen_slips.py wrote, when it exists. It is
+    authored there, from the key geometry, and only rides along here."""
+    path = OUT / "slips.tsv"
+    if not path.exists():
+        return []
+    with open(path, newline="") as f:
+        return [tuple(row) for row in csv.reader(f, delimiter="\t")][1:]
 
 
 def main():
@@ -378,6 +388,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for name, rows in slices.items():
         write_tsv(OUT / f"{name}.tsv", rows)
+    slices["slips"] = read_slips()
     write_swift(slices)
     total = sum(len(slices[n]) for n in ("sloppy", "nospace", "context", "names"))
     print(f"corpus: {total} rows across four slices, {len(slices['drift'])} held back for drift")

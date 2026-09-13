@@ -71,7 +71,8 @@ rankings adapt to typed text, and the outcome log trains `PersonalRanking`.
 Then run the benchmark **solo**. Never alongside another `xcodebuild` session on the same simulator.
 An XCUITest session running in parallel shifted typo miscorrections from 4 to 18.
 
-The checker-dependent sets are protect, typos, completions, and scenarios.
+The checker-dependent sets are the scenario corpus and `SystemSpellCheckerTests`. The typo,
+protection and completion benches score the engine's own dictionary and run under `swift test`.
 
 ## Score a corpus
 
@@ -83,6 +84,12 @@ The accuracy suites are ordinary tests; `swift test --filter` runs them and prin
 | Real-SMS v3, 638 rows | `RealCorpusV3AccuracyTests` | The reality check |
 | Real-SMS v2.1 | `RealCorpusAccuracyTests` | Retired from reporting, kept as provenance |
 | Rule regression | `CorpusAccuracyTests` | A tripwire, not a benchmark. Gates at top-1 90%, top-2 97% |
+| Typo bench, 320 pairs | `TypoBenchmarkTests` | Gates at 90% corrected, 23 miscorrections (`specs/autocorrect-parity.md` check 2) |
+| Protection, typo v4, completions | `KeyboardEvalV4Tests` | Protection gates at 100 dev / 97 test with every name and brand row untouched |
+| Stock oracle, 400 rows | `OracleAgreementTests` | Agreement with the stock recording per slice, dev and test halves, every dev miss |
+| Slip bench, 158k one-key slips | `SlipBenchTests` | Corrected / left alone / miscorrected per slip kind. The suite scores every 256th row (about 30s); `SLIP_BENCH_ROWS=all swift test -c release --filter SlipBenchTests` scores all of them |
+
+The loop scores all of them in one run: `python3 eval/loop/score.py` (`specs/autocorrect-loop.md`).
 
 Top-1 is right on the first guess. Top-2 is right within one cycle tap, which is the product-truth
 metric.
@@ -116,7 +123,13 @@ python3 eval/oracle/record.py <udid> names
 python3 eval/oracle/record.py <udid> nospace
 python3 eval/oracle/record.py <udid> context
 python3 eval/oracle/record.py <udid> sloppy
+python3 eval/oracle/record.py <udid> slips
 ```
+
+The `slips` slice is 150 one-key slips of common words, kind-stratified, written
+by `python3 eval/slips/gen_slips.py` from the stock key geometry
+(`specs/autocorrect-loop.md` unit 3). Rerun `gen-corpus.py` after it so the slice
+reaches `OracleCorpus.swift`.
 
 Rows land in `eval/oracle/stock-<date>.tsv`. Rerunning a slice resumes: ids
 already in the file are skipped, so a run killed at row 90 costs 90 rows, not
@@ -158,6 +171,52 @@ python3 engine/tools/gen-wordpairs.py
 
 Run them in that order. The pair table refers to words by their position in the
 word list. Both scripts reproduce their file byte for byte from the same inputs.
+
+## Ask stock about new words
+
+The dictionary loop (`specs/autocorrect-loop.md` units 1 and 2) widens the word list
+from `engine/tools/vendor/ssa-names.tsv` and `wikidata-brands.tsv`, brands first, then
+names by births since 1980. A word enters the list only after the stock keyboard
+leaves it as typed.
+
+```
+python3 eval/words/candidates.py --size 150      # the next batch, as oracle rows
+python3 eval/words/candidates.py --aggregate <dir of SSA yobYYYY.txt>   # rebuild ssa-names.tsv
+```
+
+At the default floor of 200 births since 1980 there are 17,726 candidates, about
+118 batches of 150.
+
+The loop runs the batches unattended, in its own worktree so a session can keep
+working in the main checkout:
+
+```
+git worktree add ../smartspace-words -b loop/words
+cd ../smartspace-words && python3 eval/loop/run.py --loop words --udid <udid> --batches 20
+```
+
+Each batch: the recorder asks stock, `candidates.py --accepted` rewrites the accepted
+list, the tables regenerate, the scorer runs, and the judge keeps the batch when no
+number drops. The recording lands as one commit and the accepted words as another,
+both authored `autocorrect-loop`; `eval/loop/results.tsv` holds one line per batch.
+The UI test bundle must be built (`xcodebuild build-for-testing`, above) after any
+change to `StockOracleTests.swift`; the batch itself needs no rebuild. The loop
+generates the worktree's Xcode project itself when it is missing.
+
+## Write teacher text
+
+The context model's training text (`specs/autocorrect-loop.md` unit 4) is the NUS SMS
+corpus plus messages a local model writes on the Studio. Open a tunnel to the Studio's
+ollama once, then run the teacher; it appends to `eval/corpus/teacher/<model>-seed<n>.txt`
+and deduplicates against every file already there.
+
+```
+ssh -f -N -L 11435:localhost:11434 studio
+python3 eval/corpus/teach.py --url http://localhost:11435 --model qwen2.5:7b --count 200000 --seed 1
+```
+
+One stream writes about two messages a second (measured 2026-09-12: 63 in 30s).
+ollama on the Studio lives in `~/ollama` (`~/ollama/ollama serve`).
 
 ## Regenerate a corpus
 
