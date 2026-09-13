@@ -113,6 +113,14 @@ A 150-row kind-stratified sample was recorded from stock and joins the oracle as
 the `slips` slice: agreement 110/150. double 29/30, swap 28/30, neighbor 25/30,
 drop 15/30, split 13/30. The drop and split kinds are the work list.
 
+First rule pass on that list (2026-09-13): a candidate that only prepends a
+letter is not a fix (stock left "orthern" and took "eavy" to "wavy"), a word with
+such a candidate is never split, and a correction that re-adds the one-letter
+fragment before it ("t ournament" -> "t tournament") is a join in disguise and
+stays as typed. Slips slice 110 -> 116 (drop 15 -> 19, split 13 -> 15); oracle
+dev 225 -> 231, test 218 flat; every guard bench flat. The slip bench's drop kind
+fell 53 -> 46 on the sampled rows, as agreeing with stock requires.
+
 The student (`ContextModel`, 1.74M parameters, LSTM 384 over a 10k word vocabulary,
 3.4MB float16 mapped) was trained on 16,926 sentences (NUS SMS plus the first
 teacher text) to dev perplexity 132. Behind `ContextScoring` it ties the pair table

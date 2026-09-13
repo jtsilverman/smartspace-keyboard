@@ -205,3 +205,6 @@ and `git log --author=autocorrect-loop`.
       recording's own inconsistency (check 1 of the parity spec), not a ranking
       the model can learn. The student ships behind ContextScoring; the pair table
       stays the default. Jake's call to widen the seam: not taken, on this evidence
+- [~] rule passes on the slips work list -- pass 1 (2026-09-13): prepend-only
+      candidates are not fixes and re-added fragments stay as typed; slips slice
+      110 -> 116, oracle dev 225 -> 231, test 218 flat, guards flat
