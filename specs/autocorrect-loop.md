@@ -194,10 +194,14 @@ and `git log --author=autocorrect-loop`.
 - [~] 4 teacher text -- NUS SMS 16,265 messages in; teach.py writes about two
       messages a second from qwen2.5:7b on the Studio; the 200k run started
       2026-09-12
-- [!] 5 student pilot -- STOPPED, reopened with Jake 2026-09-13. Retrained on
-      216,928 sentences (NUS plus 200k teacher messages) the student reaches dev
-      perplexity 53 (was 132) and still ties the pair table on the pilot:
-      context/dev 35/50, nospace/dev 32/50 for both. The seam is the limit, not
-      the model: ContextScoring is consulted only at a distance tie and in the
-      split decision, and most context misses are stock leaving a typo alone,
-      which no ranking can reach. Check 6 cannot close as written
+- [x] 5 student pilot -- closed 2026-09-13 with a tie, by the evidence. Retrained
+      on 216,928 sentences (dev perplexity 53, was 132) the student still ties the
+      pair table: context/dev 35/50, nospace/dev 32/50 for both. Of the 33 dev
+      misses, 25 are confidence calls (15 we changed and stock left, 10 the reverse)
+      and 8 are different winners; the student's P(top | sentence) does not separate
+      the 15 from the corrections stock did make (both sit below 3e-4 and both
+      reach 0.0125: "ther" stayed and "hte" stayed while "ans" -> "and" corrected),
+      so a confidence gate on the seam has no threshold to set. Those rows are the
+      recording's own inconsistency (check 1 of the parity spec), not a ranking
+      the model can learn. The student ships behind ContextScoring; the pair table
+      stays the default. Jake's call to widen the seam: not taken, on this evidence

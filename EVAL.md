@@ -122,8 +122,14 @@ decisions; most context misses are stock leaving a typo alone.
 
 Rerun 2026-09-13 on 216,928 sentences (NUS plus 200k teacher messages, four
 epochs, 117s an epoch on the mini): dev perplexity 53.1. The pilot still ties,
-35/50 and 32/50 for both models. The unit stopped and reopened with Jake: the
-seam, not the model, is the limit.
+35/50 and 32/50 for both models. The 33 dev misses are 15 rows we corrected and
+stock left, 10 the reverse, and 8 different winners. The student's probability
+for the chosen correction does not separate the 15 from the corrections stock
+did make: "ther" and "hte" stayed as typed at P=0.0125 while "ans" -> "and"
+corrected at 0.014, and most of both groups sit under 3e-4. A confidence gate
+has no threshold to set; those rows are the recording's own inconsistency.
+The pilot closes with a tie: the student ships behind the seam, the pair
+table stays the default.
 
 ## Missed spaces: what stock splits, and what we can (unit 3)
 
